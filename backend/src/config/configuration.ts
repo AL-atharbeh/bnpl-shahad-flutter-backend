@@ -6,6 +6,7 @@ export default () => ({
     username: process.env.DB_USERNAME || 'bnpl_user',
     password: process.env.DB_PASSWORD || 'bnpl_password',
     database: process.env.DB_DATABASE || 'bnpl_db', // Fixed: was DB_NAME
+    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
   },
   jwt: {
     secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
