@@ -24,7 +24,7 @@ export class Store {
   @Column({ name: 'name_ar', length: 255, nullable: true })
   nameAr: string;
 
-  @Column({ name: 'logo_url', type: 'text', nullable: true })
+  @Column({ name: 'logo_url', type: 'longtext', nullable: true })
   logoUrl: string;
 
   @Column({ type: 'text', nullable: true })

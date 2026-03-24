@@ -266,36 +266,43 @@ export class AuthService {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // 1. Create the store
-    const store = this.storeRepository.create({
-      name: storeName,
-      nameAr: storeName,
-      isActive: true,
-    });
-    const savedStore = await this.storeRepository.save(store);
+    try {
+      // 1. Create the store
+      const store = this.storeRepository.create({
+        name: storeName,
+        nameAr: storeName,
+        isActive: true,
+      });
+      const savedStore = await this.storeRepository.save(store);
 
-    // 2. Create the vendor record
-    const vendor = this.vendorRepository.create({
-      name,
-      email,
-      phone,
-      passwordHash,
-      storeId: savedStore.id,
-      isActive: true,
-    });
+      // 2. Create the vendor record
+      const vendor = this.vendorRepository.create({
+        name,
+        email,
+        phone,
+        passwordHash,
+        storeId: savedStore.id,
+        isActive: true,
+      });
 
-    await this.vendorRepository.save(vendor);
+      await this.vendorRepository.save(vendor);
 
-    const token = this.generateToken(vendor, 'vendor');
+      const token = this.generateToken(vendor, 'vendor');
 
-    return {
-      success: true,
-      message: 'تم إنشاء حساب المورد والمتجر بنجاح',
-      data: {
-        token,
-        user: this.sanitizeVendor(vendor),
-      },
-    };
+      return {
+        success: true,
+        message: 'تم إنشاء حساب المورد والمتجر بنجاح',
+        data: {
+          token,
+          user: this.sanitizeVendor(vendor),
+        },
+      };
+    } catch (error) {
+      console.error('Vendor registration error:', error);
+      throw new BadRequestException(
+        `فشل إنشاء حساب المورد: ${error.message || 'خطأ غير معروف'}`,
+      );
+    }
   }
 
   /**
