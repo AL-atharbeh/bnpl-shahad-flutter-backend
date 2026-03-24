@@ -75,7 +75,7 @@ export const dashboardService = {
             console.log('Dashboard stats:', stats);
             return stats;
         } catch (error) {
-            console.error('Failed to fetch dashboard stats', error);
+            console.error('Failed to fetch dashboard stats from API', error);
             return {
                 totalUsers: 0,
                 activeUsers: 0,
