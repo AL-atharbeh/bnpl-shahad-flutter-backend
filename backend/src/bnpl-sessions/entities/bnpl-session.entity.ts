@@ -6,9 +6,11 @@ import {
     UpdateDateColumn,
     ManyToOne,
     JoinColumn,
+    OneToMany,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Store } from '../../stores/entities/store.entity';
+import { BnplSessionItem } from './bnpl-session-item.entity';
 
 export enum SessionStatus {
     PENDING = 'pending',
@@ -55,8 +57,8 @@ export class BnplSession {
     @Column({ name: 'installments_count', default: 4 })
     installmentsCount: number;
 
-    @Column({ type: 'json', nullable: true })
-    items: any[];
+    @OneToMany(() => BnplSessionItem, (item) => item.session)
+    sessionItems: BnplSessionItem[];
 
     @Column({
         type: 'enum',

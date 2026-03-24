@@ -21,10 +21,8 @@ export class BnplSessionsController {
     @HttpCode(HttpStatus.CREATED)
     async createSession(
         @Body() createSessionDto: CreateSessionDto,
-        @Request() req,
     ) {
-        const storeId = (req.body as any).store_id || 1;
-        return this.sessionsService.createSession(storeId, createSessionDto);
+        return this.sessionsService.createSession(createSessionDto);
     }
 
     @Get(':sessionId')

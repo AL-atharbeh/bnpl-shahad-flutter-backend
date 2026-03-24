@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BnplSession, SessionStatus } from './entities/bnpl-session.entity';
+import { BnplSessionItem } from './entities/bnpl-session-item.entity';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { SessionResponseDto, SessionDetailsDto } from './dto/session-response.dto';
 import { Store } from '../stores/entities/store.entity';
@@ -10,34 +11,40 @@ import { MockPaymentService } from '../payments/mock-payment.service';
 import { UsersService } from '../users/users.service';
 import { v4 as uuidv4 } from 'uuid';
 import * as dayjs from 'dayjs';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class BnplSessionsService {
     constructor(
         @InjectRepository(BnplSession)
         private sessionRepository: Repository<BnplSession>,
+        @InjectRepository(BnplSessionItem)
+        private sessionItemRepository: Repository<BnplSessionItem>,
         @InjectRepository(Store)
         private storeRepository: Repository<Store>,
         private paymentsService: PaymentsService,
         private usersService: UsersService,
         private mockPaymentService: MockPaymentService,
+        private configService: ConfigService,
     ) { }
 
     async createSession(
-        storeId: number,
         createSessionDto: CreateSessionDto,
     ): Promise<SessionResponseDto> {
-        const store = await this.storeRepository.findOne({ where: { id: storeId } });
+        const store = await this.storeRepository.findOne({
+            where: { id: createSessionDto.store_id },
+        });
         if (!store) {
-            throw new NotFoundException('المتجر غير موجود');
+            throw new NotFoundException(`Store with ID ${createSessionDto.store_id} not found`);
         }
 
         const sessionId = `sess_${uuidv4().replace(/-/g, '')}`;
-        const expiresAt = dayjs().add(30, 'minutes').toDate();
+        const expiresAt = new Date();
+        expiresAt.setMinutes(expiresAt.getMinutes() + 30); // 30 minutes expiry
 
         const session = this.sessionRepository.create({
             sessionId,
-            storeId,
+            storeId: createSessionDto.store_id,
             storeOrderId: createSessionDto.store_order_id,
             totalAmount: createSessionDto.total_amount,
             currency: createSessionDto.currency || 'JOD',
@@ -45,7 +52,6 @@ export class BnplSessionsService {
             customerPhone: createSessionDto.customer_phone,
             customerEmail: createSessionDto.customer_email,
             customerName: createSessionDto.customer_name,
-            items: createSessionDto.items || [],
             successUrl: createSessionDto.success_url,
             cancelUrl: createSessionDto.cancel_url,
             webhookUrl: createSessionDto.webhook_url,
@@ -54,7 +60,20 @@ export class BnplSessionsService {
             expiresAt,
         });
 
-        await this.sessionRepository.save(session);
+        const savedSession = await this.sessionRepository.save(session);
+
+        // Save items if any
+        if (createSessionDto.items && createSessionDto.items.length > 0) {
+            const items = createSessionDto.items.map(itemDto =>
+                this.sessionItemRepository.create({
+                    ...itemDto,
+                    session: savedSession,
+                })
+            );
+            await this.sessionItemRepository.save(items);
+        }
+
+        const baseUrl = this.configService.get('APP_URL', 'https://yourapp.com');
 
         return {
             success: true,
@@ -68,7 +87,7 @@ export class BnplSessionsService {
     async getSession(sessionId: string): Promise<SessionDetailsDto> {
         const session = await this.sessionRepository.findOne({
             where: { sessionId },
-            relations: ['store'],
+            relations: ['store', 'sessionItems'],
         });
 
         if (!session) {
@@ -92,7 +111,7 @@ export class BnplSessionsService {
             total_amount: Number(session.totalAmount),
             currency: session.currency,
             installments_count: session.installmentsCount,
-            items: session.items || [],
+            items: session.sessionItems || [],
             status: session.status,
             created_at: session.createdAt,
             expires_at: session.expiresAt,
