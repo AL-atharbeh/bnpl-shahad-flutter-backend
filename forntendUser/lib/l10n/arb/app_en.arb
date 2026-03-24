@@ -1,0 +1,3003 @@
+{
+  "@@locale": "en",
+  "appName": "BNPL",
+  "@appName": {
+    "description": "The name of the application"
+  },
+  
+  "welcome": "Welcome",
+  "@welcome": {
+    "description": "Welcome message"
+  },
+  
+  "login": "Login",
+  "@login": {
+    "description": "Login button text"
+  },
+  
+  "register": "Register",
+  "@register": {
+    "description": "Register button text"
+  },
+  
+  "email": "Email",
+  "@email": {
+    "description": "Email field label"
+  },
+  
+  "password": "Password",
+  "@password": {
+    "description": "Password field label"
+  },
+  
+  "confirmPassword": "Confirm Password",
+  "@confirmPassword": {
+    "description": "Confirm password field label"
+  },
+  
+  "forgotPassword": "Forgot Password?",
+  "@forgotPassword": {
+    "description": "Forgot password link text"
+  },
+  
+  "resetPassword": "Reset Password",
+  "@resetPassword": {
+    "description": "Reset password button text"
+  },
+  
+  "firstName": "First Name",
+  "@firstName": {
+    "description": "First name field label"
+  },
+  
+  "lastName": "Last Name",
+  "@lastName": {
+    "description": "Last name field label"
+  },
+  
+  "phoneNumber": "Phone Number",
+  "@phoneNumber": {
+    "description": "Phone number field label"
+  },
+  
+  "home": "Home",
+  "@home": {
+    "description": "Home tab label"
+  },
+  
+  "search": "Search",
+  "@search": {
+    "description": "Search tab label"
+  },
+  
+  "cart": "Cart",
+  "@cart": {
+    "description": "Cart tab label"
+  },
+  
+  "profile": "Profile",
+  "@profile": {
+    "description": "Profile tab label"
+  },
+  
+  "notifications": "Notifications",
+  "@notifications": {
+    "description": "Notifications tab label"
+  },
+  
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings tab label"
+  },
+  
+  "logout": "Logout",
+  "@logout": {
+    "description": "Logout button text"
+  },
+  
+  "products": "Products",
+  "@products": {
+    "description": "Products section title"
+  },
+  
+  "categories": "Categories",
+  "@categories": {
+    "description": "Categories section title"
+  },
+  
+  "orders": "Orders",
+  "@orders": {
+    "description": "Orders section title"
+  },
+  
+  "payments": "Payments",
+  "@payments": {
+    "description": "Payments section title"
+  },
+  
+  "addToCart": "Add to Cart",
+  "@addToCart": {
+    "description": "Add to cart button text"
+  },
+  
+  "buyNow": "Buy Now",
+  "@buyNow": {
+    "description": "Buy now button text"
+  },
+  
+  "checkout": "Checkout",
+  "@checkout": {
+    "description": "Checkout button text"
+  },
+  
+  "total": "Total",
+  "@total": {
+    "description": "Total amount label"
+  },
+  
+  "subtotal": "Subtotal",
+  "@subtotal": {
+    "description": "Subtotal amount label"
+  },
+  
+  "tax": "Tax",
+  "@tax": {
+    "description": "Tax amount label"
+  },
+  
+  "shipping": "Shipping",
+  "@shipping": {
+    "description": "Shipping cost label"
+  },
+  
+  "discount": "Discount",
+  "@discount": {
+    "description": "Discount amount label"
+  },
+  
+  "paymentMethods": "Payment Methods",
+  "@paymentMethods": {
+    "description": "Payment methods section title"
+  },
+  
+  "creditCard": "Credit Card",
+  "@creditCard": {
+    "description": "Credit card payment method"
+  },
+  
+  "debitCard": "Debit Card",
+  "@debitCard": {
+    "description": "Debit card payment method"
+  },
+  
+  "paypal": "PayPal",
+  "@paypal": {
+    "description": "PayPal payment method"
+  },
+  
+  "applePay": "Apple Pay",
+  "@applePay": {
+    "description": "Apple Pay payment method"
+  },
+  
+  "googlePay": "Google Pay",
+  "@googlePay": {
+    "description": "Google Pay payment method"
+  },
+  
+  "orderConfirmation": "Order Confirmation",
+  "@orderConfirmation": {
+    "description": "Order confirmation title"
+  },
+  
+  "orderNumber": "Order Number",
+  "@orderNumber": {
+    "description": "Order number label"
+  },
+  
+  "orderDate": "Order Date",
+  "@orderDate": {
+    "description": "Order date label"
+  },
+  
+  "orderStatus": "Order Status",
+  "@orderStatus": {
+    "description": "Order status label"
+  },
+  
+  "pending": "Pending",
+  "@pending": {
+    "description": "Pending status"
+  },
+  
+  "processing": "Processing",
+  "@processing": {
+    "description": "Processing status"
+  },
+  
+  "shipped": "Shipped",
+  "@shipped": {
+    "description": "Shipped status"
+  },
+  
+  "delivered": "Delivered",
+  "@delivered": {
+    "description": "Delivered status"
+  },
+  
+  "cancelled": "Cancelled",
+  "@cancelled": {
+    "description": "Cancelled status"
+  },
+  
+  "onboardingTitle1": "أهلا وسهلا… يلا نبلّش",
+  "@onboardingTitle1": {
+    "description": "First onboarding screen title"
+  },
+  
+  "onboardingDescription1": "اشتري اللي بدّك ياه هسّا… والدفع بعدين، ع رواق.",
+  "@onboardingDescription1": {
+    "description": "First onboarding screen description"
+  },
+  
+  "onboardingTitle2": "رتّب مصروفك على كيفك",
+  "@onboardingTitle2": {
+    "description": "Second onboarding screen title"
+  },
+  
+  "onboardingDescription2": "قسّط دفعاتك على أشهر، وخلي بالك فاضي.",
+  "@onboardingDescription2": {
+    "description": "Second onboarding screen description"
+  },
+  
+  "onboardingTitle3": "تعامل مضمون ١٠٠٪",
+  "@onboardingTitle3": {
+    "description": "Third onboarding screen title"
+  },
+  
+  "onboardingDescription3": "دفعك آمن ومحمي… وانت مطمّن بكل خطوة.",
+  "@onboardingDescription3": {
+    "description": "Third onboarding screen description"
+  },
+  
+  "getStarted": "Get Started",
+  "@getStarted": {
+    "description": "Get started button text"
+  },
+  
+  "startShopping": "Start Shopping",
+  "@startShopping": {
+    "description": "Start shopping button text"
+  },
+  
+  "skip": "Skip",
+  "@skip": {
+    "description": "Skip button text"
+  },
+  
+  "next": "Next",
+  "@next": {
+    "description": "Next button text"
+  },
+  
+  "previous": "Previous",
+  "@previous": {
+    "description": "Previous button text"
+  },
+  
+  "save": "Save",
+  "@save": {
+    "description": "Save button text"
+  },
+  
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button text"
+  },
+  
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete button text"
+  },
+  
+  "edit": "Edit",
+  "@edit": {
+    "description": "Edit button text"
+  },
+  
+  "update": "Update",
+  "@update": {
+    "description": "Update button text"
+  },
+  
+  "submit": "Submit",
+  "@submit": {
+    "description": "Submit button text"
+  },
+  
+  "continueButton": "Continue",
+  "@continueButton": {
+    "description": "Continue button text"
+  },
+  
+  "back": "Back",
+  "@back": {
+    "description": "Back button text"
+  },
+  
+  "close": "Close",
+  "@close": {
+    "description": "Close button text"
+  },
+  
+  "ok": "OK",
+  "@ok": {
+    "description": "OK button text"
+  },
+  
+  "yes": "Yes",
+  "@yes": {
+    "description": "Yes button text"
+  },
+  
+  "no": "No",
+  "@no": {
+    "description": "No button text"
+  },
+  
+  "error": "Error",
+  "@error": {
+    "description": "Error title"
+  },
+  
+  "success": "Success",
+  "@success": {
+    "description": "Success title"
+  },
+  
+  "warning": "Warning",
+  "@warning": {
+    "description": "Warning title"
+  },
+  
+  "info": "Information",
+  "@info": {
+    "description": "Information title"
+  },
+  
+  "loading": "Loading...",
+  "@loading": {
+    "description": "Loading message"
+  },
+  
+  "noInternetConnection": "No Internet Connection",
+  "@noInternetConnection": {
+    "description": "No internet connection message"
+  },
+  
+  "tryAgain": "Try Again",
+  "@tryAgain": {
+    "description": "Try again button text"
+  },
+  
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button text"
+  },
+  
+  "refresh": "Refresh",
+  "@refresh": {
+    "description": "Refresh button text"
+  },
+  
+  "emptyCart": "Your cart is empty",
+  "@emptyCart": {
+    "description": "Empty cart message"
+  },
+  
+  "emptyOrders": "No orders found",
+  "@emptyOrders": {
+    "description": "Empty orders message"
+  },
+  
+  "emptyProducts": "No products found",
+  "@emptyProducts": {
+    "description": "Empty products message"
+  },
+  
+  "emptyNotifications": "No notifications",
+  "@emptyNotifications": {
+    "description": "Empty notifications message"
+  },
+  
+  "markAllAsRead": "Mark all as read",
+  "@markAllAsRead": {
+    "description": "Mark all notifications as read button"
+  },
+  
+  "notificationsEnabled": "Notifications enabled — You'll receive payment and offer alerts",
+  "@notificationsEnabled": {
+    "description": "Notifications enabled message"
+  },
+  
+  "all": "All",
+  "@all": {
+    "description": "All notifications filter"
+  },
+  
+  "unread": "Unread",
+  "@unread": {
+    "description": "Unread notifications filter"
+  },
+  
+  "payment": "Payments",
+  "@payment": {
+    "description": "Payment notifications filter"
+  },
+  
+  "offer": "Offers",
+  "@offer": {
+    "description": "Offer notifications filter"
+  },
+  
+  "security": "Security",
+  "@security": {
+    "description": "Security notifications filter"
+  },
+  
+  "today": "Today",
+  "@today": {
+    "description": "Today section label"
+  },
+  
+  "yesterday": "Yesterday",
+  "@yesterday": {
+    "description": "Yesterday section label"
+  },
+  
+  "thisWeek": "This week",
+  "@thisWeek": {
+    "description": "This week section label"
+  },
+  
+  "earlier": "Earlier",
+  "@earlier": {
+    "description": "Earlier section label"
+  },
+  
+  "minutesAgo": "{count} min ago",
+  "@minutesAgo": {
+    "description": "Minutes ago text",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "hoursAgo": "{count} h ago",
+  "@hoursAgo": {
+    "description": "Hours ago text",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "daysAgo": "{count} d ago",
+  "@daysAgo": {
+    "description": "Days ago text",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "markAsRead": "Mark as read",
+  "@markAsRead": {
+    "description": "Mark notification as read"
+  },
+  
+  "markAsUnread": "Mark as unread",
+  "@markAsUnread": {
+    "description": "Mark notification as unread"
+  },
+  
+  "muteThisType": "Mute this type",
+  "@muteThisType": {
+    "description": "Mute notification type"
+  },
+  
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete notification"
+  },
+  
+  "allNotificationsMarkedAsRead": "All notifications marked as read",
+  "@allNotificationsMarkedAsRead": {
+    "description": "Success message when marking all as read"
+  },
+  
+  "notificationDeleted": "Notification deleted",
+  "@notificationDeleted": {
+    "description": "Success message when deleting notification"
+  },
+  
+  "notificationTypeMuted": "This notification type has been muted",
+  "@notificationTypeMuted": {
+    "description": "Success message when muting notification type"
+  },
+  
+  "noNewNotifications": "No new notifications",
+  "@noNewNotifications": {
+    "description": "Empty state message"
+  },
+  
+  "newNotificationsWillAppearHere": "New notifications will appear here",
+  "@newNotificationsWillAppearHere": {
+    "description": "Empty state subtitle"
+  },
+  
+  "paymentReminder": "Payment Reminder",
+  "@paymentReminder": {
+    "description": "Payment reminder notification title"
+  },
+  
+  "paymentDueTomorrow": "Payment of {amount} JD due tomorrow",
+  "@paymentDueTomorrow": {
+    "description": "Payment due message",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "newOffer": "New Offer",
+  "@newOffer": {
+    "description": "New offer notification title"
+  },
+  
+  "electronicsDiscount": "20% discount on all electronics",
+  "@electronicsDiscount": {
+    "description": "Electronics discount message"
+  },
+  
+  "paymentCompleted": "Payment Completed",
+  "@paymentCompleted": {
+    "description": "Payment completed notification title"
+  },
+  
+  "paymentSuccessfullyProcessed": "Payment of {amount} JD successfully processed",
+  "@paymentSuccessfullyProcessed": {
+    "description": "Payment success message",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "securityUpdate": "Security Update",
+  "@securityUpdate": {
+    "description": "Security update notification title"
+  },
+  
+  "securitySettingsUpdated": "Your account security settings have been updated",
+  "@securitySettingsUpdated": {
+    "description": "Security settings updated message"
+  },
+  
+  "specialOffer": "Special Offer",
+  "@specialOffer": {
+    "description": "Special offer notification title"
+  },
+  
+  "clothingDiscount": "15% discount on clothing for limited time",
+  "@clothingDiscount": {
+    "description": "Clothing discount message"
+  },
+  
+  "generalAlert": "General Alert",
+  "@generalAlert": {
+    "description": "General alert notification title"
+  },
+  
+  "newFeatureReleased": "A new feature has been released in the app",
+  "@newFeatureReleased": {
+    "description": "New feature released message"
+  },
+  
+  "toggleAllNotifications": "Enable/Disable All Notifications",
+  "@toggleAllNotifications": {
+    "description": "Toggle all notifications setting"
+  },
+  
+  "notificationsEnabled": "Notifications enabled",
+  "@notificationsEnabled": {
+    "description": "Notifications enabled status"
+  },
+  
+  "notificationsDisabled": "Notifications disabled",
+  "@notificationsDisabled": {
+    "description": "Notifications disabled status"
+  },
+  
+  "emailNotifications": "Email Notifications",
+  "@emailNotifications": {
+    "description": "Email notifications setting"
+  },
+  
+  "emailNotificationsSubtitle": "Important updates and offers",
+  "@emailNotificationsSubtitle": {
+    "description": "Email notifications subtitle"
+  },
+  
+  "smsNotifications": "SMS Notifications",
+  "@smsNotifications": {
+    "description": "SMS notifications setting"
+  },
+  
+  "smsNotificationsSubtitle": "Short messages for important activity",
+  "@smsNotificationsSubtitle": {
+    "description": "SMS notifications subtitle"
+  },
+  
+  "pushNotifications": "Push Notifications",
+  "@pushNotifications": {
+    "description": "Push notifications setting"
+  },
+  
+  "pushNotificationsSubtitle": "In-app alerts",
+  "@pushNotificationsSubtitle": {
+    "description": "Push notifications subtitle"
+  },
+  
+  "dataManagement": "Data Management",
+  "@dataManagement": {
+    "description": "Data management section"
+  },
+  
+  "downloadMyData": "Download My Data",
+  "@downloadMyData": {
+    "description": "Download data option"
+  },
+  
+  "downloadMyDataSubtitle": "Send me a download link for my data",
+  "@downloadMyDataSubtitle": {
+    "description": "Download data subtitle"
+  },
+  
+  "deleteAccount": "Delete Account",
+  "@deleteAccount": {
+    "description": "Delete account option"
+  },
+  
+  "deleteAccountSubtitle": "This action cannot be undone",
+  "@deleteAccountSubtitle": {
+    "description": "Delete account subtitle"
+  },
+  
+  "policies": "Policies",
+  "@policies": {
+    "description": "Policies section"
+  },
+  
+  "privacyPolicy": "Privacy Policy",
+  "@privacyPolicy": {
+    "description": "Privacy policy option"
+  },
+  
+  "privacyPolicySubtitle": "How we handle your data",
+  "@privacyPolicySubtitle": {
+    "description": "Privacy policy subtitle"
+  },
+  
+  "termsOfService": "Terms of Service",
+  "@termsOfService": {
+    "description": "Terms of service option"
+  },
+  
+  "termsOfServiceSubtitle": "What we expect from you",
+  "@termsOfServiceSubtitle": {
+    "description": "Terms of service subtitle"
+  },
+  
+  "security": "Security",
+  "@security": {
+    "description": "Security section title"
+  },
+  
+  "biometricAuthentication": "Biometric Authentication",
+  "@biometricAuthentication": {
+    "description": "Biometric authentication setting"
+  },
+  
+  "biometricAuthenticationSubtitle": "Use fingerprint/face to unlock the app",
+  "@biometricAuthenticationSubtitle": {
+    "description": "Biometric authentication subtitle"
+  },
+  
+  "twoFactorAuthentication": "Two-Factor Authentication (2FA)",
+  "@twoFactorAuthentication": {
+    "description": "Two-factor authentication setting"
+  },
+  
+  "enabled": "Enabled",
+  "@enabled": {
+    "description": "Enabled status"
+  },
+  
+  "disabled": "Disabled",
+  "@disabled": {
+    "description": "Disabled status"
+  },
+  
+  "changePassword": "Change Password",
+  "@changePassword": {
+    "description": "Change password option"
+  },
+  
+  "changePasswordSubtitle": "Create a strong and unique password",
+  "@changePasswordSubtitle": {
+    "description": "Change password subtitle"
+  },
+  
+  "privacy": "Privacy",
+  "@privacy": {
+    "description": "Privacy section title"
+  },
+  
+  "locationServices": "Location Services",
+  "@locationServices": {
+    "description": "Location services setting"
+  },
+  
+  "locationServicesSubtitle": "Allow app to access your location",
+  "@locationServicesSubtitle": {
+    "description": "Location services subtitle"
+  },
+  
+  "usageAnalytics": "Usage Analytics",
+  "@usageAnalytics": {
+    "description": "Usage analytics setting"
+  },
+  
+  "usageAnalyticsSubtitle": "Help improve the app by sharing usage data",
+  "@usageAnalyticsSubtitle": {
+    "description": "Usage analytics subtitle"
+  },
+  
+  "twoFactorDisabled": "Two-factor authentication disabled",
+  "@twoFactorDisabled": {
+    "description": "Two-factor disabled message"
+  },
+  
+  "chooseTwoFactorMethod": "Choose Two-Factor Authentication Method",
+  "@chooseTwoFactorMethod": {
+    "description": "Choose 2FA method dialog title"
+  },
+  
+  "passwordResetLinkSent": "Password reset link sent",
+  "@passwordResetLinkSent": {
+    "description": "Password reset link sent message"
+  },
+  
+  "passwordResetEmailSent": "We'll send a password reset link to your email.",
+  "@passwordResetEmailSent": {
+    "description": "Password reset email sent message"
+  },
+  
+  "openingPrivacyPolicy": "Opening privacy policy",
+  "@openingPrivacyPolicy": {
+    "description": "Opening privacy policy message"
+  },
+  
+  "openingTermsOfService": "Opening terms of service",
+  "@openingTermsOfService": {
+    "description": "Opening terms of service message"
+  },
+  
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button text"
+  },
+  
+  "send": "Send",
+  "@send": {
+    "description": "Send button text"
+  },
+  
+  "smsMessage": "SMS Message",
+  "@smsMessage": {
+    "description": "SMS message option"
+  },
+  
+  "authenticatorApp": "Authenticator App",
+  "@authenticatorApp": {
+    "description": "Authenticator app option"
+  },
+  
+  "downloadLinkSent": "Download link sent",
+  "@downloadLinkSent": {
+    "description": "Download link sent message"
+  },
+  
+  "email": "Email",
+  "@email": {
+    "description": "Email option"
+  },
+  
+  "authenticatorAppOtp": "Authenticator App (OTP)",
+  "@authenticatorAppOtp": {
+    "description": "Authenticator app OTP option"
+  },
+  
+  "twoFactorEnabled": "2FA enabled via {method}",
+  "@twoFactorEnabled": {
+    "description": "Two-factor enabled message",
+    "placeholders": {
+      "method": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "downloadData": "Download Data",
+  "@downloadData": {
+    "description": "Download data dialog title"
+  },
+  
+  "downloadDataEmailSent": "We'll send a download link for your data to your email.",
+  "@downloadDataEmailSent": {
+    "description": "Download data email sent message"
+  },
+  
+  "deleteAccountTitle": "Delete Account",
+  "@deleteAccountTitle": {
+    "description": "Delete account dialog title"
+  },
+  
+  "deleteAccountConfirmation": "Are you sure? This action cannot be undone.",
+  "@deleteAccountConfirmation": {
+    "description": "Delete account confirmation message"
+  },
+  
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete button text"
+  },
+  
+  "accountDeleted": "Account deleted",
+  "@accountDeleted": {
+    "description": "Account deleted message"
+  },
+  
+          "showConnectedSessions": "Show connected sessions",
+        "@showConnectedSessions": {
+          "description": "Show connected sessions message"
+        },
+        
+        "loginSessions": "Login Sessions",
+        "@loginSessions": {
+          "description": "Login sessions title"
+        },
+        
+        "manageConnectedDevices": "Manage devices connected to your account",
+        "@manageConnectedDevices": {
+          "description": "Manage connected devices subtitle"
+        },
+  
+  "searchProducts": "Search products...",
+  "@searchProducts": {
+    "description": "Search products placeholder"
+  },
+  
+  "filter": "Filter",
+  "shareStore": "Store shared",
+  "reviews": "reviews",
+  "offers": "Offers",
+  "discountUpTo90": "Up to 90% off",
+  "enjoyBestOffers": "Enjoy the best offers and discounts",
+  "visitOnlineStore": "Visit Online Store",
+  "visitingStore": "Redirecting to store...",
+  "@filter": {
+    "description": "Filter button text"
+  },
+  
+  "sort": "Sort",
+  "@sort": {
+    "description": "Sort button text"
+  },
+  
+  "price": "Price",
+  "@price": {
+    "description": "Price label"
+  },
+  
+  "quantity": "Quantity",
+  "@quantity": {
+    "description": "Quantity label"
+  },
+  
+  "size": "Size",
+  "@size": {
+    "description": "Size label"
+  },
+  
+  "color": "Color",
+  "@color": {
+    "description": "Color label"
+  },
+  
+  "description": "Description",
+  "@description": {
+    "description": "Description label"
+  },
+  
+  "reviews": "Reviews",
+  "@reviews": {
+    "description": "Reviews label"
+  },
+  
+  "rating": "Rating",
+  "@rating": {
+    "description": "Rating label"
+  },
+  
+  "writeReview": "Write a Review",
+  "@writeReview": {
+    "description": "Write review button text"
+  },
+  
+  "viewAll": "View All",
+  "@viewAll": {
+    "description": "View all button text"
+  },
+  
+  "seeMore": "See More",
+  "@seeMore": {
+    "description": "See more button text"
+  },
+  
+  "seeLess": "See Less",
+  "@seeLess": {
+    "description": "See less button text"
+  },
+  
+  "language": "Language",
+  "@language": {
+    "description": "Language setting label"
+  },
+  
+  "theme": "Theme",
+  "@theme": {
+    "description": "Theme setting label"
+  },
+  
+  "darkMode": "Dark Mode",
+  "@darkMode": {
+    "description": "Dark mode setting"
+  },
+  
+  "lightMode": "Light Mode",
+  "@lightMode": {
+    "description": "Light mode setting"
+  },
+  
+  "autoMode": "Auto Mode",
+  "@autoMode": {
+    "description": "Auto mode setting"
+  },
+  
+  "about": "About",
+  "@about": {
+    "description": "About section title"
+  },
+  
+  "privacyPolicy": "Privacy Policy",
+  "@privacyPolicy": {
+    "description": "Privacy policy link"
+  },
+  
+  "termsOfService": "Terms of Service",
+  "@termsOfService": {
+    "description": "Terms of service link"
+  },
+  
+  "contactUs": "Contact Us",
+  "@contactUs": {
+    "description": "Contact us link"
+  },
+  
+  "help": "Help",
+  "@help": {
+    "description": "Help link"
+  },
+  
+  "faq": "FAQ",
+  "@faq": {
+    "description": "FAQ link"
+  },
+  
+  "support": "Support",
+  "@support": {
+    "description": "Support link"
+  },
+  
+  "version": "Version",
+  "@version": {
+    "description": "Version label"
+  },
+  
+  "buildNumber": "Build Number",
+  "@buildNumber": {
+    "description": "Build number label"
+  },
+
+  "searchPlaceholder": "Search for stores or products",
+  "@searchPlaceholder": {
+    "description": "Search bar placeholder text"
+  },
+
+  "searchSubtitle": "Find the best deals and products",
+  "@searchSubtitle": {
+    "description": "Search bar subtitle"
+  },
+
+  "pendingPayments": "Pending Payments",
+  "@pendingPayments": {
+    "description": "Pending payments section title"
+  },
+
+  "viewAllPayments": "View All",
+  "@viewAllPayments": {
+    "description": "View all payments button"
+  },
+
+  "daysLeft": "days left",
+  "@daysLeft": {
+    "description": "Days left text"
+  },
+
+  "dueIn": "Due in",
+  "@dueIn": {
+    "description": "Due in text"
+  },
+
+  "topStores": "Top Stores",
+  "@topStores": {
+    "description": "Top stores section title"
+  },
+
+  "viewAllStores": "See All",
+  "@viewAllStores": {
+    "description": "View all stores button"
+  },
+
+  "bestOffers": "Best Offers",
+  "@bestOffers": {
+    "description": "Best offers section title"
+  },
+
+  "viewAllOffers": "See All",
+  "@viewAllOffers": {
+    "description": "View all offers button"
+  },
+
+  "visitStore": "Visit Store",
+  "@visitStore": {
+    "description": "Visit store button"
+  },
+
+  "extendDueDate": "Extend due date",
+  "@extendDueDate": {
+    "description": "Extend due date action"
+  },
+
+  "forUpTo": "For up to 21 days",
+  "@forUpTo": {
+    "description": "Extension period text"
+  },
+
+  "extensionRequested": "Extension requested",
+  "@extensionRequested": {
+    "description": "Extension requested message"
+  },
+
+  "redirectingToPayment": "Redirecting to payment page",
+  "@redirectingToPayment": {
+    "description": "Payment redirect message"
+  },
+
+  "payAmount": "Pay {amount}",
+  "@payAmount": {
+    "description": "Pay amount button",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "example": "JD 150"
+      }
+    }
+  },
+
+  "enteringStore": "Entering {storeName}",
+  "@enteringStore": {
+    "description": "Entering store message",
+    "placeholders": {
+      "storeName": {
+        "type": "String",
+        "example": "Zara"
+      }
+    }
+  },
+
+  "pageOf": "Page {current} of {total}",
+  "@pageOf": {
+    "description": "Page indicator text",
+    "placeholders": {
+      "current": {
+        "type": "int",
+        "example": "1"
+      },
+      "total": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+
+  "totalStores": "{count} stores",
+  "@totalStores": {
+    "description": "Total stores count",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "16"
+      }
+    }
+  },
+
+  "favorites": "Favorites",
+  "@favorites": {
+    "description": "Favorites tab label"
+  },
+
+  "wallet": "Wallet",
+  "@wallet": {
+    "description": "Wallet tab label"
+  },
+
+  "profile": "Profile",
+  "@profile": {
+    "description": "Profile tab label"
+  },
+
+  "priceCompare": "Price compare. Pay less.",
+  "@priceCompare": {
+    "description": "Price comparison banner title"
+  },
+
+  "comparePrice": "Compare price and get best deals with Flixpay.",
+  "@comparePrice": {
+    "description": "Price comparison banner subtitle"
+  },
+
+  "specialOffer": "Special Offer - Get 5% Off!",
+  "@specialOffer": {
+    "description": "Special offer message"
+  },
+
+  "urgent": "Urgent",
+  "@urgent": {
+    "description": "Urgent notification text"
+  },
+
+  "newItem": "New",
+  "@newItem": {
+    "description": "New notification text"
+  },
+
+  "tomorrow": "Tomorrow",
+  "@tomorrow": {
+    "description": "Tomorrow text"
+  },
+
+  "dayAfterTomorrow": "Day After Tomorrow",
+  "@dayAfterTomorrow": {
+    "description": "Day after tomorrow text"
+  },
+
+  "shopping": "Shop & Pay Later",
+  "@shopping": {
+    "description": "Shopping tab label"
+  },
+
+  "featuredOffers": "Featured Offers",
+  "@featuredOffers": {
+    "description": "Featured offers section title"
+  },
+
+  "searchProductOrBrand": "Search product or brand…",
+  "@searchProductOrBrand": {
+    "description": "Search bar placeholder for products or brands"
+  },
+
+  "product": "product",
+  "@product": {
+    "description": "Product text"
+  },
+
+  "payments": "Payments",
+  "@payments": {
+    "description": "Payments tab label"
+  },
+
+  "payLaterPurchases": "Pay Later Purchases",
+  "@payLaterPurchases": {
+    "description": "Pay later purchases title"
+  },
+
+  "dueIn30Days": "Due in 30 days",
+  "@dueIn30Days": {
+    "description": "Due in 30 days text"
+  },
+
+  "totalAmountDue": "Total Amount Due",
+  "@totalAmountDue": {
+    "description": "Total amount due text"
+  },
+
+  "dueIn7Days": "Due in 7 days",
+  "@dueIn7Days": {
+    "description": "Due in 7 days text"
+  },
+
+  "payDues": "Pay Dues",
+  "@payDues": {
+    "description": "Pay dues button text"
+  },
+
+  "viewHistory": "View History",
+  "@viewHistory": {
+    "description": "View history button text"
+  },
+
+  "dueSoon": "Due Soon",
+  "@dueSoon": {
+    "description": "Due soon text"
+  },
+
+  "pay": "Pay",
+  "@pay": {
+    "description": "Pay button text"
+  },
+
+  "extend": "Extend",
+  "@extend": {
+    "description": "Extend button text"
+  },
+
+  "dueTomorrow": "Due Tomorrow",
+  "@dueTomorrow": {
+    "description": "Due tomorrow text"
+  },
+
+  "dueInDays": "Due in {days} days",
+  "@dueInDays": {
+    "description": "Due in days text",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+
+  "installmentOf": "{current} of {total} Installment",
+  "@installmentOf": {
+    "description": "Installment text",
+    "placeholders": {
+      "current": {
+        "type": "int",
+        "example": "4"
+      },
+      "total": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+
+  "editProfile": "Edit Profile",
+  "@editProfile": {
+    "description": "Edit profile option"
+  },
+
+  "notifications": "Notifications",
+  "@notifications": {
+    "description": "Notifications option"
+  },
+
+  "securityAndPrivacy": "Security & Privacy",
+  "@securityAndPrivacy": {
+    "description": "Security and privacy option"
+  },
+
+  "helpAndSupport": "Help & Support",
+  "@helpAndSupport": {
+    "description": "Help and support option"
+  },
+
+  "aboutApp": "About App",
+  "@aboutApp": {
+    "description": "About app option"
+  },
+
+  "logoutConfirmation": "Logout",
+  "@logoutConfirmation": {
+    "description": "Logout confirmation dialog title"
+  },
+
+  "logoutMessage": "Are you sure you want to logout?",
+  "@logoutMessage": {
+    "description": "Logout confirmation message"
+  },
+
+  "openProfile": "Open Profile",
+  "@openProfile": {
+    "description": "Open profile button text"
+  },
+
+  "clickToGoToProfile": "Click to go to profile",
+  "@clickToGoToProfile": {
+    "description": "Click to go to profile text"
+  },
+
+  "personalData": "Personal Data",
+  "@personalData": {
+    "description": "Personal data option in profile"
+  },
+
+  "contactUs": "Contact Us",
+  "@contactUs": {
+    "description": "Contact us option in profile"
+  },
+
+  "privacyAndSecurity": "Privacy & Security",
+  "@privacyAndSecurity": {
+    "description": "Privacy and security option in profile"
+  },
+
+  "language": "Language",
+  "@language": {
+    "description": "Language option in profile"
+  },
+
+  "bnplForBusiness": "BNPL for Business",
+  "@bnplForBusiness": {
+    "description": "BNPL for business option in profile"
+  },
+
+  "chooseLanguage": "Choose Language",
+  "@chooseLanguage": {
+    "description": "Choose language dialog title"
+  },
+
+  "arabic": "Arabic",
+  "@arabic": {
+    "description": "Arabic language option"
+  },
+
+  "english": "English",
+  "@english": {
+    "description": "English language option"
+  },
+
+  "youHonoredUs": "You Honored Us",
+  "@youHonoredUs": {
+    "description": "Thank you message title"
+  },
+
+  "joinedOn": "You joined us on {date}",
+  "@joinedOn": {
+    "description": "Join date message",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "March 15, 2024"
+      }
+    }
+  },
+
+  "thankYouMessage": "Thank you for your trust in us and we hope to always meet your expectations. We are here to serve you and provide the best possible experience.",
+  "@thankYouMessage": {
+    "description": "Thank you message content"
+  },
+
+  "myAccount": "My Account",
+  "@myAccount": {
+    "description": "Profile page title"
+  },
+
+  "dueTomorrow": "Due Tomorrow",
+  "@dueTomorrow": {
+    "description": "Due tomorrow text"
+  },
+
+  "dueInDays": "Due in {days} days",
+  "@dueInDays": {
+    "description": "Due in days text",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+
+  "installmentOf": "{current} of {total} Installment",
+  "@installmentOf": {
+    "description": "Installment text",
+    "placeholders": {
+      "current": {
+        "type": "int",
+        "example": "4"
+      },
+      "total": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+
+  "august2025": "August 2025",
+  "@august2025": {
+    "description": "August 2025 month text"
+  },
+
+  "paymentsHistory": "Payments History",
+  "@paymentsHistory": {
+    "description": "Payments history page title"
+  },
+
+  "dateFilter": "Date Filter",
+  "@dateFilter": {
+    "description": "Date filter section title"
+  },
+
+  "selectTimeRange": "Select time range",
+  "@selectTimeRange": {
+    "description": "Select time range placeholder"
+  },
+
+  "noPaidTransactions": "No paid transactions",
+  "@noPaidTransactions": {
+    "description": "No paid transactions message"
+  },
+
+  "today": "Today",
+  "@today": {
+    "description": "Today text"
+  },
+
+  "yesterday": "Yesterday",
+  "@yesterday": {
+    "description": "Yesterday text"
+  },
+
+  "thisWeek": "This Week",
+  "@thisWeek": {
+    "description": "This week text"
+  },
+
+  "thisMonth": "This Month",
+  "@thisMonth": {
+    "description": "This month text"
+  },
+
+  "transaction": "transaction",
+  "@transaction": {
+    "description": "Transaction text"
+  },
+
+  "transactions": "transactions",
+  "@transactions": {
+    "description": "Transactions text"
+  },
+
+  "paid": "Paid",
+  "@paid": {
+    "description": "Paid status text"
+  },
+
+  "payDues": "Pay Dues",
+  "@payDues": {
+    "description": "Pay dues page title"
+  },
+
+  "next7Days": "Next 7 Days",
+  "@next7Days": {
+    "description": "Next 7 days filter"
+  },
+
+  "next30Days": "Next 30 Days",
+  "@next30Days": {
+    "description": "Next 30 days filter"
+  },
+
+  "all": "All",
+  "@all": {
+    "description": "All filter"
+  },
+
+  "installmentOfCycle": "{current} of {total} Installment",
+  "@installmentOfCycle": {
+    "description": "Installment cycle text",
+    "placeholders": {
+      "current": {
+        "type": "int",
+        "example": "4"
+      },
+      "total": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+
+  "dueTomorrow": "Due Tomorrow",
+  "@dueTomorrow": {
+    "description": "Due tomorrow text"
+  },
+
+  "dueInDays": "Due in {days} days",
+  "@dueInDays": {
+    "description": "Due in days text",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+
+  "payAmount": "Pay JD {amount}",
+  "@payAmount": {
+    "description": "Pay amount button text",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "example": "15.435"
+      }
+    }
+  },
+
+  "paymentSuccessful": "Payment successful JD {amount}",
+  "@paymentSuccessful": {
+    "description": "Payment successful message",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "example": "15.435"
+      }
+    }
+  },
+
+  "currentBalance": "Current Balance",
+  "@currentBalance": {
+    "description": "Current balance text"
+  },
+
+  "cardholder": "Cardholder",
+  "@cardholder": {
+    "description": "Cardholder text"
+  },
+
+  "validThru": "VALID THRU",
+  "@validThru": {
+    "description": "Valid thru text"
+  },
+
+  "primaryCard": "Primary Card",
+  "@primaryCard": {
+    "description": "Primary card text"
+  },
+
+  "arabic": "Arabic",
+  "@arabic": {
+    "description": "Arabic language text"
+  },
+
+  "english": "English",
+  "@english": {
+    "description": "English language text"
+  },
+  
+  "paymentMethods": "Payment Methods",
+  "@paymentMethods": {
+    "description": "Payment methods section title"
+  },
+  
+  "add": "Add",
+  "@add": {
+    "description": "Add button text"
+  },
+  
+  "addNewCard": "Add New Card",
+  "@addNewCard": {
+    "description": "Add new card title"
+  },
+  
+  "cardholderName": "Cardholder Name",
+  "@cardholderName": {
+    "description": "Cardholder name field label"
+  },
+  
+  "cardNumber": "Card Number",
+  "@cardNumber": {
+    "description": "Card number field label"
+  },
+  
+  "expiryDate": "Expiry Date (MM/YY)",
+  "@expiryDate": {
+    "description": "Expiry date field label"
+  },
+  
+  "enterExpiryDate": "Please enter expiry date",
+  "@enterExpiryDate": {
+    "description": "Error message for empty expiry date"
+  },
+  
+  "invalidMonth": "Invalid month (01-12)",
+  "@invalidMonth": {
+    "description": "Error message for invalid month"
+  },
+  
+  "invalidYear": "Year must be current year or later",
+  "@invalidYear": {
+    "description": "Error message for invalid year"
+  },
+  
+  "createAccount": "Create Account",
+  "@createAccount": {
+    "description": "Create account title and button"
+  },
+  
+  "joinUsAndStart": "Join us and start your journey!",
+  "@joinUsAndStart": {
+    "description": "Join us subtitle"
+  },
+  
+  "fullName": "Full Name",
+  "@fullName": {
+    "description": "Full name field label"
+  },
+  
+  "phoneNumber": "Phone Number",
+  "@phoneNumber": {
+    "description": "Phone number field label"
+  },
+  
+  "iAgreeTo": "I agree to ",
+  "@iAgreeTo": {
+    "description": "I agree to text"
+  },
+  
+  "termsAndConditions": "Terms and Conditions",
+  "@termsAndConditions": {
+    "description": "Terms and conditions text"
+  },
+  
+  "orContinueWith": "Or continue with",
+  "@orContinueWith": {
+    "description": "Or continue with text"
+  },
+  
+  "alreadyHaveAccount": "Already have an account? ",
+  "@alreadyHaveAccount": {
+    "description": "Already have account text"
+  },
+  
+  "loginHere": "Login here",
+  "@loginHere": {
+    "description": "Login here text"
+  },
+  
+  "pleaseEnterFullName": "Please enter your full name",
+  "@pleaseEnterFullName": {
+    "description": "Error message for empty full name"
+  },
+  
+  "pleaseEnterEmail": "Please enter email",
+  "@pleaseEnterEmail": {
+    "description": "Error message for empty email"
+  },
+  
+  "pleaseEnterValidEmail": "Please enter a valid email",
+  "@pleaseEnterValidEmail": {
+    "description": "Error message for invalid email"
+  },
+  
+  "pleaseEnterPhoneNumber": "Please enter phone number",
+  "@pleaseEnterPhoneNumber": {
+    "description": "Error message for empty phone"
+  },
+  
+  "phoneMustContainNumbersOnly": "Phone must contain numbers only",
+  "@phoneMustContainNumbersOnly": {
+    "description": "Error message for phone format"
+  },
+  
+  "phoneMustBe9Digits": "Phone must be 9 digits",
+  "@phoneMustBe9Digits": {
+    "description": "Error message for phone length"
+  },
+  
+  "pleaseEnterPassword": "Please enter password",
+  "@pleaseEnterPassword": {
+    "description": "Error message for empty password"
+  },
+  
+  "passwordDoesNotMeetRequirements": "Password does not meet all requirements",
+  "@passwordDoesNotMeetRequirements": {
+    "description": "Error message for password requirements"
+  },
+  
+  "pleaseConfirmPassword": "Please confirm password",
+  "@pleaseConfirmPassword": {
+    "description": "Error message for empty confirm password"
+  },
+  
+  "passwordsDoNotMatch": "Passwords do not match",
+  "@passwordsDoNotMatch": {
+    "description": "Error message for password mismatch"
+  },
+  
+  "pleaseAgreeToTerms": "Please agree to terms and conditions",
+  "@pleaseAgreeToTerms": {
+    "description": "Error message for terms agreement"
+  },
+  
+  "initialBalance": "Initial Balance (Optional)",
+  "@initialBalance": {
+    "description": "Initial balance field label"
+  },
+  
+  "saveCard": "Save Card",
+  "@saveCard": {
+    "description": "Save card button text"
+  },
+  
+  "enterName": "Enter name",
+  "@enterName": {
+    "description": "Enter name validation message"
+  },
+  
+  "invalidNumber": "Invalid number",
+  "@invalidNumber": {
+    "description": "Invalid number validation message"
+  },
+  
+  "invalidFormat": "Invalid format",
+  "@invalidFormat": {
+    "description": "Invalid format validation message"
+  },
+  
+  "deleteCard": "Delete Card",
+  "@deleteCard": {
+    "description": "Delete card button text"
+  },
+
+  "choosePaymentMethod": "Choose Payment Method",
+  "@choosePaymentMethod": {
+    "description": "Choose payment method title"
+  },
+
+  "cardAddedSuccessfully": "Card added successfully",
+  "@cardAddedSuccessfully": {
+    "description": "Card added successfully message"
+  },
+
+  "paymentSuccessfulApplePay": "Payment successful via Apple Pay",
+  "@paymentSuccessfulApplePay": {
+    "description": "Payment successful via Apple Pay message"
+  },
+
+  "invalidCardNumber": "Invalid card number",
+  "@invalidCardNumber": {
+    "description": "Invalid card number error message"
+  },
+
+  "invalidCvv": "Invalid CVV",
+  "@invalidCvv": {
+    "description": "Invalid CVV error message"
+  },
+  
+  "deleteCardConfirmation": "Delete Card",
+  "@deleteCardConfirmation": {
+    "description": "Delete card confirmation dialog title"
+  },
+  
+  "deleteCardMessage": "Are you sure you want to delete this card?",
+  "@deleteCardMessage": {
+    "description": "Delete card confirmation message"
+  },
+  
+  "nationalId": "National ID",
+  "@nationalId": {
+    "description": "National ID field label"
+  },
+  
+  "contactInfo": "Contact Information",
+  "@contactInfo": {
+    "description": "Contact information section title"
+  },
+  
+  "address": "Address",
+  "@address": {
+    "description": "Address field label"
+  },
+  
+  "updateYourData": "Update your data for a better experience",
+  "@updateYourData": {
+    "description": "Update your data message"
+  },
+  
+  "edit": "Edit",
+  "@edit": {
+    "description": "Edit button text"
+  },
+  
+  "enterNationalId": "Enter national ID",
+  "@enterNationalId": {
+    "description": "Enter national ID validation message"
+  },
+  
+  "nationalIdTooShort": "National ID is too short",
+  "@nationalIdTooShort": {
+    "description": "National ID too short validation message"
+  },
+  
+  "enterEmail": "Enter email",
+  "@enterEmail": {
+    "description": "Enter email validation message"
+  },
+  
+  "invalidEmail": "Invalid email",
+  "@invalidEmail": {
+    "description": "Invalid email validation message"
+  },
+  
+  "enterPhone": "Enter phone number",
+  "@enterPhone": {
+    "description": "Enter phone validation message"
+  },
+  
+  "dataSavedSuccessfully": "Data saved successfully",
+  "@dataSavedSuccessfully": {
+    "description": "Data saved successfully message"
+  },
+  
+  "emailHint": "name@domain.com",
+  "@emailHint": {
+    "description": "Email field hint text"
+  },
+  
+  "phoneHint": "+962 79 000 0000",
+  "@phoneHint": {
+    "description": "Phone field hint text"
+  },
+  
+  "addressHint": "City, Street, Building Number...",
+  "@addressHint": {
+    "description": "Address field hint text"
+  },
+  
+  "messageType": "Message Type",
+  "@messageType": {
+    "description": "Message type section title"
+  },
+  
+  "generalInquiry": "General Inquiry",
+  "@generalInquiry": {
+    "description": "General inquiry category"
+  },
+  
+  "technicalIssue": "Technical Issue",
+  "@technicalIssue": {
+    "description": "Technical issue category"
+  },
+  
+  "paymentBilling": "Payment & Billing",
+  "@paymentBilling": {
+    "description": "Payment and billing category"
+  },
+  
+  "suggestion": "Suggestion",
+  "@suggestion": {
+    "description": "Suggestion category"
+  },
+  
+  "complaint": "Complaint",
+  "@complaint": {
+    "description": "Complaint category"
+  },
+  
+  "contactInfo": "Contact Information",
+  "@contactInfo": {
+    "description": "Contact information section title"
+  },
+  
+  "fullName": "Full Name",
+  "@fullName": {
+    "description": "Full name field label"
+  },
+  
+  "nameExample": "Example: John Doe",
+  "@nameExample": {
+    "description": "Name field example"
+  },
+  
+  "enterYourName": "Enter your name",
+  "@enterYourName": {
+    "description": "Enter your name validation message"
+  },
+  
+  "enterYourEmail": "Enter your email",
+  "@enterYourEmail": {
+    "description": "Enter your email validation message"
+  },
+  
+  "phoneOptional": "Phone Number (Optional)",
+  "@phoneOptional": {
+    "description": "Phone number optional field label"
+  },
+  
+  "message": "Message",
+  "@message": {
+    "description": "Message field label"
+  },
+  
+  "messageHint": "Write your message briefly and clearly...",
+  "@messageHint": {
+    "description": "Message field hint"
+  },
+  
+  "enterYourMessage": "Enter your message",
+  "@enterYourMessage": {
+    "description": "Enter your message validation"
+  },
+  
+  "messageTooShort": "Message is too short",
+  "@messageTooShort": {
+    "description": "Message too short validation"
+  },
+  
+  "send": "Send",
+  "@send": {
+    "description": "Send button text"
+  },
+  
+  "messageSentSuccessfully": "Your message has been sent successfully",
+  "@messageSentSuccessfully": {
+    "description": "Message sent successfully"
+  },
+  
+  "customerSupport": "Customer Support — We're happy to serve you",
+  "@customerSupport": {
+    "description": "Customer support header"
+  },
+  
+  "call": "Call",
+  "@call": {
+    "description": "Call action text"
+  },
+  
+  "email": "Email",
+  "@email": {
+    "description": "Email action text"
+  },
+  
+  "whatsapp": "WhatsApp",
+  "@whatsapp": {
+    "description": "WhatsApp action text"
+  },
+  
+  "whatsappError": "Failed to open WhatsApp",
+  "@whatsappError": {
+    "description": "WhatsApp error message"
+  },
+  
+  "callError": "Failed to make call",
+  "@callError": {
+    "description": "Call error message"
+  },
+  
+  "emailError": "Failed to open email",
+  "@emailError": {
+    "description": "Email error message"
+  },
+  
+  "due": "Due",
+  "@due": {
+    "description": "Due text for extend sheet"
+  },
+  
+  "getExtraDaysToPay": "Get Extra Days to Pay",
+  "@getExtraDaysToPay": {
+    "description": "Get extra days to pay title"
+  },
+  
+  "extendDueDateDescription": "Extend your due date to enjoy more payment flexibility",
+  "@extendDueDateDescription": {
+    "description": "Extend due date description"
+  },
+  
+  "days": "days",
+  "@days": {
+    "description": "Days text"
+  },
+  
+  "mostPopular": "Most Popular",
+  "@mostPopular": {
+    "description": "Most popular badge text"
+  },
+  
+  "whatAreYouLookingFor": "What are you looking for?",
+  "@whatAreYouLookingFor": {
+    "description": "Search field hint text"
+  },
+  
+  "stores": "Stores",
+  "@stores": {
+    "description": "Stores tab label"
+  },
+  
+  "onlineOnly": "Online Only",
+  "@onlineOnly": {
+    "description": "Online only label"
+  },
+  
+  "enteringTo": "Entering to",
+  "@enteringTo": {
+    "description": "Entering to store message"
+  },
+  
+  "noStoresFound": "No stores found",
+  "@noStoresFound": {
+    "description": "No stores found message"
+  },
+  
+  "noProductsFound": "No products found",
+  "@noProductsFound": {
+    "description": "No products found message"
+  },
+  
+  "noOffersFound": "No offers found",
+  "@noOffersFound": {
+    "description": "No offers found message"
+  },
+  
+  "noPaymentsFound": "No payments found",
+  "@noPaymentsFound": {
+    "description": "No payments found message"
+  },
+  
+  "productsComingSoon": "Products coming soon",
+  "@productsComingSoon": {
+    "description": "Products coming soon message"
+  },
+  
+  "newOffer": "New Offer",
+  "@newOffer": {
+    "description": "New offer badge"
+  },
+  
+  "mostRequested": "Most Requested",
+  "@mostRequested": {
+    "description": "Most requested badge"
+  },
+  
+  "reviews": "reviews",
+  "@reviews": {
+    "description": "Reviews count text"
+  },
+  
+  "millionReviews": "{count}M reviews",
+  "@millionReviews": {
+    "description": "Million reviews count",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "thousandReviews": "{count}K reviews",
+  "@thousandReviews": {
+    "description": "Thousand reviews count",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "offers": "Offers",
+  "@offers": {
+    "description": "Offers section title"
+  },
+  
+  "upTo": "Up to",
+  "@upTo": {
+    "description": "Up to discount text"
+  },
+  
+  "enjoyBestOffers": "Enjoy the best offers and discounts",
+  "@enjoyBestOffers": {
+    "description": "Enjoy best offers message"
+  },
+  
+  "excellent": "Excellent",
+  "@excellent": {
+    "description": "Excellent rating label"
+  },
+  
+  "good": "Good",
+  "@good": {
+    "description": "Good rating label"
+  },
+  
+  "poor": "Poor",
+  "@poor": {
+    "description": "Poor rating label"
+  },
+  
+  "visitEcommerceStore": "Visit E-commerce Store",
+  "@visitEcommerceStore": {
+    "description": "Visit e-commerce store button text"
+  },
+  
+  "noStoreUrlAvailable": "Store URL is not available",
+  "@noStoreUrlAvailable": {
+    "description": "Message when store URL is not available"
+  },
+  
+  "cannotOpenUrl": "Cannot open URL",
+  "@cannotOpenUrl": {
+    "description": "Message when URL cannot be opened"
+  },
+  
+  "errorOpeningUrl": "Error opening URL",
+  "@errorOpeningUrl": {
+    "description": "Error message when opening URL fails"
+  },
+  
+  "share": "Share",
+  "@share": {
+    "description": "Share button tooltip"
+  },
+  
+  "currentOffers": "Current Offers",
+  "@currentOffers": {
+    "description": "Current offers section title"
+  },
+  
+  "shop": "Shop",
+  "@shop": {
+    "description": "Shop button text"
+  },
+  
+  "startingFrom": "Starting from",
+  "@startingFrom": {
+    "description": "Starting from text"
+  },
+  
+  "monthly": "monthly",
+  "@monthly": {
+    "description": "Monthly text"
+  },
+  
+  "orIn4Installments": "or in 4 installments without interest. More options.",
+  "@orIn4Installments": {
+    "description": "Installment options text"
+  },
+  
+  "productType": "Product Type",
+  "@productType": {
+    "description": "Product type attribute"
+  },
+  
+  "oneSize": "One Size",
+  "@oneSize": {
+    "description": "One size option"
+  },
+  
+  "eu": "EU",
+  "@eu": {
+    "description": "EU size option"
+  },
+  
+  "excellentReview": "Excellent 😍",
+  "@excellentReview": {
+    "description": "Excellent review rating"
+  },
+  
+  "dalalReview": "Shein is truly the most beautiful app! ❤️‍🔥 A diverse and beautiful world, easy to use, everything I need in one place.",
+  "@dalalReview": {
+    "description": "Dalal's review text"
+  },
+  
+  "maiReview": "My experience is excellent in terms of product diversity, fast delivery, and payment options.",
+  "@maiReview": {
+    "description": "Mai's review text"
+  },
+  
+  "dalal": "Dalal",
+  "@dalal": {
+    "description": "Dalal name"
+  },
+  
+  "mai": "Mai",
+  "@mai": {
+    "description": "Mai name"
+  },
+  
+  "august2025": "August 2025",
+  "@august2025": {
+    "description": "August 2025 date"
+  },
+  
+  "may2025": "May 2025",
+  "@may2025": {
+    "description": "May 2025 date"
+  },
+  
+  "shein": "Shein",
+  "@shein": {
+    "description": "Shein store name"
+  },
+  
+  "tabby": "tabby",
+  "@tabby": {
+    "description": "Tabby payment service name"
+  },
+  
+  "highQualityFromBestMaterials": "{productName} high quality from the best materials",
+  "@highQualityFromBestMaterials": {
+    "description": "Product subtitle template",
+    "placeholders": {
+      "productName": {
+        "type": "String",
+        "example": "Product Name"
+      }
+    }
+  },
+  
+  "street6": "Street 6",
+  "@street6": {
+    "description": "Street 6 store name"
+  },
+  
+  "productType": "Product Type",
+  "@productType": {
+    "description": "Product type attribute"
+  },
+  
+  "dress": "Dress",
+  "@dress": {
+    "description": "Dress product type"
+  },
+  
+  "material": "Material",
+  "@material": {
+    "description": "Material attribute"
+  },
+  
+  "cotton100": "100% Cotton",
+  "@cotton100": {
+    "description": "100% cotton material"
+  },
+  
+  "color": "Color",
+  "@color": {
+    "description": "Color attribute"
+  },
+  
+  "multiColor": "Multi Color",
+  "@multiColor": {
+    "description": "Multi color option"
+  },
+  
+  "availableSizes": "Available Sizes",
+  "@availableSizes": {
+    "description": "Available sizes attribute"
+  },
+  
+  "sizesList": "XS, S, M, L, XL, XXL",
+  "@sizesList": {
+    "description": "List of available sizes"
+  },
+  
+  "warranty": "Warranty",
+  "@warranty": {
+    "description": "Warranty attribute"
+  },
+  
+  "days30": "30 days",
+  "@days30": {
+    "description": "30 days period"
+  },
+  
+  "delivery": "Delivery",
+  "@delivery": {
+    "description": "Delivery attribute"
+  },
+  
+  "free": "Free",
+  "@free": {
+    "description": "Free delivery"
+  },
+  
+          "productReturn": "Return",
+        "@productReturn": {
+          "description": "Return attribute"
+        },
+  
+  "days14": "14 days",
+  "@days14": {
+    "description": "14 days period"
+  },
+  
+  "trialImages": "Trial images",
+  "@trialImages": {
+    "description": "Trial images comment"
+  },
+  
+  "storeDescription": "{storeName} store offers the best products at the best prices. We excel in high quality and excellent customer service.",
+  "@storeDescription": {
+    "description": "Store description template",
+    "placeholders": {
+      "storeName": {
+        "type": "String",
+        "example": "Store Name"
+      }
+    }
+  },
+  
+  "blackDress": "Black Plain Dress",
+  "@blackDress": {
+    "description": "Black plain dress product name"
+  },
+  
+  "summerPolkaDress": "Summer Polka Dot Dress",
+  "@summerPolkaDress": {
+    "description": "Summer polka dot dress product name"
+  },
+  
+  "formalDress": "Formal Dress",
+  "@formalDress": {
+    "description": "Formal dress product name"
+  },
+  
+  "casualDress": "Casual Dress",
+  "@casualDress": {
+    "description": "Casual dress product name"
+  },
+  
+  "pleatedDress": "Pleated Dress",
+  "@pleatedDress": {
+    "description": "Pleated dress product name"
+  },
+  
+  "chiffonDress": "Chiffon Dress",
+  "@chiffonDress": {
+    "description": "Chiffon dress product name"
+  },
+  
+  "embroideredDress": "Embroidered Dress",
+  "@embroideredDress": {
+    "description": "Embroidered dress product name"
+  },
+  
+  "shortDress": "Short Dress",
+  "@shortDress": {
+    "description": "Short dress product name"
+  },
+  
+  "newProduct": "New",
+  "@newProduct": {
+    "description": "New product badge"
+  },
+  
+  "sheinStore": "Shein",
+  "@sheinStore": {
+    "description": "Shein store name"
+  },
+  
+  "annasStore": "Annas",
+  "@annasStore": {
+    "description": "Annas store name"
+  },
+  
+  "namshiStore": "Namshi",
+  "@namshiStore": {
+    "description": "Namshi store name"
+  },
+  
+  "bloomingdalesStore": "Bloomingdale's",
+  "@bloomingdalesStore": {
+    "description": "Bloomingdale's store name"
+  },
+  
+  "allStores": "All Stores",
+  "@allStores": {
+    "description": "All stores page title"
+  },
+  
+  "searchStores": "Search stores...",
+  "@searchStores": {
+    "description": "Search stores placeholder"
+  },
+  
+  "unnas": "Unnas",
+  "@unnas": {
+    "description": "Unnas store name"
+  },
+  
+  "namshi": "Namshi",
+  "@namshi": {
+    "description": "Namshi store name"
+  },
+  
+  "electron": "Electron",
+  "@electron": {
+    "description": "Electron store name"
+  },
+  
+  "homestyle": "Home Style",
+  "@homestyle": {
+    "description": "Home Style store name"
+  },
+  
+  "kids": "Kids",
+  "@kids": {
+    "description": "Kids category name"
+  },
+  
+  "fashion": "Fashion",
+  "@fashion": {
+    "description": "Fashion category name"
+  },
+  
+  "electronics": "Electronics",
+  "@electronics": {
+    "description": "Electronics category name"
+  },
+  
+  "beauty": "Beauty",
+  "@beauty": {
+    "description": "Beauty category name"
+  },
+  
+  "home": "Home",
+  "@home": {
+    "description": "Home category name"
+  },
+  
+  "searchOffers": "Search offers...",
+  "@searchOffers": {
+    "description": "Search offers placeholder"
+  },
+  
+  "logoutConfirmation": "Are you sure you want to logout?",
+  "@logoutConfirmation": {
+    "description": "Logout confirmation message"
+  },
+  
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button text"
+  },
+
+  "refreshComplete": "Refreshed successfully",
+  "@refreshComplete": {
+    "description": "Message shown when pull-to-refresh completes"
+  },
+
+  "rewardsPoints": "Rewards Points",
+  "@rewardsPoints": {
+    "description": "Rewards points title"
+  },
+
+  "yourPoints": "Your Points",
+  "@yourPoints": {
+    "description": "Your points label"
+  },
+
+  "points": "points",
+  "@points": {
+    "description": "Points text"
+  },
+
+  "earnPointsWithPayments": "Earn points with every payment!",
+  "@earnPointsWithPayments": {
+    "description": "Earn points with payments message"
+  },
+
+  "pointsHistory": "Points History",
+  "@pointsHistory": {
+    "description": "Points history title"
+  },
+
+  "earnedPoints": "Earned Points",
+  "@earnedPoints": {
+    "description": "Earned points label"
+  },
+
+  "redeemedPoints": "Redeemed Points",
+  "@redeemedPoints": {
+    "description": "Redeemed points label"
+  },
+
+  "pointsEarnedFromPayment": "+{points} points from payment",
+  "@pointsEarnedFromPayment": {
+    "description": "Points earned from payment",
+    "placeholders": {
+      "points": {
+        "type": "int",
+        "example": "10"
+      }
+    }
+  },
+
+  "redeemPoints": "Redeem Points",
+  "@redeemPoints": {
+    "description": "Redeem points button text"
+  },
+
+  "pointsValue": "{points} points = JD {amount}",
+  "@pointsValue": {
+    "description": "Points value conversion",
+    "placeholders": {
+      "points": {
+        "type": "int",
+        "example": "100"
+      },
+      "amount": {
+        "type": "String",
+        "example": "1.000"
+      }
+    }
+  },
+
+  "totalEarnedPoints": "Total Earned Points",
+  "@totalEarnedPoints": {
+    "description": "Total earned points label"
+  },
+
+  "availableToRedeem": "Available to Redeem",
+  "@availableToRedeem": {
+    "description": "Available to redeem label"
+  },
+
+  "paymentSuccess": "Payment successful!",
+  "@paymentSuccess": {
+    "description": "Payment success message"
+  },
+
+  "earnedPointsMessage": "You earned {points} reward points!",
+  "@earnedPointsMessage": {
+    "description": "Earned points success message",
+    "placeholders": {
+      "points": {
+        "type": "int",
+        "example": "10"
+      }
+    }
+  },
+
+  "freePostponeAvailable": "Free Postpone Available",
+  "@freePostponeAvailable": {
+    "description": "Free postpone badge text"
+  },
+
+  "postponeForFree": "Postpone for Free",
+  "@postponeForFree": {
+    "description": "Postpone for free button text"
+  },
+
+  "postponeInstallment": "Postpone Installment",
+  "@postponeInstallment": {
+    "description": "Postpone installment title"
+  },
+
+  "freePostponeTitle": "Postpone Installment for Free",
+  "@freePostponeTitle": {
+    "description": "Free postpone title"
+  },
+
+  "freePostponeDescription": "You can postpone any installment for free once per month. It will be postponed for 10 additional days without fees.",
+  "@freePostponeDescription": {
+    "description": "Free postpone description"
+  },
+
+  "currentDueDate": "Current Due Date",
+  "@currentDueDate": {
+    "description": "Current due date label"
+  },
+
+  "newDueDate": "New Due Date",
+  "@newDueDate": {
+    "description": "New due date label"
+  },
+
+  "confirmPostpone": "Confirm Postpone",
+  "@confirmPostpone": {
+    "description": "Confirm postpone button"
+  },
+
+  "postponeSuccess": "Installment postponed successfully",
+  "@postponeSuccess": {
+    "description": "Postpone success message"
+  },
+
+  "freePostponeUsed": "You've used your free postpone this month",
+  "@freePostponeUsed": {
+    "description": "Free postpone already used message"
+  },
+
+  "freePostponeUsedWithDays": "You can use free postpone again after {days} days",
+  "@freePostponeUsedWithDays": {
+    "description": "Free postpone used with days remaining",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "example": "15"
+      }
+    }
+  },
+
+  "postponeNote": "Note: You can use this feature once per month for any installment.",
+  "@postponeNote": {
+    "description": "Postpone note text"
+  },
+
+  "oneTimeFreePostpone": "Free Postpone • Monthly",
+  "@oneTimeFreePostpone": {
+    "description": "One time free postpone badge"
+  },
+
+  "postponeDays": "Postpone 10 Days",
+  "@postponeDays": {
+    "description": "Postpone days label"
+  },
+
+  "phoneNumber": "Phone Number",
+  "@phoneNumber": {
+    "description": "Phone number label"
+  },
+
+  "enterPhoneNumber": "Enter your phone number",
+  "@enterPhoneNumber": {
+    "description": "Enter phone number prompt"
+  },
+
+  "phoneNumberHint": "7XXXXXXXX",
+  "@phoneNumberHint": {
+    "description": "Phone number hint"
+  },
+
+  "continueButton": "Continue",
+  "@continueButton": {
+    "description": "Continue button"
+  },
+
+  "welcomeBack": "Welcome Back",
+  "@welcomeBack": {
+    "description": "Welcome back message"
+  },
+
+  "welcomeTo": "Welcome to",
+  "@welcomeTo": {
+    "description": "Welcome to message"
+  },
+
+  "enterPhoneToStart": "Enter your phone number to get started",
+  "@enterPhoneToStart": {
+    "description": "Enter phone to start message"
+  },
+
+  "verificationCode": "Verification Code",
+  "@verificationCode": {
+    "description": "Verification code"
+  },
+
+  "enterCodeSentTo": "Enter the code sent to",
+  "@enterCodeSentTo": {
+    "description": "Enter code sent to message"
+  },
+
+  "didNotReceiveCode": "Didn't receive the code?",
+  "@didNotReceiveCode": {
+    "description": "Did not receive code"
+  },
+
+  "resendCode": "Resend",
+  "@resendCode": {
+    "description": "Resend code"
+  },
+
+  "resendIn": "Resend in",
+  "@resendIn": {
+    "description": "Resend in"
+  },
+
+  "seconds": "seconds",
+  "@seconds": {
+    "description": "Seconds"
+  },
+
+  "verify": "Verify",
+  "@verify": {
+    "description": "Verify button"
+  },
+
+  "verifying": "Verifying...",
+  "@verifying": {
+    "description": "Verifying message"
+  },
+
+  "civilIdVerification": "Civil ID Verification",
+  "@civilIdVerification": {
+    "description": "Civil ID verification"
+  },
+
+  "takeCivilIdPhoto": "Take a photo of your Civil ID",
+  "@takeCivilIdPhoto": {
+    "description": "Take civil ID photo"
+  },
+
+  "frontSide": "Front Side",
+  "@frontSide": {
+    "description": "Front side"
+  },
+
+  "backSide": "Back Side",
+  "@backSide": {
+    "description": "Back side"
+  },
+
+  "takePhoto": "Take Photo",
+  "@takePhoto": {
+    "description": "Take photo"
+  },
+
+  "retakePhoto": "Retake",
+  "@retakePhoto": {
+    "description": "Retake photo"
+  },
+
+  "uploadFromGallery": "Choose from Gallery",
+  "@uploadFromGallery": {
+    "description": "Upload from gallery"
+  },
+
+  "photoTaken": "Photo Captured",
+  "@photoTaken": {
+    "description": "Photo taken"
+  },
+
+  "pleaseCaptureBothSides": "Please capture clear photos of both sides",
+  "@pleaseCaptureBothSides": {
+    "description": "Please capture both sides message"
+  },
+
+  "completYourProfile": "Complete Your Profile",
+  "@completYourProfile": {
+    "description": "Complete your profile"
+  },
+
+  "almostThere": "Almost There!",
+  "@almostThere": {
+    "description": "Almost there message"
+  },
+
+  "fullName": "Full Name",
+  "@fullName": {
+    "description": "Full name"
+  },
+
+  "civilIdNumber": "Civil ID Number",
+  "@civilIdNumber": {
+    "description": "Civil ID number"
+  },
+
+  "dateOfBirth": "Date of Birth",
+  "@dateOfBirth": {
+    "description": "Date of birth"
+  },
+
+  "address": "Address",
+  "@address": {
+    "description": "Address"
+  },
+
+  "monthlyIncome": "Monthly Income",
+  "@monthlyIncome": {
+    "description": "Monthly income"
+  },
+
+  "employer": "Employer",
+  "@employer": {
+    "description": "Employer"
+  },
+
+  "createAccount": "Create Account",
+  "@createAccount": {
+    "description": "Create account"
+  },
+
+  "pleaseEnterValidPhone": "Please enter a valid phone number",
+  "@pleaseEnterValidPhone": {
+    "description": "Please enter valid phone"
+  },
+
+  "phoneNumberMustBe8Digits": "Phone number must be 9 digits",
+  "@phoneNumberMustBe8Digits": {
+    "description": "Phone number must be 9 digits"
+  },
+
+  "pleaseEnterVerificationCode": "Please enter the verification code",
+  "@pleaseEnterVerificationCode": {
+    "description": "Please enter verification code"
+  },
+
+  "invalidVerificationCode": "Invalid verification code",
+  "@invalidVerificationCode": {
+    "description": "Invalid verification code"
+  },
+
+  "pleaseUploadBothSides": "Please upload photos of both sides",
+  "@pleaseUploadBothSides": {
+    "description": "Please upload both sides"
+  },
+
+  "accountCreatedSuccessfully": "Account created successfully!",
+  "@accountCreatedSuccessfully": {
+    "description": "Account created successfully"
+  },
+
+  "secureAndFast": "Secure & Fast",
+  "@secureAndFast": {
+    "description": "Secure and fast"
+  },
+
+  "buyNowPayLater": "Buy Now, Pay Later",
+  "@buyNowPayLater": {
+    "description": "Buy now pay later tagline"
+  },
+
+  "enterPassword": "Enter Password",
+  "@enterPassword": {
+    "description": "Enter password title"
+  },
+
+  "enter4DigitsToLogin": "Enter 4 digits to log in to your account",
+  "@enter4DigitsToLogin": {
+    "description": "Enter 4 digits to login subtitle"
+  },
+
+  "incorrectPassword": "Incorrect password",
+  "@incorrectPassword": {
+    "description": "Incorrect password error message"
+  },
+
+  "errorVerifyingPassword": "Error verifying password",
+  "@errorVerifyingPassword": {
+    "description": "Error verifying password"
+  },
+
+  "loginWithPhoneNumber": "Log in with phone number",
+  "@loginWithPhoneNumber": {
+    "description": "Login with phone number button"
+  },
+
+  "pinForAccountLogin": "PIN for Account Login",
+  "@pinForAccountLogin": {
+    "description": "PIN for account login"
+  },
+
+  "enabled4Digits": "Enabled - 4 digits",
+  "@enabled4Digits": {
+    "description": "Enabled - 4 digits"
+  },
+
+  "disabledTapToEnable": "Disabled - Tap to enable",
+  "@disabledTapToEnable": {
+    "description": "Disabled - tap to enable"
+  },
+
+  "faceId": "Face ID",
+  "@faceId": {
+    "description": "Face ID"
+  },
+
+  "enabledUseFaceIdToLogin": "Enabled - Use Face ID to log in",
+  "@enabledUseFaceIdToLogin": {
+    "description": "Enabled - use Face ID to login"
+  },
+
+  "disabledRequiresPinFirst": "Disabled - Requires PIN activation first",
+  "@disabledRequiresPinFirst": {
+    "description": "Disabled - requires PIN activation first"
+  },
+
+  "accountManagement": "Account Management",
+  "@accountManagement": {
+    "description": "Account management"
+  },
+
+  "deleteAccountPermanently": "Delete account permanently - Cannot be undone",
+  "@deleteAccountPermanently": {
+    "description": "Delete account permanently - cannot be undone"
+  },
+
+  "setPinForLogin": "Set PIN for Login",
+  "@setPinForLogin": {
+    "description": "Set PIN for login"
+  },
+
+  "confirmPin": "Confirm PIN",
+  "@confirmPin": {
+    "description": "Confirm PIN"
+  },
+
+  "enter4DigitsAsPin": "Enter 4 digits as PIN for account login",
+  "@enter4DigitsAsPin": {
+    "description": "Enter 4 digits as PIN for account login"
+  },
+
+  "reEnterPinToConfirm": "Re-enter PIN to confirm",
+  "@reEnterPinToConfirm": {
+    "description": "Re-enter PIN to confirm"
+  },
+
+  "pinsDoNotMatch": "PINs do not match, please try again",
+  "@pinsDoNotMatch": {
+    "description": "PINs do not match, please try again"
+  },
+
+  "back": "Back",
+  "@back": {
+    "description": "Back button"
+  },
+
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button"
+  },
+
+  "changePin": "Change PIN",
+  "@changePin": {
+    "description": "Change PIN"
+  },
+
+  "doYouWantToChangeCurrentPin": "Do you want to change the current PIN?",
+  "@doYouWantToChangeCurrentPin": {
+    "description": "Do you want to change the current PIN?"
+  },
+
+  "enterCurrentPin": "Enter current PIN",
+  "@enterCurrentPin": {
+    "description": "Enter current PIN"
+  },
+
+  "change": "Change",
+  "@change": {
+    "description": "Change button"
+  }
+}
