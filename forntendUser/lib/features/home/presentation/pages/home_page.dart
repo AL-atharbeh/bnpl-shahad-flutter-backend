@@ -2282,28 +2282,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(24),
-                      child: Image.asset(
-                        category['image'],
+                      child: ImageHelper.buildImage(
+                        imageUrl: category['image'],
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  category['color'].withValues(alpha: 0.8),
-                                  category['color'].withValues(alpha: 0.6),
-                                ],
-                              ),
+                        errorWidget: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                category['color'].withValues(alpha: 0.8),
+                                category['color'].withValues(alpha: 0.6),
+                              ],
                             ),
-                            child: Icon(
-                              category['icon'],
-                              color: Colors.white,
-                              size: 28,
-                            ),
-                          );
-                        },
+                          ),
+                          child: Icon(
+                            category['icon'],
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                        ),
                       ),
                     ),
                   ),

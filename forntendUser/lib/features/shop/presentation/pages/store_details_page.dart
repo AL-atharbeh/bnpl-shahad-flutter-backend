@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../../../../utils/image_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../services/store_service.dart';
@@ -420,23 +421,14 @@ class _StoreDetailsPageState extends State<StoreDetailsPage> {
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      bannerImage.startsWith('http')
-                          ? Image.network(
-                              bannerImage,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
-                                color: const Color(0xFFF1F5F9),
-                                child: const Icon(Icons.store, size: 64, color: Color(0xFF6B7280)),
-                              ),
-                            )
-                          : Image.asset(
-                              bannerImage,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
-                                color: const Color(0xFFF1F5F9),
-                                child: const Icon(Icons.store, size: 64, color: Color(0xFF6B7280)),
-                              ),
-                            ),
+                      ImageHelper.buildImage(
+                        imageUrl: bannerImage,
+                        fit: BoxFit.cover,
+                        errorWidget: Container(
+                          color: const Color(0xFFF1F5F9),
+                          child: const Icon(Icons.store, size: 64, color: Color(0xFF6B7280)),
+                        ),
+                      ),
                       Container(
                         decoration: const BoxDecoration(
                           gradient: LinearGradient(
@@ -469,23 +461,14 @@ class _StoreDetailsPageState extends State<StoreDetailsPage> {
                                 ],
                               ),
                               child: ClipOval(
-                                child: logoImage.startsWith('http')
-                                    ? Image.network(
-                                        logoImage,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => Container(
-                                          color: const Color(0xFFF1F5F9),
-                                          child: const Icon(Icons.store, size: 32, color: Color(0xFF6B7280)),
-                                        ),
-                                      )
-                                    : Image.asset(
-                                        logoImage,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => Container(
-                                          color: const Color(0xFFF1F5F9),
-                                          child: const Icon(Icons.store, size: 32, color: Color(0xFF6B7280)),
-                                        ),
-                                      ),
+                                child: ImageHelper.buildImage(
+                                  imageUrl: logoImage,
+                                  fit: BoxFit.cover,
+                                  errorWidget: Container(
+                                    color: const Color(0xFFF1F5F9),
+                                    child: const Icon(Icons.store, size: 32, color: Color(0xFF6B7280)),
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -758,11 +741,13 @@ class _StoreDetailsPageState extends State<StoreDetailsPage> {
                   child: CircleAvatar(
                     radius: 20,
                     backgroundColor: Colors.white,
-                    child: Image.asset(
-                      logoImage,
-                      width: 24,
-                      height: 24,
-                      fit: BoxFit.cover,
+                    child: ClipOval(
+                      child: ImageHelper.buildImage(
+                        imageUrl: logoImage,
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
