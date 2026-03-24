@@ -1,4 +1,6 @@
 import 'dart:ui';
+import '../../../../utils/image_helper.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../l10n/generated/app_localizations.dart';
@@ -439,42 +441,14 @@ class _LogoOnly extends StatelessWidget {
   const _LogoOnly({required this.name,required this.logo,this.storeId,this.onTap});
 
   Widget _buildStoreImage(String imageUrl) {
-    final isNetworkImage = imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
-    
-    if (isNetworkImage) {
-      return Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            color: const Color(0xFFF1F5F9),
-            child: Center(
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                    : null,
-                strokeWidth: 2,
-                color: _C.primary,
-              ),
-            ),
-          );
-        },
-        errorBuilder: (_, __, ___) => Container(
-          color: const Color(0xFFF1F5F9),
-          child: const Icon(Icons.store_rounded, color: _C.text, size: 30),
-        ),
-      );
-    } else {
-      return Image.asset(
-        imageUrl,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
-          color: const Color(0xFFF1F5F9),
-          child: const Icon(Icons.store_rounded, color: _C.text, size: 30),
-        ),
-      );
-    }
+    return ImageHelper.buildImage(
+      imageUrl: imageUrl,
+      fit: BoxFit.cover,
+      errorWidget: Container(
+        color: const Color(0xFFF1F5F9),
+        child: const Icon(Icons.store_rounded, color: _C.text, size: 30),
+      ),
+    );
   }
 
   @override

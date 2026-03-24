@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../../../utils/image_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../services/language_service.dart';
@@ -523,27 +524,14 @@ class _StoreRow extends StatelessWidget {
   }
   
   Widget _buildStoreLogo(String logoUrl) {
-    final isNetworkImage = logoUrl.startsWith('http://') || logoUrl.startsWith('https://');
-    
-    if (isNetworkImage) {
-      return Image.network(
-        logoUrl,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Icon(
-          Icons.store_rounded,
-          color: const Color(0xFF0F172A).withValues(alpha: 0.55),
-        ),
-      );
-    } else {
-      return Image.asset(
-        logoUrl,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Icon(
-          Icons.store_rounded,
-          color: const Color(0xFF0F172A).withValues(alpha: 0.55),
-        ),
-      );
-    }
+    return ImageHelper.buildImage(
+      imageUrl: logoUrl,
+      fit: BoxFit.cover,
+      errorWidget: Icon(
+        Icons.store_rounded,
+        color: const Color(0xFF0F172A).withValues(alpha: 0.55),
+      ),
+    );
   }
 
   Widget _chip({required String text, required Color bg, required Color fg}) {
@@ -703,26 +691,15 @@ class _ProductCard extends StatelessWidget {
             ? imagesList[0]?.toString()
             : null);
     
-    final isNetworkImage = imageUrl != null && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'));
-    
-    if (imageUrl != null) {
-      return isNetworkImage
-          ? Image.network(
-              imageUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                color: const Color(0xFFF1F5F9),
-                child: const Icon(Icons.image, color: Color(0xFF94A3B8), size: 40),
-              ),
-            )
-          : Image.asset(
-              imageUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                color: const Color(0xFFF1F5F9),
-                child: const Icon(Icons.image, color: Color(0xFF94A3B8), size: 40),
-              ),
-            );
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      return ImageHelper.buildImage(
+        imageUrl: imageUrl,
+        fit: BoxFit.cover,
+        errorWidget: Container(
+          color: const Color(0xFFF1F5F9),
+          child: const Icon(Icons.image, color: Color(0xFF94A3B8), size: 40),
+        ),
+      );
     } else {
       return Container(
         color: const Color(0xFFF1F5F9),

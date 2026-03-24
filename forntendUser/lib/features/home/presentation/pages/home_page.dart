@@ -1,4 +1,5 @@
 import 'dart:ui';
+import '../../../../utils/image_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -1894,16 +1895,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     }
     
     // Only show stores from database - if empty, hide the section
-    if (_topStores.isEmpty) {
-      if (EnvDev.enableLogging) {
-        print('⚠️ No stores to display. _topStores is empty.');
-      }
-      return const SizedBox.shrink();
-    }
+    // if (_topStores.isEmpty) {
+    //   if (EnvDev.enableLogging) {
+    //     print('⚠️ No stores to display. _topStores is empty.');
+    //   }
+    //   return const SizedBox.shrink();
+    // }
     
-    if (EnvDev.enableLogging) {
-      print('✅ Displaying ${_topStores.length} stores in Top Stores section');
-    }
+    // if (EnvDev.enableLogging) {
+    // //  print('✅ Displaying ${_topStores.length} stores in Top Stores section');
+    // }
     
     return Container(
       margin: const EdgeInsets.only(top: 32, left: 20, right: 20),
@@ -2124,50 +2125,30 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   
   Widget _buildStoreImage(Map<String, dynamic> store) {
     final imageUrl = store['image'] ?? '';
-    final isNetworkImage = imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
-    
-    if (isNetworkImage) {
-      return Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  store['color'].withValues(alpha: 0.3),
-                  store['color'].withValues(alpha: 0.2),
-                ],
-              ),
-            ),
-            child: Center(
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                    : null,
-                strokeWidth: 2,
-                color: store['color'],
-              ),
-            ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          return _buildStoreImageFallback(store);
-        },
-      );
-    } else {
-      return Image.asset(
-        imageUrl,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return _buildStoreImageFallback(store);
-        },
-      );
-    }
+    return ImageHelper.buildImage(
+      imageUrl: imageUrl,
+      fit: BoxFit.cover,
+      errorWidget: _buildStoreImageFallback(store),
+      placeholder: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              store['color'].withValues(alpha: 0.3),
+              store['color'].withValues(alpha: 0.2),
+            ],
+          ),
+        ),
+        child: Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: store['color'],
+          ),
+        ),
+      ),
+    );
   }
   
   Widget _buildStoreImageFallback(Map<String, dynamic> store) {
@@ -2376,55 +2357,27 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   }
   
   Widget _buildStoreLogoImage(String logoUrl, Color fallbackColor, String storeName) {
-    final isNetworkImage = logoUrl.startsWith('http://') || logoUrl.startsWith('https://');
-    
-    if (isNetworkImage) {
-      return Image.network(
-        logoUrl,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            decoration: BoxDecoration(
-              color: fallbackColor,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                storeName.isNotEmpty ? storeName[0].toUpperCase() : 'S',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                  fontSize: 18,
-                ),
-              ),
-            ),
-          );
-        },
-      );
-    } else {
-      return Image.asset(
-        logoUrl.isNotEmpty ? logoUrl : 'assets/images/zara.jpg',
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            decoration: BoxDecoration(
-              color: fallbackColor,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                storeName.isNotEmpty ? storeName[0].toUpperCase() : 'S',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                  fontSize: 18,
-                ),
-              ),
-            ),
-          );
-        },
-      );
-    }
+    final fallback = Container(
+      decoration: BoxDecoration(
+        color: fallbackColor,
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          storeName.isNotEmpty ? storeName[0].toUpperCase() : 'S',
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+            fontSize: 18,
+          ),
+        ),
+      ),
+    );
+    return ImageHelper.buildImage(
+      imageUrl: logoUrl,
+      fit: BoxFit.cover,
+      errorWidget: fallback,
+    );
   }
 
   Widget _buildBestOffersSection() {
