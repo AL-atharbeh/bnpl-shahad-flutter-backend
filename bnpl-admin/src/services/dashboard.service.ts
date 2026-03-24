@@ -84,7 +84,15 @@ export const dashboardService = {
                 totalSales: 0,
                 totalProfits: 0,
                 overduePayments: 0,
-            } as DashboardStats;
+                blockedUsers: 0,
+                verifiedUsers: 0,
+                newUsersThisMonth: 0,
+                avgCreditScore: 0,
+                totalCreditLimit: 0,
+                totalCreditUsed: 0,
+                totalDelays: 0,
+                avgTransactionValue: 0,
+            };
         }
     },
 
