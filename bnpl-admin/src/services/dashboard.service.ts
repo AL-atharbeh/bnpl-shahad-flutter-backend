@@ -84,7 +84,7 @@ export const dashboardService = {
                 totalSales: 0,
                 totalProfits: 0,
                 overduePayments: 0,
-            };
+            } as DashboardStats;
         }
     },
 
