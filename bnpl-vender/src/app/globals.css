@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #01160e;
+  /* Much darker green for background */
+  --color-foreground: #ecf3f0;
+  --color-primary: #059669;
+  /* Emerald 600 */
+  --color-secondary: #10b981;
+  /* Emerald 500 */
+  --color-accent: #34d399;
+  /* Emerald 400 */
+  --color-financial: #052e16;
+  /* Dark Green */
+}
+
+:root {
+  --background: #01160e;
+  --foreground: #ecf3f0;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+/* Glassmorphism utility with green tint */
+.glass {
+  background: rgba(1, 35, 24, 0.7);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(16, 185, 129, 0.1);
+}
+
+.glass-emerald {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.15), rgba(5, 150, 105, 0.05));
+  border: 1px solid rgba(5, 150, 105, 0.2);
+}
+
+.btn-financial {
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #01160e;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
+}
+
+.btn-financial:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+}

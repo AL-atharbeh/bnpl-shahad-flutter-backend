@@ -1,0 +1,20 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { BnplSessionsController } from './bnpl-sessions.controller';
+import { BnplSessionsService } from './bnpl-sessions.service';
+import { BnplSession } from './entities/bnpl-session.entity';
+import { Store } from '../stores/entities/store.entity';
+import { PaymentsModule } from '../payments/payments.module';
+import { UsersModule } from '../users/users.module';
+
+@Module({
+    imports: [
+        TypeOrmModule.forFeature([BnplSession, Store]),
+        PaymentsModule,
+        UsersModule,
+    ],
+    controllers: [BnplSessionsController],
+    providers: [BnplSessionsService],
+    exports: [BnplSessionsService],
+})
+export class BnplSessionsModule { }

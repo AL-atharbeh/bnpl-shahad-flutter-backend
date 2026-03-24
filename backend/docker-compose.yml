@@ -1,0 +1,79 @@
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: bnpl-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: bnpl_db
+      MYSQL_USER: bnpl_user
+      MYSQL_PASSWORD: bnpl_password
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # NestJS Backend Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bnpl-backend
+    restart: always
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      API_PREFIX: api/v1
+      
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USERNAME: bnpl_user
+      DB_PASSWORD: bnpl_password
+      DB_DATABASE: bnpl_db
+      
+      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
+      JWT_EXPIRES_IN: 7d
+      
+      OTP_EXPIRY_MINUTES: 5
+      OTP_LENGTH: 6
+      
+      DEFAULT_COUNTRY: JO
+      DEFAULT_CURRENCY: JOD
+      COMMISSION_RATE: 2.5
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+    command: npm run start:dev
+
+  # phpMyAdmin - واجهة ويب لإدارة قاعدة البيانات
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: bnpl-phpmyadmin
+    restart: always
+    ports:
+      - '8080:80'
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: bnpl_user
+      PMA_PASSWORD: bnpl_password
+      MYSQL_ROOT_PASSWORD: root_password
+    depends_on:
+      mysql:
+        condition: service_healthy
+    links:
+      - mysql
+
+volumes:
+  mysql_data:
+

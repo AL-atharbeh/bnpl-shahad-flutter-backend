@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zara - متجر تجريبي</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            direction: rtl;
+        }
+
+        .header {
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            letter-spacing: 3px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .products {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+        }
+
+        .product-info {
+            padding: 20px;
+        }
+
+        .product-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .product-price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 15px;
+        }
+
+        .add-to-cart {
+            width: 100%;
+            padding: 12px;
+            background: #000;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .add-to-cart:hover {
+            background: #333;
+        }
+
+        .add-to-cart:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .cart {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 20px;
+        }
+
+        .cart h2 {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .cart-item-info {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .cart-item-price {
+            color: #666;
+        }
+
+        .cart-item-remove {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .cart-total {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #000;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        .checkout-btn:hover {
+            transform: scale(1.02);
+        }
+
+        .checkout-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .empty-cart {
+            text-align: center;
+            color: #999;
+            padding: 40px 0;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .error.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>ZARA</h1>
+        <p>متجر تجريبي - اختبار نظام الدفع بالتقسيط</p>
+    </div>
+
+    <div class="container">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+            <div>
+                <h2 style="margin-bottom: 20px;">المنتجات</h2>
+                <div class="products" id="products"></div>
+            </div>
+
+            <div>
+                <div class="cart">
+                    <h2>🛒 سلة التسوق</h2>
+                    <div id="cart-items"></div>
+                    <div class="cart-total">
+                        <span>الإجمالي:</span>
+                        <span id="total">0 دينار</span>
+                    </div>
+                    <button class="checkout-btn" id="checkout-btn" onclick="checkout()" disabled>
+                        📱 الدفع بالتقسيط عبر شهد
+                    </button>
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 10px;">جاري إنشاء الجلسة...</p>
+                    </div>
+                    <div class="error" id="error"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // المنتجات
+        const products = [
+            { id: 1, name: 'فستان أسود كلاسيكي', price: 400, emoji: '👗' },
+            { id: 2, name: 'بدلة رسمية', price: 600, emoji: '🤵' },
+            { id: 3, name: 'معطف شتوي', price: 800, emoji: '🧥' },
+            { id: 4, name: 'حذاء جلدي', price: 300, emoji: '👞' },
+            { id: 5, name: 'حقيبة يد', price: 500, emoji: '👜' },
+            { id: 6, name: 'نظارة شمسية', price: 200, emoji: '🕶️' }
+        ];
+
+        // السلة
+        let cart = [];
+
+        // عرض المنتجات
+        function renderProducts() {
+            const container = document.getElementById('products');
+            container.innerHTML = products.map(product => `
+                <div class="product-card">
+                    <div class="product-image">${product.emoji}</div>
+                    <div class="product-info">
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-price">${product.price} دينار</div>
+                        <button class="add-to-cart" onclick="addToCart(${product.id})" id="btn-${product.id}">
+                            إضافة للسلة
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // إضافة للسلة
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            cart.push(product);
+            updateCart();
+
+            // تعطيل الزر
+            document.getElementById(`btn-${productId}`).disabled = true;
+            document.getElementById(`btn-${productId}`).textContent = '✓ تمت الإضافة';
+        }
+
+        // حذف من السلة
+        function removeFromCart(index) {
+            const product = cart[index];
+            cart.splice(index, 1);
+            updateCart();
+
+            // تفعيل الزر
+            document.getElementById(`btn-${product.id}`).disabled = false;
+            document.getElementById(`btn-${product.id}`).textContent = 'إضافة للسلة';
+        }
+
+        // تحديث السلة
+        function updateCart() {
+            const container = document.getElementById('cart-items');
+            const checkoutBtn = document.getElementById('checkout-btn');
+
+            if (cart.length === 0) {
+                container.innerHTML = '<div class="empty-cart">السلة فارغة</div>';
+                checkoutBtn.disabled = true;
+            } else {
+                container.innerHTML = cart.map((item, index) => `
+                    <div class="cart-item">
+                        <div class="cart-item-info">
+                            <div class="cart-item-name">${item.emoji} ${item.name}</div>
+                            <div class="cart-item-price">${item.price} دينار</div>
+                        </div>
+                        <button class="cart-item-remove" onclick="removeFromCart(${index})">حذف</button>
+                    </div>
+                `).join('');
+                checkoutBtn.disabled = false;
+            }
+
+            // تحديث الإجمالي
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            document.getElementById('total').textContent = `${total} دينار`;
+        }
+
+        // الدفع
+        async function checkout() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const checkoutBtn = document.getElementById('checkout-btn');
+
+            loading.classList.add('active');
+            error.classList.remove('active');
+            checkoutBtn.disabled = true;
+
+            try {
+                // حساب الإجمالي
+                const totalAmount = cart.reduce((sum, item) => sum + item.price, 0);
+
+                // إنشاء order ID فريد
+                const orderId = 'ZARA-' + Date.now();
+
+                // إنشاء session
+                const response = await fetch('http://localhost:3000/api/v1/sessions/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        store_id: 1,
+                        store_order_id: orderId,
+                        total_amount: totalAmount,
+                        currency: 'JOD',
+                        installments_count: 4,
+                        items: cart.map(item => ({
+                            name: item.name,
+                            price: item.price,
+                            quantity: 1
+                        })),
+                        success_url: window.location.href + '?success=true',
+                        cancel_url: window.location.href + '?cancelled=true'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // توجيه للتطبيق
+                    console.log('Session created:', data.session_id);
+                    console.log('Redirect URL:', data.redirect_url);
+
+                    loading.classList.remove('active');
+
+                    // فتح التطبيق مباشرة
+                    window.location.href = data.redirect_url;
+                } else {
+                    throw new Error(data.error || 'فشل في إنشاء الجلسة');
+                }
+            } catch (err) {
+                console.error('Checkout error:', err);
+                error.textContent = '❌ حدث خطأ: ' + err.message;
+                error.classList.add('active');
+                loading.classList.remove('active');
+                checkoutBtn.disabled = false;
+            }
+        }
+
+        // التهيئة
+        renderProducts();
+        updateCart();
+
+        // التحقق من نتيجة الدفع
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('success') === 'true') {
+            alert('🎉 تم الدفع بنجاح!\n\nشكراً لاستخدامك خدمة شهد للدفع بالتقسيط.');
+            cart = [];
+            updateCart();
+        } else if (urlParams.get('cancelled') === 'true') {
+            alert('❌ تم إلغاء عملية الدفع.');
+        }
+    </script>
+</body>
+
+</html>
