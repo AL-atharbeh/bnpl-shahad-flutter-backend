@@ -2379,6 +2379,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   }
 
   Widget _buildBestOffersSection() {
+    // Hide the entire section if it's done loading and there are no offers
+    if (!_isLoadingOffers && _bestOffers.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
     final l10n = AppLocalizations.of(context)!;
     final languageService = Provider.of<LanguageService>(context);
     final isRTL = languageService.isArabic;
