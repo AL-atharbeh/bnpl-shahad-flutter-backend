@@ -369,7 +369,7 @@
                 const orderId = 'ZARA-' + Date.now();
 
                 // إنشاء session
-                const response = await fetch('http://localhost:3000/api/v1/sessions/create', {
+                const response = await fetch('https://bnpl-shahad-flutter-backend.onrender.com/api/v1/sessions/create', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
