@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/bnpl_session.dart';
+import '../../../config/env/env_dev.dart';
 
 class BnplSessionService {
-  static const String baseUrl = 'http://localhost:3000/api/v1';
+  static const String baseUrl = EnvDev.baseUrl;
 
   Future<BnplSession> getSession(String sessionId) async {
     try {
