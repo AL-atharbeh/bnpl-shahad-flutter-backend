@@ -33,7 +33,15 @@ export default function SignupPage() {
                 router.push("/auth/store-setup");
             }
         } catch (err: any) {
-            setError(err.response?.data?.message || t("loginError"));
+            console.error("Registration error:", err.response?.data || err.message);
+            const msg = err.response?.data?.message;
+            if (Array.isArray(msg)) {
+                setError(msg.join(", "));
+            } else if (typeof msg === "string") {
+                setError(msg);
+            } else {
+                setError(err.response?.data?.error || t("loginError"));
+            }
         } finally {
             setLoading(false);
         }
