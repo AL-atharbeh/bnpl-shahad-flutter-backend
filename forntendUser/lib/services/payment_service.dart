@@ -30,6 +30,7 @@ class PaymentService {
   Future<Map<String, dynamic>> getPendingPayments({
     int? installmentNumber,
     int? installmentsCount,
+    bool? nextOnly,
   }) async {
     String endpoint = ApiEndpoints.pendingPayments;
     List<String> queryParams = [];
@@ -39,6 +40,9 @@ class PaymentService {
     }
     if (installmentsCount != null) {
       queryParams.add('installmentsCount=$installmentsCount');
+    }
+    if (nextOnly != null) {
+      queryParams.add('nextOnly=$nextOnly');
     }
     
     if (queryParams.isNotEmpty) {

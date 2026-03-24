@@ -275,12 +275,12 @@
     <script>
         // المنتجات
         const products = [
-            { id: 1, name: 'فستان أسود كلاسيكي', price: 400, emoji: '👗' },
-            { id: 2, name: 'بدلة رسمية', price: 600, emoji: '🤵' },
-            { id: 3, name: 'معطف شتوي', price: 800, emoji: '🧥' },
-            { id: 4, name: 'حذاء جلدي', price: 300, emoji: '👞' },
-            { id: 5, name: 'حقيبة يد', price: 500, emoji: '👜' },
-            { id: 6, name: 'نظارة شمسية', price: 200, emoji: '🕶️' }
+            { id: 1, name: 'فستان أسود كلاسيكي', price: 400, emoji: '👗', image: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=400' },
+            { id: 2, name: 'بدلة رسمية', price: 600, emoji: '🤵', image: 'https://images.unsplash.com/photo-1594932224010-75670568c485?auto=format&fit=crop&w=400' },
+            { id: 3, name: 'معطف شتوي', price: 800, emoji: '🧥', image: 'https://images.unsplash.com/photo-1539533757359-267bb4ca9a73?auto=format&fit=crop&w=400' },
+            { id: 4, name: 'حذاء جلدي', price: 300, emoji: '👞', image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=400' },
+            { id: 5, name: 'حقيبة يد', price: 500, emoji: '👜', image: 'https://images.unsplash.com/photo-1584917033904-47e0cb0cd9e5?auto=format&fit=crop&w=400' },
+            { id: 6, name: 'نظارة شمسية', price: 200, emoji: '🕶️', image: 'https://images.unsplash.com/photo-1511499767390-a7335958beba?auto=format&fit=crop&w=400' }
         ];
 
         // السلة
@@ -291,7 +291,9 @@
             const container = document.getElementById('products');
             container.innerHTML = products.map(product => `
                 <div class="product-card">
-                    <div class="product-image">${product.emoji}</div>
+                    <div class="product-image" style="background-image: url('${product.image}'); background-size: cover; background-position: center;">
+                        ${!product.image ? product.emoji : ''}
+                    </div>
                     <div class="product-info">
                         <div class="product-name">${product.name}</div>
                         <div class="product-price">${product.price} دينار</div>
@@ -321,8 +323,11 @@
             updateCart();
 
             // تفعيل الزر
-            document.getElementById(`btn-${product.id}`).disabled = false;
-            document.getElementById(`btn-${product.id}`).textContent = 'إضافة للسلة';
+            const btn = document.getElementById(`btn-${product.id}`);
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'إضافة للسلة';
+            }
         }
 
         // تحديث السلة
@@ -375,7 +380,7 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        store_id: 5,
+                        store_id: 1, // تم تحديثه إلى 1 (Zara) بعد إعادة تهيئة قاعدة البيانات
                         store_order_id: orderId,
                         total_amount: totalAmount,
                         currency: 'JOD',
@@ -383,7 +388,8 @@
                         items: cart.map(item => ({
                             name: item.name,
                             price: item.price,
-                            quantity: 1
+                            quantity: 1,
+                            image: item.image // إضافه صوره المنتج
                         })),
                         success_url: window.location.href + '?success=true',
                         cancel_url: window.location.href + '?cancelled=true'

@@ -37,6 +37,7 @@ export class PaymentsService {
     userId: number,
     installmentNumber?: number,
     installmentsCount?: number,
+    nextOnly: boolean = true,
   ): Promise<Payment[]> {
     // Get all payments for the user (both pending and completed) grouped by orderId
     const allPayments = await this.paymentRepository.find({
@@ -84,12 +85,19 @@ export class PaymentsService {
           // This installment is paid, check the next one
           continue;
         } else if (installment.isPostponed) {
-          // This installment is postponed, check the next one
+          // This installment is postponed, check the next one or include if nextOnly is false
+          if (!nextOnly && installment.status === 'pending') {
+             nextRequiredPayments.push(installment);
+          }
           continue;
         } else {
-          // This is the first unpaid, non-postponed installment - add it and stop
+          // This is an unpaid installment
           nextRequiredPayments.push(installment);
-          break;
+          
+          if (nextOnly) {
+            // Stop after finding the FIRST unpaid installment
+            break;
+          }
         }
       }
     }

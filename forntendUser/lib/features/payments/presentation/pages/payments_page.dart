@@ -86,7 +86,7 @@ class _PaymentsPageState extends State<PaymentsPage> {
     }
     
     try {
-      final response = await _paymentService.getPendingPayments();
+      final response = await _paymentService.getPendingPayments(nextOnly: false);
       
       if (EnvDev.enableLogging) {
         print('📥 API Response: success=${response['success']}');
@@ -187,31 +187,12 @@ class _PaymentsPageState extends State<PaymentsPage> {
             }
           }
           
-          // Convert and sort payments by order_id and installment_number
-          final paymentsList = paymentsData.map((item) {
+          // Convert all payments to Map<String, dynamic>
+          final allPaymentsList = paymentsData.map((item) {
             if (item is Map<String, dynamic>) {
               return item;
             } else if (item is Map) {
-              final converted = Map<String, dynamic>.from(item);
-              // Ensure dueDate is properly formatted
-              if (converted['dueDate'] != null) {
-                final dueDate = converted['dueDate'];
-                if (dueDate is DateTime) {
-                  converted['dueDate'] = dueDate.toIso8601String();
-                } else if (dueDate is String) {
-                  // Already a string, keep it
-                } else {
-                  // Try to convert
-                  try {
-                    converted['dueDate'] = DateTime.parse(dueDate.toString()).toIso8601String();
-                  } catch (e) {
-                    if (EnvDev.enableLogging) {
-                      print('   ⚠️ Could not parse dueDate: $dueDate');
-                    }
-                  }
-                }
-              }
-              return converted;
+              return Map<String, dynamic>.from(item);
             } else {
               if (EnvDev.enableLogging) {
                 print('   ⚠️ Item is not a Map: ${item.runtimeType}');
@@ -219,6 +200,34 @@ class _PaymentsPageState extends State<PaymentsPage> {
               return <String, dynamic>{};
             }
           }).toList().cast<Map<String, dynamic>>();
+
+          // Filter for pending status only
+          final paymentsList = allPaymentsList.where((p) => p['status'] == 'pending').map((item) {
+            final converted = Map<String, dynamic>.from(item);
+            // Ensure dueDate is properly formatted
+            if (converted['dueDate'] != null) {
+              final dueDate = converted['dueDate'];
+              if (dueDate is DateTime) {
+                converted['dueDate'] = dueDate.toIso8601String();
+              } else if (dueDate is String) {
+                // Already a string, keep it
+              } else {
+                // Try to convert
+                try {
+                  converted['dueDate'] = DateTime.parse(dueDate.toString()).toIso8601String();
+                } catch (e) {
+                  if (EnvDev.enableLogging) {
+                    print('   ⚠️ Could not parse dueDate: $dueDate');
+                  }
+                }
+              }
+            }
+            return converted;
+          }).toList();
+          
+          if (EnvDev.enableLogging) {
+            print('   ✅ Filtered to ${paymentsList.length} pending installments out of ${allPaymentsList.length} total');
+          }
           
           // Sort payments by order_id (to group installments together) and then by installment_number
           paymentsList.sort((a, b) {
@@ -453,6 +462,7 @@ class _Content extends StatelessWidget {
               dueIn7: dueIn7,
               total: total,
               l10n: l10n,
+              payments: payments,
             ),
           ),
         ),
@@ -469,7 +479,7 @@ class _Content extends StatelessWidget {
                   icon: Icons.receipt_long_rounded, 
                   label: l10n.payDues,
                   l10n: l10n,
-                  onTap: () => PayDuesSheet.show(context),
+                  onTap: () => PayDuesSheet.show(context, payments: payments),
                 )),
                 const SizedBox(width: 12),
                 Expanded(child: _QuickAction(
@@ -485,29 +495,39 @@ class _Content extends StatelessWidget {
 
         const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
-                 // قسم الشهر
+                 // قسم الشهر الحالي
          SliverToBoxAdapter(
            child: Padding(
              padding: const EdgeInsets.symmetric(horizontal: 16),
-             child: Row(
-               children: [
-                 Text(l10n.august2025, 
-                   style: const TextStyle(
-                     fontWeight: FontWeight.w800, 
-                     fontSize: 16, 
-                     color: BNPLColors.text
-                   )
-                 ),
-                 const SizedBox(width: 8),
-                 const Icon(Icons.brightness_1, size: 6, color: BNPLColors.accent),
-                 const SizedBox(width: 6),
-                 Text(l10n.dueSoon, 
-                   style: const TextStyle(
-                     color: BNPLColors.accent, 
-                     fontWeight: FontWeight.w700
-                   )
-                 ),
-               ],
+             child: Builder(
+               builder: (context) {
+                 final now = DateTime.now();
+                 const months = [
+                   'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+                   'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+                 ];
+                 final currentMonth = '${months[now.month - 1]} ${now.year}';
+                 return Row(
+                   children: [
+                     Text(currentMonth, 
+                       style: const TextStyle(
+                         fontWeight: FontWeight.w800, 
+                         fontSize: 16, 
+                         color: BNPLColors.text
+                       )
+                     ),
+                     const SizedBox(width: 8),
+                     const Icon(Icons.brightness_1, size: 6, color: BNPLColors.accent),
+                     const SizedBox(width: 6),
+                     Text(l10n.dueSoon, 
+                       style: const TextStyle(
+                         color: BNPLColors.accent, 
+                         fontWeight: FontWeight.w700
+                       )
+                     ),
+                   ],
+                 );
+               },
              ),
            ),
          ),
@@ -974,12 +994,14 @@ class _SummaryCard extends StatelessWidget {
   final double dueIn7;
   final double total;
   final AppLocalizations l10n;
+  final List<Map<String, dynamic>> payments;
 
   const _SummaryCard({
     required this.dueIn30,
     required this.dueIn7,
     required this.total,
     required this.l10n,
+    required this.payments,
   });
 
   @override
@@ -1007,7 +1029,7 @@ class _SummaryCard extends StatelessWidget {
               Row(
                 children: [
                   GestureDetector(
-                    onTap: () => PayDuesSheet.show(context),
+                    onTap: () => PayDuesSheet.show(context, payments: payments),
                     child: Container(
                       width: 42,
                       height: 42,

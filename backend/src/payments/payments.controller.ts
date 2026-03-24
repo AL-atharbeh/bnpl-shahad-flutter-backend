@@ -81,6 +81,7 @@ export class PaymentsController {
     @Request() req,
     @Query('installmentNumber') installmentNumber?: string,
     @Query('installmentsCount') installmentsCount?: string,
+    @Query('nextOnly') nextOnly?: string,
   ) {
     // Check if user is authenticated
     if (!req.user || !req.user.id) {
@@ -89,11 +90,13 @@ export class PaymentsController {
 
     const installmentNum = installmentNumber ? parseInt(installmentNumber, 10) : undefined;
     const installmentsCnt = installmentsCount ? parseInt(installmentsCount, 10) : undefined;
+    const isNextOnly = nextOnly === 'false' ? false : true;
 
     const payments = await this.paymentsService.getPendingPayments(
       req.user.id,
       installmentNum,
       installmentsCnt,
+      isNextOnly,
     );
 
     console.log(`[PaymentsController] Returning ${payments.length} pending payments for user ${req.user.id}`);
@@ -186,157 +189,433 @@ export class PaymentsController {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>صفحة الدفع التجريبية</title>
+  <title>إتمام الدفع</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+    }
+
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.5; }
+      50% { transform: scale(1.05); opacity: 0.2; }
+      100% { transform: scale(0.95); opacity: 0.5; }
+    }
+
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+      background: #f8f9fb;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 20px;
+      animation: fadeIn 0.5s ease;
+      position: relative;
+      overflow: hidden;
     }
+
+    /* Soft background decorations */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -120px;
+      left: -120px;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -100px;
+      right: -100px;
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
     .container {
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      max-width: 400px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 24px;
+      border: 1px solid rgba(0, 0, 0, 0.04);
+      box-shadow: 
+        0 4px 24px rgba(0, 0, 0, 0.04),
+        0 1px 2px rgba(0, 0, 0, 0.02);
+      max-width: 420px;
       width: 100%;
-      padding: 40px;
+      padding: 40px 32px;
       text-align: center;
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
     }
-    .logo {
+
+    .icon-wrapper {
+      position: relative;
       width: 80px;
       height: 80px;
-      background: linear-gradient(135deg, #10B981, #059669);
+      margin: 0 auto 24px;
+      animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+    }
+
+    .icon-wrapper::before {
+      content: '';
+      position: absolute;
+      inset: -8px;
       border-radius: 50%;
-      margin: 0 auto 20px;
+      background: rgba(16, 185, 129, 0.08);
+      animation: pulse-ring 3s ease-in-out infinite;
+    }
+
+    .icon-circle {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(145deg, #ecfdf5, #d1fae5);
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 40px;
+      position: relative;
+      z-index: 1;
     }
+
+    .icon-circle svg {
+      width: 36px;
+      height: 36px;
+      color: #10b981;
+    }
+
     h1 {
-      color: #1a1a1a;
-      font-size: 24px;
-      margin-bottom: 10px;
+      color: #111827;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
     }
+
     .subtitle {
-      color: #757575;
-      font-size: 14px;
-      margin-bottom: 30px;
+      color: #9ca3af;
+      font-size: 13px;
+      font-weight: 400;
+      margin-bottom: 28px;
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
     }
+
+    .amount-section {
+      padding: 24px 0;
+      margin: 0 0 24px;
+      border-top: 1px solid #f3f4f6;
+      border-bottom: 1px solid #f3f4f6;
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
+    }
+
+    .amount-label {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 8px;
+      font-weight: 400;
+    }
+
     .amount {
-      font-size: 48px;
-      font-weight: bold;
-      color: #10B981;
-      margin: 20px 0;
+      font-size: 42px;
+      font-weight: 700;
+      color: #111827;
+      letter-spacing: -1px;
+      line-height: 1.1;
     }
+
+    .amount .currency {
+      font-size: 18px;
+      color: #6b7280;
+      font-weight: 600;
+      margin-right: 4px;
+    }
+
     .info {
-      background: #f5f7fa;
-      border-radius: 12px;
-      padding: 20px;
-      margin: 20px 0;
+      background: #fafbfc;
+      border-radius: 16px;
+      padding: 18px 20px;
+      margin: 0 0 20px;
       text-align: right;
+      border: 1px solid #f3f4f6;
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
     }
+
     .info-row {
       display: flex;
       justify-content: space-between;
-      margin: 10px 0;
-      font-size: 14px;
+      align-items: center;
+      padding: 8px 0;
     }
+
+    .info-row:not(:last-child) {
+      border-bottom: 1px solid #f3f4f6;
+    }
+
     .info-label {
-      color: #757575;
+      color: #9ca3af;
+      font-size: 13px;
+      font-weight: 400;
     }
+
     .info-value {
-      color: #1a1a1a;
+      color: #374151;
       font-weight: 600;
+      font-size: 13px;
+      direction: ltr;
     }
+
+    .security-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #f0fdf4;
+      border: 1px solid #dcfce7;
+      border-radius: 100px;
+      padding: 8px 16px;
+      font-size: 12px;
+      color: #16a34a;
+      font-weight: 500;
+      margin-bottom: 24px;
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both;
+    }
+
+    .security-badge svg {
+      width: 14px;
+      height: 14px;
+    }
+
     .buttons {
       display: flex;
+      flex-direction: column;
       gap: 12px;
-      margin-top: 30px;
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
     }
+
     button {
-      flex: 1;
-      padding: 16px;
+      width: 100%;
+      padding: 16px 24px;
       border: none;
-      border-radius: 12px;
+      border-radius: 14px;
       font-size: 16px;
-      font-weight: bold;
+      font-family: 'Cairo', sans-serif;
+      font-weight: 700;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
     }
+
+    button::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.1) 50%,
+        transparent 100%
+      );
+      background-size: 200% 100%;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    button:hover::after {
+      opacity: 1;
+      animation: shimmer 1.5s infinite;
+    }
+
     .btn-success {
-      background: #10B981;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
       color: white;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2);
     }
+
     .btn-success:hover {
-      background: #059669;
       transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
     }
+
+    .btn-success:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+    }
+
     .btn-cancel {
-      background: #E53935;
-      color: white;
+      background: white;
+      color: #6b7280;
+      border: 1.5px solid #e5e7eb;
     }
+
     .btn-cancel:hover {
-      background: #C62828;
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(229, 57, 53, 0.3);
+      background: #fef2f2;
+      color: #ef4444;
+      border-color: #fecaca;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.08);
     }
-    .note {
+
+    .btn-cancel:active {
+      transform: translateY(0);
+    }
+
+    .footer-note {
       margin-top: 20px;
-      padding: 12px;
-      background: #FFF3CD;
-      border-radius: 8px;
-      font-size: 13px;
-      color: #856404;
+      font-size: 11px;
+      color: #d1d5db;
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both;
+    }
+
+    /* Loading state */
+    .loading-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(4px);
+      border-radius: 24px;
+      z-index: 10;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .loading-overlay.active {
+      display: flex;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #e5e7eb;
+      border-top-color: #10b981;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: #6b7280;
+      font-size: 14px;
+      font-weight: 500;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="logo">💳</div>
-    <h1>صفحة الدفع التجريبية</h1>
-    <p class="subtitle">Mock Payment Gateway</p>
-    
-    <div class="amount">${amount} ${currency}</div>
-    
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <span class="loading-text">جاري معالجة الدفع...</span>
+    </div>
+
+    <!-- Icon -->
+    <div class="icon-wrapper">
+      <div class="icon-circle">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+        </svg>
+      </div>
+    </div>
+
+    <h1>إتمام الدفع</h1>
+    <p class="subtitle">يرجى مراجعة تفاصيل الدفع وتأكيد العملية</p>
+
+    <!-- Amount -->
+    <div class="amount-section">
+      <div class="amount-label">المبلغ المطلوب</div>
+      <div class="amount">
+        <span class="currency">${currency}</span>
+        ${amount}
+      </div>
+    </div>
+
+    <!-- Info -->
     <div class="info">
       <div class="info-row">
-        <span class="info-label">رقم الفاتورة:</span>
+        <span class="info-label">رقم الفاتورة</span>
         <span class="info-value">#${invoiceId}</span>
       </div>
       <div class="info-row">
-        <span class="info-label">المرجع:</span>
+        <span class="info-label">المرجع</span>
         <span class="info-value">${customerRef}</span>
       </div>
     </div>
-    
-    <div class="note">
-      ⚠️ هذه صفحة دفع تجريبية للاختبار فقط
+
+    <!-- Security badge -->
+    <div class="security-badge">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+      </svg>
+      دفع آمن ومشفر
     </div>
-    
+
+    <!-- Buttons -->
     <div class="buttons">
-      <button class="btn-success" onclick="handleSuccess()">
-        ✅ دفع ناجح
+      <button class="btn-success" onclick="handleSuccess()" id="payBtn">
+        تأكيد الدفع
       </button>
-      <button class="btn-cancel" onclick="handleCancel()">
-        ❌ إلغاء
+      <button class="btn-cancel" onclick="handleCancel()" id="cancelBtn">
+        إلغاء العملية
       </button>
+    </div>
+
+    <div class="footer-note">
+      بيئة اختبار — لا يتم خصم أي مبالغ حقيقية
     </div>
   </div>
-  
+
   <script>
     function handleSuccess() {
-      window.location.href = '/api/v1/payments/callback/success?paymentId=${invoiceId}&Id=${invoiceId}';
+      document.getElementById('loadingOverlay').classList.add('active');
+      document.getElementById('payBtn').disabled = true;
+      document.getElementById('cancelBtn').disabled = true;
+      setTimeout(function() {
+        window.location.href = '/api/v1/payments/callback/success?paymentId=${invoiceId}&Id=${invoiceId}';
+      }, 1200);
     }
-    
+
     function handleCancel() {
-      window.location.href = '/api/v1/payments/callback/error?paymentId=${invoiceId}&Id=${invoiceId}';
+      document.getElementById('cancelBtn').style.background = '#fef2f2';
+      document.getElementById('cancelBtn').style.color = '#ef4444';
+      setTimeout(function() {
+        window.location.href = '/api/v1/payments/callback/error?paymentId=${invoiceId}&Id=${invoiceId}';
+      }, 400);
     }
   </script>
 </body>

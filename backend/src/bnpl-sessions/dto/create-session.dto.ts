@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsNumber, IsString, IsOptional, IsArray, Min, IsEmail, IsUrl } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsOptional, IsArray, Min, IsEmail, IsUrl, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class SessionItemDto {
     @IsString()
@@ -57,6 +58,8 @@ export class CreateSessionDto {
 
     @IsArray()
     @IsOptional()
+    @ValidateNested({ each: true })
+    @Type(() => SessionItemDto)
     items?: SessionItemDto[];
 
     @IsString()

@@ -45,13 +45,23 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
         _error = null;
       });
 
+      print('🔍 Fetching session: ${widget.sessionId}');
       final session = await _sessionService.getSession(widget.sessionId);
+      
+      // DEBUG: Log session details to see items
+      print('📦 Session Loaded: ${session.sessionId}');
+      print('📦 Store: ${session.store.name} (Logo: ${session.store.logoUrl})');
+      print('📦 Items Count: ${session.items.length}');
+      for (var item in session.items) {
+        print('   - Item: ${item.name}, Price: ${item.price}, Image: ${item.image}');
+      }
 
       setState(() {
         _session = session;
         _isLoading = false;
       });
     } catch (e) {
+      print('❌ Error loading session: $e');
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -355,6 +365,8 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
         children: [
           _buildStoreCard(),
           const SizedBox(height: 16),
+          _buildItemsList(),
+          const SizedBox(height: 16),
           _buildAmountCard(),
           const SizedBox(height: 16),
           _buildInstallmentCard(),
@@ -366,16 +378,133 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
     );
   }
 
+  Widget _buildItemsList() {
+    print('📦 Session Items count: ${_session!.items.length}');
+    
+    if (_session!.items.isEmpty) {
+      return Container(
+        margin: const EdgeInsets.only(top: 8),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.orange.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            const Icon(Icons.shopping_basket_outlined, size: 40, color: Colors.orange),
+            const SizedBox(height: 12),
+            Text(
+              'لا توجد تفاصيل للمنتجات في هذا الطلب',
+              style: GoogleFonts.cairo(
+                fontSize: 15,
+                color: const Color(0xFF6B7280),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: Text(
+            'تفاصيل المنتجات',
+            style: GoogleFonts.cairo(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF1A1A1A),
+            ),
+          ),
+        ),
+        ..._session!.items.map((item) => _buildItemTile(item)).toList(),
+      ],
+    );
+  }
+
+  Widget _buildItemTile(SessionItem item) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: const Color(0xFFF5F7FA),
+              image: item.image != null
+                  ? DecorationImage(
+                      image: NetworkImage(item.image!),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
+            child: item.image == null
+                ? const Icon(Icons.shopping_bag_outlined, color: Color(0xFF9E9E9E))
+                : null,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.name,
+                  style: GoogleFonts.cairo(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1A1A1A),
+                  ),
+                ),
+                Text(
+                  'الكمية: ${item.quantity}',
+                  style: GoogleFonts.cairo(
+                    fontSize: 13,
+                    color: const Color(0xFF757575),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '${item.price.toStringAsFixed(2)} ${_session!.currency}',
+            style: GoogleFonts.cairo(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF10B981),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildStoreCard() {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -386,8 +515,15 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
             width: 70,
             height: 70,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              color: const Color(0xFFF5F7FA),
+              borderRadius: BorderRadius.circular(18),
+              gradient: _session!.store.logoUrl == null
+                  ? const LinearGradient(
+                      colors: [Color(0xFFF3F4F6), Color(0xFFE5E7EB)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : null,
+              color: _session!.store.logoUrl == null ? null : const Color(0xFFF5F7FA),
               image: _session!.store.logoUrl != null
                   ? DecorationImage(
                       image: NetworkImage(_session!.store.logoUrl!),
@@ -396,7 +532,20 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
                   : null,
             ),
             child: _session!.store.logoUrl == null
-                ? const Icon(Icons.store, size: 36, color: Color(0xFF9E9E9E))
+                ? Center(
+                    child: Text(
+                      _session!.store.nameAr.isNotEmpty 
+                        ? _session!.store.nameAr[0] 
+                        : _session!.store.name.isNotEmpty 
+                          ? _session!.store.name[0] 
+                          : 'S',
+                      style: GoogleFonts.cairo(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF9CA3AF),
+                      ),
+                    ),
+                  )
                 : null,
           ),
           const SizedBox(width: 16),
@@ -405,19 +554,28 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _session!.store.nameAr,
+                  _session!.store.nameAr.isNotEmpty ? _session!.store.nameAr : _session!.store.name,
                   style: GoogleFonts.cairo(
-                    fontSize: 20,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1A1A1A),
+                    color: const Color(0xFF111827),
+                    height: 1.2,
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  'طلب من ${_session!.store.name}',
-                  style: GoogleFonts.cairo(
-                    fontSize: 14,
-                    color: const Color(0xFF757575),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'طلب من ${_session!.store.name}',
+                    style: GoogleFonts.cairo(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF6B7280),
+                    ),
                   ),
                 ),
               ],
