@@ -323,27 +323,33 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
                 const SizedBox(height: 12),
 
                 // Subtitle
-                RichText(
-                  textAlign: TextAlign.center,
-                  text: TextSpan(
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
-                      height: 1.5,
+                Column(
+                  children: [
+                    Text(
+                      l10n.enterCodeSentTo,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    children: [
-                      TextSpan(text: l10n.enterCodeSentTo),
-                      TextSpan(text: '\n'),
-                      TextSpan(
-                        text: '+962 ${widget.phoneNumber}',
+                    const SizedBox(height: 6),
+                    Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Text(
+                        widget.phoneNumber,
                         style: TextStyle(
+                          fontSize: 16,
                           color: AppColors.primary,
                           fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
                         ),
+                        textAlign: TextAlign.center,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(height: 40),

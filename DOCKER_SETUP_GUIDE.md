@@ -20,7 +20,7 @@ docker-compose up -d
 - **Backend API**: `http://localhost:3000`
 - **Swagger Docs**: `http://localhost:3000/api/docs`
 - **phpMyAdmin**: `http://localhost:8080`
-- **MySQL**: `localhost:3306`
+- **MySQL**: `localhost:3306` 
 
 ### 2. عرض السجلات (Logs)
 
