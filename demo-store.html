@@ -235,39 +235,6 @@
         .error.active {
             display: block;
         }
-
-        .customer-form {
-            background: #fdfdfd;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-
-        .customer-form h3 {
-            font-size: 16px;
-            margin-bottom: 12px;
-            color: #444;
-        }
-
-        .form-group {
-            margin-bottom: 10px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            margin-bottom: 5px;
-            color: #666;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
     </style>
 </head>
 
@@ -291,22 +258,6 @@
                     <div class="cart-total">
                         <span>الإجمالي:</span>
                         <span id="total">0 دينار</span>
-                    </div>
-
-                    <div class="customer-form">
-                        <h3>👤 معلومات المشتري</h3>
-                        <div class="form-group">
-                            <label>الاسم الكامل</label>
-                            <input type="text" id="cust-name" placeholder="أحمد محمد" value="أحمد محمد">
-                        </div>
-                        <div class="form-group">
-                            <label>البريد الإلكتروني</label>
-                            <input type="email" id="cust-email" placeholder="example@gmail.com" value="ahmad@example.com">
-                        </div>
-                        <div class="form-group">
-                            <label>رقم الهاتف</label>
-                            <input type="tel" id="cust-phone" placeholder="9627XXXXXXXX" value="962790123456">
-                        </div>
                     </div>
 
                     <button class="checkout-btn" id="checkout-btn" onclick="checkout()" disabled>
@@ -420,11 +371,6 @@
                 // حساب الإجمالي
                 const totalAmount = cart.reduce((sum, item) => sum + item.price, 0);
 
-                // قراءة بيانات العميل
-                const customerName = document.getElementById('cust-name').value;
-                const customerEmail = document.getElementById('cust-email').value;
-                const customerPhone = document.getElementById('cust-phone').value;
-
                 // إنشاء order ID فريد
                 const orderId = 'ZARA-' + Date.now();
 
@@ -438,9 +384,6 @@
                         store_id: 1, // تم تحديثه إلى 1 (Zara) بعد إعادة تهيئة قاعدة البيانات
                         store_order_id: orderId,
                         total_amount: totalAmount,
-                        customer_name: customerName,
-                        customer_email: customerEmail,
-                        customer_phone: customerPhone,
                         currency: 'JOD',
                         installments_count: 4,
                         items: cart.map(item => ({

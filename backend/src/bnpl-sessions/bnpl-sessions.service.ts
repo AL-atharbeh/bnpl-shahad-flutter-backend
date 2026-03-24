@@ -132,18 +132,20 @@ export class BnplSessionsService {
 
         // If session is PENDING, just set userId and keep it PENDING
         if (session.status === SessionStatus.PENDING) {
+            const user = await this.usersService.findById(userId);
+            
             session.userId = userId;
-            session.customerPhone = session.customerPhone || '+962000000000';
-            session.customerEmail = session.customerEmail || 'customer@example.com';
-            session.customerName = session.customerName || 'Customer';
+            session.customerPhone = user.phone;
+            session.customerEmail = user.email;
+            session.customerName = user.name;
             session.approvedAt = new Date();
 
             await this.sessionRepository.save(session);
-            console.log('✅ Session approved (PENDING → userId set):', sessionId);
+            console.log('✅ Session approved (PENDING → User data synced):', sessionId);
 
             return {
                 success: true,
-                message: 'تمت الموافقة على الطلب',
+                message: 'تمت الموافقة على الطلب ومزامنة بياناتك',
                 session_id: sessionId,
             };
         }
