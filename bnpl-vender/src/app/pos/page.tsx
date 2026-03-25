@@ -119,15 +119,15 @@ export default function POSPage() {
 
         try {
             const payload = {
-                store_id: user.storeId,
+                store_id: Number(user.storeId),
                 store_order_id: `POS_${Date.now()}`,
-                total_amount: totalAmount,
+                total_amount: Number(totalAmount),
                 customer_phone: customerPhone || undefined,
-                installments_count: installments,
+                installments_count: Number(installments),
                 items: cart.map(item => ({
                     name: language === "ar" ? item.name_ar : item.name,
-                    quantity: item.quantity,
-                    price: item.price
+                    quantity: Number(item.quantity),
+                    price: Number(item.price)
                 }))
             };
 
