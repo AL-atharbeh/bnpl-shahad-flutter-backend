@@ -18,7 +18,7 @@ import {
     ArrowRight,
     ArrowLeft
 } from "lucide-react";
-import { getVendorProducts, createBnplSession, getBnplSession } from "@/services/api";
+import { getVendorProducts, createBnplSession, getBnplSession, verifyBnplOtp } from "@/services/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -38,6 +38,9 @@ export default function POSPage() {
     const [creatingSession, setCreatingSession] = useState(false);
     const [activeSession, setActiveSession] = useState<any>(null);
     const [sessionStatus, setSessionStatus] = useState<string>("PENDING");
+    const [otpCode, setOtpCode] = useState("");
+    const [isOtpVerified, setIsOtpVerified] = useState(false);
+    const [verifyingOtp, setVerifyingOtp] = useState(false);
 
     const statusInterval = useRef<NodeJS.Timeout | null>(null);
 
@@ -114,6 +117,9 @@ export default function POSPage() {
         if (paymentMethod === "phone" && !customerPhone) return;
 
         setCreatingSession(true);
+        setIsOtpVerified(false);
+        setOtpCode("");
+        
         const userStr = localStorage.getItem("vendor_user");
         const user = JSON.parse(userStr!);
 
@@ -132,7 +138,7 @@ export default function POSPage() {
                 store_id: Number(user.storeId),
                 store_order_id: `POS_${Date.now()}`,
                 total_amount: Number(totalAmount.toFixed(2)),
-                customer_phone: formattedPhone || undefined,
+                customer_phone: paymentMethod === "phone" ? formattedPhone : undefined,
                 installments_count: Number(installments),
                 items: cart.map(item => ({
                     name: (language === "ar" ? item.name_ar : item.name) || item.name,
@@ -144,12 +150,34 @@ export default function POSPage() {
             const res = await createBnplSession(payload);
             setActiveSession(res.data);
             setSessionStatus("PENDING");
+            
+            // If QR, consider OTP verified (or not applicable)
+            if (paymentMethod === "qr") {
+                setIsOtpVerified(true);
+            }
         } catch (err: any) {
             console.error("Failed to create session", err);
             const errorMsg = err.response?.data?.message || err.message || "Unknown error";
             alert(`Failed to initiate payment: ${errorMsg}`);
         } finally {
             setCreatingSession(false);
+        }
+    };
+
+    const handleVerifyOtp = async () => {
+        if (!otpCode || otpCode.length !== 6 || !activeSession) return;
+        
+        setVerifyingOtp(true);
+        try {
+            const res = await verifyBnplOtp(activeSession.session_id, otpCode);
+            setIsOtpVerified(true);
+            alert(res.data.message);
+        } catch (err: any) {
+            console.error("OTP Verification failed", err);
+            const errorMsg = err.response?.data?.message || "Invalid code";
+            alert(errorMsg);
+        } finally {
+            setVerifyingOtp(false);
         }
     };
 
@@ -163,7 +191,45 @@ export default function POSPage() {
             <DashboardLayout>
                 <div className="max-w-2xl mx-auto py-12">
                     <div className="glass rounded-3xl p-12 border-emerald-900/20 text-center space-y-8 animate-in fade-in zoom-in duration-500">
-                        {sessionStatus === "PENDING" || sessionStatus === "PAYMENT_PENDING" ? (
+                        {!isOtpVerified ? (
+                            <>
+                                <div className="flex justify-center">
+                                    <div className="h-20 w-20 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                                        <Smartphone className="h-10 w-10 text-emerald-500" />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <h2 className="text-2xl font-black text-white">{language === "ar" ? "أدخل رمز التحقق" : "Enter Verification Code"}</h2>
+                                    <p className="text-slate-400">{language === "ar" ? `تم إرسال رمز إلى العميل على الرقم ${customerPhone}` : `A code has been sent to the customer at ${customerPhone}`}</p>
+                                </div>
+                                
+                                <div className="max-w-xs mx-auto">
+                                    <input
+                                        type="text"
+                                        maxLength={6}
+                                        value={otpCode}
+                                        onChange={(e) => setOtpCode(e.target.value)}
+                                        placeholder="------"
+                                        className="w-full bg-[#011f18] border-2 border-emerald-900/30 rounded-2xl py-4 text-center text-3xl font-black tracking-[1em] text-emerald-400 outline-none focus:border-emerald-500 shadow-inner"
+                                    />
+                                </div>
+
+                                <button
+                                    onClick={handleVerifyOtp}
+                                    disabled={verifyingOtp || otpCode.length !== 6}
+                                    className="btn-financial w-full py-4 rounded-2xl text-lg font-black disabled:opacity-30 flex items-center justify-center gap-2"
+                                >
+                                    {verifyingOtp ? <Loader2 className="h-6 w-6 animate-spin" /> : (language === "ar" ? "تحقق من الرمز" : "Verify Code")}
+                                </button>
+
+                                <button
+                                    onClick={() => setActiveSession(null)}
+                                    className="text-slate-500 hover:text-slate-300 transition-colors text-sm"
+                                >
+                                    {t("cancel")}
+                                </button>
+                            </>
+                        ) : sessionStatus === "PENDING" || sessionStatus === "PAYMENT_PENDING" ? (
                             <>
                                 <div className="flex justify-center">
                                     <div className="relative">

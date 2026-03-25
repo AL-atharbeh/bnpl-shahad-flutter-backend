@@ -35,6 +35,7 @@ export const getSalesDetailed = (storeId: number) => api.get(`/reports/sales-det
 
 export const createBnplSession = (data: any) => api.post('/sessions/create', data);
 export const getBnplSession = (sessionId: string) => api.get(`/sessions/${sessionId}`);
+export const verifyBnplOtp = (sessionId: string, otp: string) => api.post(`/sessions/${sessionId}/verify-otp`, { otp });
 
 export const getVendorProducts = (storeId: number, params?: any) => api.get(`/products/store/${storeId}`, { params });
 export const createProduct = (data: any) => api.post('/products', data);
