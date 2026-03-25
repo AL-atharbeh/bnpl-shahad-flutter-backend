@@ -20,7 +20,9 @@ export class RewardsService {
       .where('reward.userId = :userId', { userId })
       .getRawOne();
 
-    return parseInt(result?.total || '0');
+    console.log(`🔍 Points for user ${userId}:`, result);
+    const total = result?.total ? Number(result.total) : 0;
+    return total;
   }
 
   /**

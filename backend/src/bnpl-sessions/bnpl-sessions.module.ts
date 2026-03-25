@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BnplSessionsController } from './bnpl-sessions.controller';
 import { BnplSessionsService } from './bnpl-sessions.service';
@@ -12,7 +12,7 @@ import { RewardsModule } from '../rewards/rewards.module';
 @Module({
     imports: [
         TypeOrmModule.forFeature([BnplSession, BnplSessionItem, Store]),
-        PaymentsModule,
+        forwardRef(() => PaymentsModule),
         UsersModule,
         RewardsModule,
     ],
