@@ -1908,56 +1908,59 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     }
     
     return Container(
-      margin: const EdgeInsets.only(top: 32, left: 20, right: 20),
+      margin: const EdgeInsets.only(top: 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.topStores,
-                    style: AppTextStyles.changaH4,
-                  ),
-                  Text(
-                    l10n.totalStores(_topStores.length),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.topStores,
+                      style: AppTextStyles.changaH4,
+                    ),
+                    Text(
+                      l10n.totalStores(_topStores.length),
+                      style: GoogleFonts.mada(
+                        fontSize: 12,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+                TextButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(l10n.viewAllStores),
+                        duration: const Duration(seconds: 1),
+                        backgroundColor: AppColors.primary,
+                      ),
+                    );
+                  },
+                  child: Text(
+                    l10n.viewAllStores,
                     style: GoogleFonts.mada(
-                      fontSize: 12,
-                      color: const Color(0xFF64748B),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
                     ),
-                  ),
-                ],
-              ),
-              TextButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.viewAllStores),
-                      duration: const Duration(seconds: 1),
-                      backgroundColor: AppColors.primary,
-                    ),
-                  );
-                },
-                child: Text(
-                  l10n.viewAllStores,
-                  style: GoogleFonts.mada(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 20),
           SizedBox(
             height: 250,
             child: PageView.builder(
               controller: _storesPageController,
-              reverse: isRTL,
+              reverse: false,
               onPageChanged: (index) {
                 setState(() {
                   _currentStoresPage = index;
@@ -2199,12 +2202,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     }
     
     return Container(
-      margin: const EdgeInsets.only(top: 24, left: 20, right: 20),
+      margin: const EdgeInsets.only(top: 24),
       child: SizedBox(
         height: 160,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
-          reverse: isRTL,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          reverse: false,
           itemCount: categoriesToShow.length,
           itemBuilder: (context, index) {
             final category = categoriesToShow[index];
@@ -2234,7 +2238,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       child: Container(
         width: 120,
         height: 160,
-        margin: EdgeInsets.only(right: isRTL ? 12 : 0, left: isRTL ? 0 : 12),
+        margin: const EdgeInsetsDirectional.only(end: 12),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
           child: BackdropFilter(
@@ -2390,31 +2394,34 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     final isRTL = languageService.isArabic;
     
     return Container(
-      margin: const EdgeInsets.only(top: 32, left: 20, right: 20),
+      margin: const EdgeInsets.only(top: 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                l10n.bestOffers,
-                style: AppTextStyles.changaH4,
-              ),
-              TextButton(
-                onPressed: () {
-                  AppRouter.navigateToOffers(context);
-                },
-                child: Text(
-                  l10n.viewAllOffers,
-                  style: GoogleFonts.mada(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  l10n.bestOffers,
+                  style: AppTextStyles.changaH4,
+                ),
+                TextButton(
+                  onPressed: () {
+                    AppRouter.navigateToOffers(context);
+                  },
+                  child: Text(
+                    l10n.viewAllOffers,
+                    style: GoogleFonts.mada(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 16),
           (_isLoadingOffers && _bestOffers.isEmpty)
@@ -2436,7 +2443,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                       height: 300,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        reverse: isRTL,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        reverse: false,
                         itemCount: _bestOffers.length,
                         itemBuilder: (context, index) {
                           final offer = _bestOffers[index];
@@ -2491,7 +2499,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     return GestureDetector(
       onTap: _openStoreUrl,
       child: Container(
-        margin: EdgeInsets.only(right: isRTL ? 16 : 0, left: isRTL ? 0 : 16),
+        margin: const EdgeInsetsDirectional.only(end: 16),
         child: SizedBox(
           width: cardWidth,
           height: cardHeight,
