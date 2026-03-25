@@ -30,7 +30,15 @@ export class UsersService {
   }
 
   async findByPhone(phone: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { phone } });
+    const phoneWithPlus = phone.startsWith('+') ? phone : `+${phone}`;
+    const phoneWithoutPlus = phone.startsWith('+') ? phone.substring(1) : phone;
+
+    return this.userRepository.findOne({
+      where: [
+        { phone: phoneWithPlus },
+        { phone: phoneWithoutPlus }
+      ]
+    });
   }
 
   async updateProfile(userId: number, updateData: Partial<User>): Promise<User> {
