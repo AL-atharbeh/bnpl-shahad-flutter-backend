@@ -39,18 +39,31 @@ class _PaymentsHistoryPageState extends State<PaymentsHistoryPage> {
       final response = await _paymentService.getPaymentHistory(status: 'completed');
       
       if (response['success'] == true) {
-        final List<dynamic> data = response['data'] ?? [];
+        final backendData = response['data'];
+        List<dynamic> data = [];
         
+        if (backendData is Map && backendData['data'] is List) {
+          data = backendData['data'];
+        } else if (backendData is List) {
+          data = backendData;
+        }
+
         setState(() {
           _dbHistories = data.map((item) {
             // Safe parsing of date
-            DateTime date;
-            try {
-              date = item['paidAt'] != null 
-                  ? DateTime.parse(item['paidAt']) 
-                  : (item['createdAt'] != null ? DateTime.parse(item['createdAt']) : DateTime.now());
-            } catch (e) {
-              date = DateTime.now();
+            DateTime date = DateTime.now();
+            String? dateStr = item['paidAt'] ?? item['createdAt'];
+            
+            if (dateStr != null) {
+              try {
+                // Handle formats like "2026-03-24 15:15:15" by replacing space with T
+                String formattedDate = dateStr.contains(' ') && !dateStr.contains('T')
+                    ? dateStr.replaceFirst(' ', 'T')
+                    : dateStr;
+                date = DateTime.parse(formattedDate);
+              } catch (e) {
+                debugPrint('Failed to parse date: $dateStr');
+              }
             }
 
             return _Hist(
