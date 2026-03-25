@@ -288,7 +288,7 @@ class _AllStoresPageState extends State<AllStoresPage> {
               child: ListView.separated(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 scrollDirection: Axis.horizontal,
-                reverse: _isRTL,
+                reverse: false,
                 itemCount: filters.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 10),
                 itemBuilder: (_, i) {

@@ -305,7 +305,7 @@ class _OffersPageState extends State<OffersPage> {
               child: ListView.separated(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 scrollDirection: Axis.horizontal,
-                reverse: _isRTL,
+                reverse: false,
                 itemCount: filters.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 10),
                 itemBuilder: (_, i) {
@@ -556,7 +556,6 @@ class _LogoOfferTile extends StatelessWidget {
                       isArabic ? offer.storeNameAr : offer.storeName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      textAlign: isRTL ? TextAlign.right : TextAlign.left,
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 14,
@@ -589,7 +588,7 @@ class _LogoOfferTile extends StatelessWidget {
 
               // الخصم الكبير أسفل الكرت
               Align(
-                alignment: isRTL ? Alignment.centerRight : Alignment.centerLeft,
+                alignment: AlignmentDirectional.centerStart,
                 child: Text(
                   offer.discountText,
                   style: const TextStyle(
