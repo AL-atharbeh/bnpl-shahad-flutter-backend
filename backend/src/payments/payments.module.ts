@@ -9,6 +9,7 @@ import { Payment } from './entities/payment.entity';
 import { RewardsModule } from '../rewards/rewards.module';
 import { PostponementsModule } from '../postponements/postponements.module';
 import { UsersModule } from '../users/users.module';
+import { BnplSessionsModule } from '../bnpl-sessions/bnpl-sessions.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { UsersModule } from '../users/users.module';
     HttpModule,
     forwardRef(() => PostponementsModule), // Use forwardRef to avoid circular dependency
     UsersModule,
+    forwardRef(() => BnplSessionsModule),
   ],
   controllers: [PaymentsController],
   providers: [PaymentsService, MyFatoorahService, MockPaymentService],

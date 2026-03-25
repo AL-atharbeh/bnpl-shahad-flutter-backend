@@ -18,6 +18,7 @@ import { MyFatoorahService } from './myfatoorah.service';
 import { PostponementsService } from '../postponements/postponements.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UsersService } from '../users/users.service';
+import { BnplSessionsService } from '../bnpl-sessions/bnpl-sessions.service';
 
 @ApiTags('payments')
 @Controller('payments')
@@ -27,6 +28,7 @@ export class PaymentsController {
     private readonly myFatoorahService: MyFatoorahService,
     private readonly postponementsService: PostponementsService,
     private readonly usersService: UsersService,
+    private readonly bnplSessionsService: BnplSessionsService,
   ) { }
 
   @Get()
@@ -743,18 +745,28 @@ export class PaymentsController {
 
       if (isVerified) {
         // Get customer reference (session ID)
-        const customerRef = await this.myFatoorahService.getCustomerReference(actualPaymentId);
+        const sessionId = await this.myFatoorahService.getCustomerReference(actualPaymentId);
 
-        console.log(`✅ Payment verified for session: ${customerRef}`);
+        console.log(`✅ Payment verified for session: ${sessionId}`);
 
-        // TODO: Update first installment status to 'completed'
-        // This will be done in the next step
+        // Update session and mark first installment as completed
+        try {
+          const session = await this.bnplSessionsService.getSessionEntity(sessionId);
+          if (session && session.userId) {
+            await this.bnplSessionsService.approveSession(sessionId, session.userId);
+            console.log(`✅ Session ${sessionId} approved and first installment marked as completed`);
+          } else {
+            console.warn(`⚠️ Session ${sessionId} has no userId, cannot approve automatically`);
+          }
+        } catch (error) {
+          console.error(`❌ Failed to approve session ${sessionId} after payment:`, error.message);
+        }
 
         return {
           success: true,
-          message: 'Payment verified successfully',
+          message: 'Payment verified and status updated successfully',
           paymentId: actualPaymentId,
-          customerReference: customerRef,
+          customerReference: sessionId,
         };
       } else {
         console.warn(`⚠️ Payment verification failed: ${actualPaymentId}`);

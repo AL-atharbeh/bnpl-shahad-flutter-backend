@@ -85,14 +85,7 @@ export class BnplSessionsService {
     }
 
     async getSession(sessionId: string): Promise<SessionDetailsDto> {
-        const session = await this.sessionRepository.findOne({
-            where: { sessionId },
-            relations: ['store', 'sessionItems'],
-        });
-
-        if (!session) {
-            throw new NotFoundException('الجلسة غير موجودة');
-        }
+        const session = await this.getSessionEntity(sessionId);
 
         if (session.status === SessionStatus.PENDING && dayjs().isAfter(session.expiresAt)) {
             session.status = SessionStatus.EXPIRED;
@@ -116,6 +109,19 @@ export class BnplSessionsService {
             created_at: session.createdAt,
             expires_at: session.expiresAt,
         };
+    }
+
+    async getSessionEntity(sessionId: string): Promise<BnplSession> {
+        const session = await this.sessionRepository.findOne({
+            where: { sessionId },
+            relations: ['store', 'sessionItems'],
+        });
+
+        if (!session) {
+            throw new NotFoundException('الجلسة غير موجودة');
+        }
+
+        return session;
     }
 
     async approveSession(sessionId: string, userId: number): Promise<any> {
