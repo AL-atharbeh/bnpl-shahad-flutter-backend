@@ -105,14 +105,22 @@ class PointsService extends ChangeNotifier {
       // 1. تحميل رصيد النقاط الحالي
       final pointsResponse = await _apiService.get('/rewards/points');
       if (pointsResponse['success'] == true) {
-        final data = pointsResponse['data'];
+        // Backend returns: { success: true, data: { currentPoints: N } }
+        // ApiService puts it in: pointsResponse['data']
+        final backendData = pointsResponse['data'];
+        final data = backendData['data'] ?? backendData;
         _currentPoints = (data['currentPoints'] as num?)?.toInt() ?? 0;
       }
       
       // 2. تحميل تاريخ العمليات
       final historyResponse = await _apiService.get('/rewards/history');
       if (historyResponse['success'] == true) {
-        final List<dynamic> historyData = historyResponse['data'] ?? [];
+        // Backend returns: { success: true, data: [...] }
+        final backendData = historyResponse['data'];
+        final List<dynamic> historyData = backendData['data'] is List 
+            ? backendData['data'] 
+            : (backendData is List ? backendData : []);
+            
         _transactions = historyData
             .map((json) => PointsTransaction.fromJson(json as Map<String, dynamic>))
             .toList();
