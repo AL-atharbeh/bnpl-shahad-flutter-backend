@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../services/language_service.dart';
+import '../../../../services/payment_service.dart';
 
 class PaymentsHistoryPage extends StatefulWidget {
   const PaymentsHistoryPage({super.key});
@@ -20,61 +21,58 @@ class PaymentsHistoryPage extends StatefulWidget {
 }
 
 class _PaymentsHistoryPageState extends State<PaymentsHistoryPage> {
+  final _paymentService = PaymentService();
   DateTimeRange? _selectedDateRange;
+  bool _isLoading = true;
+  List<_Hist> _dbHistories = [];
 
-  final _histories = <_Hist>[
-    _Hist(
-      merchant: 'Boutiqaat',
-      amount: 4.060,
-      statusKey: 'paid',
-      date: DateTime.now().subtract(const Duration(days: 2)),
-      icon: Icons.store_mall_directory_rounded,
-      color: Colors.green,
-    ),
-    _Hist(
-      merchant: 'Bloomingdale\'s',
-      amount: 7.750,
-      statusKey: 'paid',
-      date: DateTime.now().subtract(const Duration(days: 8)),
-      icon: Icons.shopping_bag_rounded,
-      color: Colors.green,
-    ),
-    _Hist(
-      merchant: 'H&M',
-      amount: 8.900,
-      statusKey: 'paid',
-      date: DateTime.now().subtract(const Duration(days: 15)),
-      icon: Icons.shopping_cart_rounded,
-      color: Colors.green,
-    ),
-    _Hist(
-      merchant: 'Nike Store',
-      amount: 12.500,
-      statusKey: 'paid',
-      date: DateTime.now().subtract(const Duration(days: 20)),
-      icon: Icons.sports_basketball_rounded,
-      color: Colors.green,
-    ),
-    _Hist(
-      merchant: 'Apple Store',
-      amount: 25.000,
-      statusKey: 'paid',
-      date: DateTime.now().subtract(const Duration(days: 35)),
-      icon: Icons.phone_iphone_rounded,
-      color: Colors.green,
-    ),
-    _Hist(
-      merchant: 'Adidas',
-      amount: 18.750,
-      statusKey: 'paid',
-      date: DateTime.now().subtract(const Duration(days: 45)),
-      icon: Icons.sports_soccer_rounded,
-      color: Colors.green,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final response = await _paymentService.getPaymentHistory(status: 'completed');
+      
+      if (response['success'] == true) {
+        final List<dynamic> data = response['data'] ?? [];
+        
+        setState(() {
+          _dbHistories = data.map((item) {
+            // Safe parsing of date
+            DateTime date;
+            try {
+              date = item['paidAt'] != null 
+                  ? DateTime.parse(item['paidAt']) 
+                  : (item['createdAt'] != null ? DateTime.parse(item['createdAt']) : DateTime.now());
+            } catch (e) {
+              date = DateTime.now();
+            }
+
+            return _Hist(
+              merchant: item['merchantName'] ?? item['storeName'] ?? 'متجر',
+              amount: (item['amount'] as num?)?.toDouble() ?? 0.0,
+              statusKey: 'paid',
+              date: date,
+              icon: Icons.store_mall_directory_rounded,
+              color: Colors.green,
+            );
+          }).toList();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading payment history: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   List<_Hist> get _filteredHistories {
-    return _histories.where((hist) {
+    return _dbHistories.where((hist) {
       // فلترة حسب التاريخ فقط
       if (_selectedDateRange != null) {
         return hist.date.isAfter(_selectedDateRange!.start.subtract(const Duration(days: 1))) &&
@@ -232,7 +230,9 @@ class _PaymentsHistoryPageState extends State<PaymentsHistoryPage> {
 
           // قائمة السجل مجمعة حسب التاريخ
           Expanded(
-            child: _filteredHistories.isEmpty
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFF00A66A)))
+                : _filteredHistories.isEmpty
                                  ? Center(
                      child: Column(
                        mainAxisAlignment: MainAxisAlignment.center,
