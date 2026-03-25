@@ -123,11 +123,16 @@ export default function POSPage() {
                 return;
             }
 
+            let formattedPhone = customerPhone?.trim();
+            if (formattedPhone?.startsWith("07")) {
+                formattedPhone = "962" + formattedPhone.substring(1);
+            }
+
             const payload = {
                 store_id: Number(user.storeId),
                 store_order_id: `POS_${Date.now()}`,
                 total_amount: Number(totalAmount.toFixed(2)),
-                customer_phone: customerPhone?.trim() || undefined,
+                customer_phone: formattedPhone || undefined,
                 installments_count: Number(installments),
                 items: cart.map(item => ({
                     name: (language === "ar" ? item.name_ar : item.name) || item.name,
