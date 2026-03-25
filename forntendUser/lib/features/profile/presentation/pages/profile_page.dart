@@ -1186,12 +1186,6 @@ class _PointsIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pointsService = Provider.of<PointsService>(context);
-    
-    // تهيئة الخدمة إذا لم تكن مهيئة
-    if (!pointsService.isInitialized) {
-      pointsService.initialize();
-    }
-
     final currentPoints = pointsService.currentPoints;
 
     return GestureDetector(
@@ -1717,12 +1711,6 @@ class RewardsPointsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final pointsService = Provider.of<PointsService>(context);
-    
-    // تهيئة الخدمة إذا لم تكن مهيئة
-    if (!pointsService.isInitialized) {
-      pointsService.initialize();
-    }
-
     final currentPoints = pointsService.currentPoints;
 
     return Container(
