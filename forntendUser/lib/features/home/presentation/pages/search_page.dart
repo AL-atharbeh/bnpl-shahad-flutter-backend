@@ -72,6 +72,13 @@ class _SearchPageState extends State<SearchPage> {
       final storesResult = results[0];
       final productsResult = results[1];
 
+      if (EnvDev.enableLogging) {
+        print('🔍 Store Search Success: ${storesResult['success']}');
+        if (!storesResult['success']) print('❌ Store Search Error: ${storesResult['error']}');
+        print('🔍 Product Search Success: ${productsResult['success']}');
+        if (!productsResult['success']) print('❌ Product Search Error: ${productsResult['error']}');
+      }
+
       setState(() {
         if (storesResult['success']) {
           final data = storesResult['data'];
@@ -85,7 +92,7 @@ class _SearchPageState extends State<SearchPage> {
       });
     } catch (e) {
       if (EnvDev.enableLogging) {
-        print('❌ Search error: $e');
+        print('❌ Search error (catch): $e');
       }
     } finally {
       setState(() => _isLoading = false);
