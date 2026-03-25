@@ -73,13 +73,15 @@ export class NotificationsService {
     // Send via Firebase if user has FCM token
     if (user.fcmToken) {
       try {
-        await this.firebaseService.sendToDevice(user.fcmToken, { title, body }, data);
-        this.logger.log(`Notification sent to user ${userId} via FCM`);
+        this.logger.log(`📱 Attempting to send FCM to user ${userId}. Token: ${user.fcmToken.substring(0, 10)}...`);
+        this.logger.log(`📊 FCM Data: ${JSON.stringify(data)}`);
+        const response = await this.firebaseService.sendToDevice(user.fcmToken, { title, body }, data);
+        this.logger.log(`✅ FCM Notification response: ${JSON.stringify(response)}`);
       } catch (error) {
-        this.logger.error(`Failed to send FCM notification to user ${userId}:`, error);
+        this.logger.error(`❌ Failed to send FCM notification to user ${userId}:`, error.stack);
       }
     } else {
-      this.logger.warn(`User ${userId} does not have FCM token. Notification saved to database but not sent to device. User needs to open the app and login.`);
+      this.logger.warn(`⚠️ User ${userId} does not have FCM token. Notification saved to database but not sent to device.`);
     }
 
     // Create in-app notification automatically
