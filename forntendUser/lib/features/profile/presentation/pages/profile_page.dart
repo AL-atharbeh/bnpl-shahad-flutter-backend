@@ -26,6 +26,10 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _loadUserProfile();
+    // تهيئة خدمة النقاط من السيرفر
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<PointsService>(context, listen: false).initialize();
+    });
   }
 
   Future<void> _loadUserProfile() async {

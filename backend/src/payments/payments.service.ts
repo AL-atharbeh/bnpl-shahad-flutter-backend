@@ -268,12 +268,14 @@ export class PaymentsService {
 
     const updatedPayment = await this.paymentRepository.save(payment);
 
-    // Award points for successful payment
+    // Award points for successful payment (Commented out to follow the "1 point per session" rule)
+    /*
     await this.rewardsService.awardPointsForPayment(
       payment.userId,
       payment.id,
       payment.amount,
     );
+    */
 
     return updatedPayment;
   }

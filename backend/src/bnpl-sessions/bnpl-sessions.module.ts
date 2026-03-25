@@ -7,12 +7,14 @@ import { BnplSessionItem } from './entities/bnpl-session-item.entity';
 import { Store } from '../stores/entities/store.entity';
 import { PaymentsModule } from '../payments/payments.module';
 import { UsersModule } from '../users/users.module';
+import { RewardsModule } from '../rewards/rewards.module';
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([BnplSession, BnplSessionItem, Store]),
         PaymentsModule,
         UsersModule,
+        RewardsModule,
     ],
     controllers: [BnplSessionsController],
     providers: [BnplSessionsService],

@@ -33,9 +33,6 @@ export class RewardsService {
     });
   }
 
-  /**
-   * Award points for successful payment (1 JOD = 1 point)
-   */
   async awardPointsForPayment(
     userId: number,
     paymentId: number,
@@ -50,6 +47,25 @@ export class RewardsService {
       transactionType: 'earned',
       amount,
       description: `نقاط من عملية دفع بمبلغ ${amount} دينار`,
+    });
+
+    return this.rewardPointRepository.save(rewardPoint);
+  }
+
+  /**
+   * Award points for successful purchase session (1 point per session)
+   */
+  async awardPointsForSession(
+    userId: number,
+    sessionId: string,
+    amount: number,
+  ): Promise<RewardPoint> {
+    const rewardPoint = this.rewardPointRepository.create({
+      userId,
+      points: 1, // 1 point per purchase session as requested
+      transactionType: 'earned',
+      amount,
+      description: `نقطة مكتسبة من عملية شراء - جلسة رقم ${sessionId}`,
     });
 
     return this.rewardPointRepository.save(rewardPoint);

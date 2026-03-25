@@ -7,6 +7,7 @@ import { CreateSessionDto } from './dto/create-session.dto';
 import { SessionResponseDto, SessionDetailsDto } from './dto/session-response.dto';
 import { Store } from '../stores/entities/store.entity';
 import { PaymentsService } from '../payments/payments.service';
+import { RewardsService } from '../rewards/rewards.service';
 import { MockPaymentService } from '../payments/mock-payment.service';
 import { UsersService } from '../users/users.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -26,6 +27,7 @@ export class BnplSessionsService {
         private usersService: UsersService,
         private mockPaymentService: MockPaymentService,
         private configService: ConfigService,
+        private rewardsService: RewardsService,
     ) { }
 
     async createSession(
