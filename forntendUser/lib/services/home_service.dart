@@ -36,11 +36,13 @@ class HomeService {
 
   // Search stores
   Future<Map<String, dynamic>> searchStores(String query) async {
-    return await _apiService.get('${ApiEndpoints.storesSearch}?q=$query');
+    final encodedQuery = Uri.encodeComponent(query);
+    return await _apiService.get('${ApiEndpoints.storesSearch}?q=$encodedQuery');
   }
 
   // Search products
   Future<Map<String, dynamic>> searchProducts(String query) async {
-    return await _apiService.get('${ApiEndpoints.productsSearch}?q=$query');
+    final encodedQuery = Uri.encodeComponent(query);
+    return await _apiService.get('${ApiEndpoints.productsSearch}?q=$encodedQuery');
   }
 }
