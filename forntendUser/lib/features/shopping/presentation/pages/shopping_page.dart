@@ -262,7 +262,7 @@ class _ShoppingPageState extends State<ShoppingPage> {
               child: ListView.separated(
                 padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
                 scrollDirection: Axis.horizontal,
-                reverse: isRTL,
+                reverse: false,
                 itemCount: _mainCategories.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 10),
                 itemBuilder: (_, i) {
@@ -422,7 +422,7 @@ class _ShoppingPageState extends State<ShoppingPage> {
                         child: ListView.separated(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           scrollDirection: Axis.horizontal,
-                          reverse: isRTL,
+                          reverse: false,
                           itemCount: _featuredDeals.length,
                           separatorBuilder: (_, __) => const SizedBox(width: 12),
                           itemBuilder: (_, i) {
@@ -605,12 +605,11 @@ class _ImageCategoryTile extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(
-                left: isRTL ? null : 10,
-                right: isRTL ? 10 : null,
+              PositionedDirectional(
+                start: 10,
                 bottom: 10,
                 child: Column(
-                  crossAxisAlignment: isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title,
                         maxLines: 1,
