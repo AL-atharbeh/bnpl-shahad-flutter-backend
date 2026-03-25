@@ -118,25 +118,31 @@ export default function POSPage() {
         const user = JSON.parse(userStr!);
 
         try {
+            if (!user.storeId) {
+                alert("Store ID is missing from your account. Please log in again.");
+                return;
+            }
+
             const payload = {
                 store_id: Number(user.storeId),
                 store_order_id: `POS_${Date.now()}`,
-                total_amount: Number(totalAmount),
-                customer_phone: customerPhone || undefined,
+                total_amount: Number(totalAmount.toFixed(2)),
+                customer_phone: customerPhone?.trim() || undefined,
                 installments_count: Number(installments),
                 items: cart.map(item => ({
-                    name: language === "ar" ? item.name_ar : item.name,
+                    name: (language === "ar" ? item.name_ar : item.name) || item.name,
                     quantity: Number(item.quantity),
-                    price: Number(item.price)
+                    price: Number(Number(item.price).toFixed(2))
                 }))
             };
 
             const res = await createBnplSession(payload);
             setActiveSession(res.data);
             setSessionStatus("PENDING");
-        } catch (err) {
+        } catch (err: any) {
             console.error("Failed to create session", err);
-            alert("Failed to initiate payment. Please try again.");
+            const errorMsg = err.response?.data?.message || err.message || "Unknown error";
+            alert(`Failed to initiate payment: ${errorMsg}`);
         } finally {
             setCreatingSession(false);
         }
