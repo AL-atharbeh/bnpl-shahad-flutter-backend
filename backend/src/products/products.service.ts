@@ -148,7 +148,9 @@ export class ProductsService {
   async searchProducts(query: string, categoryId?: number): Promise<Product[]> {
     const whereConditions: any[] = [
       { name: Like(`%${query}%`), isActive: true },
+      { nameAr: Like(`%${query}%`), isActive: true },
       { description: Like(`%${query}%`), isActive: true },
+      { descriptionAr: Like(`%${query}%`), isActive: true },
     ];
 
     if (categoryId) {

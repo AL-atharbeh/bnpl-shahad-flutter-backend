@@ -11,6 +11,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../services/category_service.dart';
 import '../../../../services/deal_service.dart';
 import '../../../../config/env/env_dev.dart';
+import '../../../../utils/image_helper.dart';
 
 /// ألوان وهوية بسيطة
 class ShopColors {
@@ -351,9 +352,7 @@ class _ShoppingPageState extends State<ShoppingPage> {
                           final storesCount = category['storesCount'] as int? ?? 0;
                           
                           return _ImageCategoryTile(
-                            imagePath: imageUrl.isNotEmpty && imageUrl.startsWith('http')
-                                ? imageUrl
-                                : 'assets/images/zara.jpg', // Fallback
+                            imagePath: imageUrl,
                             title: categoryName,
                             count: storesCount,
                             isRTL: isRTL,
@@ -516,35 +515,35 @@ class _SmartSearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(22),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Container(
-          height: 56,
-          decoration: BoxDecoration(
-                         color: Colors.white.withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: ShopColors.stroke),
-            boxShadow: const [
-              BoxShadow(color: Color(0x14000000), blurRadius: 14, offset: Offset(0, 6)),
-            ],
-          ),
-          child: Row(
-            children: [
-              const SizedBox(width: 12),
-              const Icon(Icons.search_rounded, color: ShopColors.subtext),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: l10n.searchProductOrBrand,
-                    hintStyle: const TextStyle(color: ShopColors.subtext),
-                    border: InputBorder.none,
+    return GestureDetector(
+      onTap: () => AppRouter.navigateToSearch(context),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            height: 56,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: ShopColors.stroke),
+              boxShadow: const [
+                BoxShadow(color: Color(0x14000000), blurRadius: 14, offset: Offset(0, 6)),
+              ],
+            ),
+            child: Row(
+              children: [
+                const SizedBox(width: 12),
+                const Icon(Icons.search_rounded, color: ShopColors.subtext),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.searchProductOrBrand,
+                    style: const TextStyle(color: ShopColors.subtext, fontSize: 16),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -572,67 +571,67 @@ class _ImageCategoryTile extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: imagePath.startsWith('http')
-                  ? Image.network(
-                      imagePath,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        color: const Color(0xFFEDEFF3),
-                        child: const Icon(Icons.category, size: 40, color: Color(0xFF94A3B8)),
-                      ),
-                    )
-                  : Image.asset(
-                      imagePath,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        color: const Color(0xFFEDEFF3),
-                        child: const Icon(Icons.category, size: 40, color: Color(0xFF94A3B8)),
-                      ),
-                    ),
-            ),
-            // تدرّج سفلي لقراءة النص
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: [Colors.black.withValues(alpha: 0.45), Colors.transparent],
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: ShopColors.stroke,
+            width: 1,
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15), // Slightly smaller to fit inside border
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: ImageHelper.buildImage(
+                  imageUrl: imagePath,
+                  fit: BoxFit.cover,
+                  errorWidget: Container(
+                    color: const Color(0xFFEDEFF3),
+                    child: const Icon(Icons.category, size: 40, color: Color(0xFF94A3B8)),
                   ),
                 ),
               ),
-            ),
-            Positioned(
-              left: isRTL ? null : 10,
-              right: isRTL ? 10 : null,
-              bottom: 10,
-              child: Column(
-                crossAxisAlignment: isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.changa(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14,
-                      )),
-                  const SizedBox(height: 2),
-                  Text('$count ${l10n.product}',
-                      style: GoogleFonts.mada(
-                        color: Colors.white70,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      )),
-                ],
+              // Gradient for readability
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [Colors.black.withValues(alpha: 0.45), Colors.transparent],
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ],
+              Positioned(
+                left: isRTL ? null : 10,
+                right: isRTL ? 10 : null,
+                bottom: 10,
+                child: Column(
+                  crossAxisAlignment: isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.changa(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                        )),
+                    const SizedBox(height: 2),
+                    Text('$count ${l10n.product}',
+                        style: GoogleFonts.mada(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        )),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -687,51 +686,30 @@ class _DealCard extends StatelessWidget {
           children: [
             // Background Image with Parallax Effect
             Positioned.fill(
-              child: imageUrl.isNotEmpty && imageUrl.startsWith('http')
-                  ? Image.network(
-                      imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              ShopColors.primary.withValues(alpha: 0.15),
-                              ShopColors.primary.withValues(alpha: 0.05),
-                              Colors.purple.withValues(alpha: 0.1),
-                            ],
-                          ),
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.local_offer_outlined,
-                            size: 80,
-                            color: ShopColors.primary.withValues(alpha: 0.3),
-                          ),
-                        ),
-                      ),
-                    )
-                  : Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            ShopColors.primary.withValues(alpha: 0.15),
-                            ShopColors.primary.withValues(alpha: 0.05),
-                            Colors.purple.withValues(alpha: 0.1),
-                          ],
-                        ),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.local_offer_outlined,
-                          size: 80,
-                          color: ShopColors.primary.withValues(alpha: 0.3),
-                        ),
-                      ),
+              child: ImageHelper.buildImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.cover,
+                errorWidget: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        ShopColors.primary.withValues(alpha: 0.15),
+                        ShopColors.primary.withValues(alpha: 0.05),
+                        Colors.purple.withValues(alpha: 0.1),
+                      ],
                     ),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.local_offer_outlined,
+                      size: 80,
+                      color: ShopColors.primary.withValues(alpha: 0.3),
+                    ),
+                  ),
+                ),
+              ),
             ),
             
             // Sophisticated Gradient Overlay

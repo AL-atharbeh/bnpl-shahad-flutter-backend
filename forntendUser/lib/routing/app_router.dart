@@ -20,6 +20,7 @@ import '../../features/shop/presentation/pages/product_details_page.dart';
 import '../../features/offers/presentation/pages/offers_page.dart';
 import '../../features/stores/presentation/pages/all_stores_page.dart';
 import '../../features/bnpl_sessions/presentation/pages/session_confirmation_page.dart';
+import '../../features/home/presentation/pages/search_page.dart';
 
 class AppRouter {
   static const String splash = '/';
@@ -43,6 +44,7 @@ class AppRouter {
   static const String offers = '/offers';
   static const String allStores = '/all-stores';
   static const String sessionConfirmation = '/session-confirmation';
+  static const String search = '/search';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     print('🛣️ Generating route: ${settings.name}');
@@ -261,6 +263,12 @@ class AppRouter {
           );
         }
         
+        case search:
+          return MaterialPageRoute(
+            builder: (_) => const SearchPage(),
+            settings: settings,
+          );
+        
        default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
@@ -418,6 +426,10 @@ class AppRouter {
 
   static void navigateToAllStores(BuildContext context) {
     Navigator.pushNamed(context, allStores);
+  }
+
+  static void navigateToSearch(BuildContext context) {
+    Navigator.pushNamed(context, search);
   }
 
   static void goBack(BuildContext context) {

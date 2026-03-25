@@ -119,7 +119,9 @@ export class StoresService {
   async searchStores(query: string, categoryId?: number): Promise<Store[]> {
     const whereConditions: any[] = [
       { name: Like(`%${query}%`), isActive: true },
+      { nameAr: Like(`%${query}%`), isActive: true },
       { description: Like(`%${query}%`), isActive: true },
+      { descriptionAr: Like(`%${query}%`), isActive: true },
     ];
 
     if (categoryId) {

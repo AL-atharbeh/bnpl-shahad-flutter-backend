@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import '../config/env/env_dev.dart';
 
 /// Helper class to handle different image URL formats including base64 data URLs
 class ImageHelper {
@@ -28,7 +29,16 @@ class ImageHelper {
     }
   }
 
-  /// Build an image widget that supports network URLs, base64 data URLs, and asset paths
+  /// Get the base server URL (strips /api/v1 from the baseUrl)
+  static String get _serverUrl {
+    final baseUrl = EnvDev.baseUrl;
+    if (baseUrl.contains('/api/v1')) {
+      return baseUrl.split('/api/v1')[0];
+    }
+    return baseUrl;
+  }
+
+  /// Build an image widget that supports network URLs, base64 data URLs, relative server paths, and asset paths
   static Widget buildImage({
     required String imageUrl,
     BoxFit fit = BoxFit.cover,
@@ -48,9 +58,23 @@ class ImageHelper {
       return defaultError;
     }
 
+    // Process the URL: if it's a relative path from the server, prepend the server URL
+    String processedUrl = imageUrl;
+    if (!isNetworkUrl(imageUrl) && 
+        !isBase64DataUrl(imageUrl) && 
+        !imageUrl.startsWith('assets/')) {
+      
+      final server = _serverUrl;
+      // Ensure there's a single slash between server and relative path
+      final path = imageUrl.startsWith('/') ? imageUrl : '/$imageUrl';
+      processedUrl = '$server$path';
+      
+      debugPrint('🖼️ Prepending server URL to relative path: $processedUrl');
+    }
+
     // Handle base64 data URLs
-    if (isBase64DataUrl(imageUrl)) {
-      final bytes = decodeBase64DataUrl(imageUrl);
+    if (isBase64DataUrl(processedUrl)) {
+      final bytes = decodeBase64DataUrl(processedUrl);
       if (bytes != null) {
         return Image.memory(
           bytes,
@@ -63,10 +87,10 @@ class ImageHelper {
       return defaultError;
     }
 
-    // Handle network URLs
-    if (isNetworkUrl(imageUrl)) {
+    // Handle network URLs (including both full URLs and newly constructed server URLs)
+    if (isNetworkUrl(processedUrl)) {
       return Image.network(
-        imageUrl,
+        processedUrl,
         fit: fit,
         width: width,
         height: height,
@@ -81,11 +105,24 @@ class ImageHelper {
             ),
           );
         },
-        errorBuilder: (_, __, ___) => defaultError,
+        errorBuilder: (_, __, ___) {
+          // If the server-prepended URL fails, it might actually be an asset path that was misidentified
+          // Try loading it as an asset as a last resort if it doesn't start with http
+          if (!imageUrl.startsWith('http')) {
+             return Image.asset(
+              imageUrl,
+              fit: fit,
+              width: width,
+              height: height,
+              errorBuilder: (_, __, ___) => defaultError,
+            );
+          }
+          return defaultError;
+        },
       );
     }
 
-    // Handle asset images
+    // Handle asset images correctly
     return Image.asset(
       imageUrl,
       fit: fit,

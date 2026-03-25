@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import '../../../../utils/image_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -1202,13 +1203,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     
     return GestureDetector(
       onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.searchProducts),
-            duration: const Duration(seconds: 2),
-            backgroundColor: AppColors.primary,
-          ),
-        );
+        if (kDebugMode) print('🔍 Home Search Bar Tapped');
+        AppRouter.navigateToSearch(context);
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -1883,7 +1879,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     final isRTL = languageService.isArabic;
     
     // Show only database stores - no fallback
-    if (_isLoadingStores) {
+    if (_isLoadingStores && _topStores.isEmpty) {
       // Show loading placeholder
       return Container(
         margin: const EdgeInsets.only(top: 32, left: 20, right: 20),
@@ -1895,16 +1891,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     }
     
     // Only show stores from database - if empty, hide the section
-    // if (_topStores.isEmpty) {
-    //   if (EnvDev.enableLogging) {
-    //     print('⚠️ No stores to display. _topStores is empty.');
-    //   }
-    //   return const SizedBox.shrink();
-    // }
+    if (_topStores.isEmpty) {
+      if (EnvDev.enableLogging) {
+        // print('⚠️ No stores to display. _topStores is empty.');
+      }
+      return const SizedBox.shrink();
+    }
     
-    // if (EnvDev.enableLogging) {
-    // //  print('✅ Displaying ${_topStores.length} stores in Top Stores section');
-    // }
+    if (EnvDev.enableLogging) {
+    //  print('✅ Displaying ${_topStores.length} stores in Top Stores section');
+    }
     
     return Container(
       margin: const EdgeInsets.only(top: 32, left: 20, right: 20),
@@ -2416,7 +2412,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
             ],
           ),
           const SizedBox(height: 16),
-          _isLoadingOffers
+          (_isLoadingOffers && _bestOffers.isEmpty)
               ? const SizedBox(
                   height: 300,
                   child: Center(child: CircularProgressIndicator()),

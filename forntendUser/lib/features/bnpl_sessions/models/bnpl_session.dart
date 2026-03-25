@@ -25,7 +25,7 @@ class BnplSession {
     return BnplSession(
       sessionId: json['session_id'] ?? '',
       store: Store.fromJson(json['store'] ?? {}),
-      totalAmount: (json['total_amount'] ?? 0).toDouble(),
+      totalAmount: double.tryParse(json['total_amount']?.toString() ?? '0') ?? 0.0,
       currency: json['currency'] ?? 'JOD',
       installmentsCount: json['installments_count'] ?? 4,
       items: (json['items'] as List?)
@@ -84,7 +84,7 @@ class SessionItem {
     return SessionItem(
       name: json['name'] ?? '',
       quantity: json['quantity'] ?? 1,
-      price: (json['price'] ?? 0).toDouble(),
+      price: double.tryParse(json['price']?.toString() ?? '0') ?? 0.0,
       description: json['description'],
       image: json['image'],
     );

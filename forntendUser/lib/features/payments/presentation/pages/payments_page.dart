@@ -229,18 +229,28 @@ class _PaymentsPageState extends State<PaymentsPage> {
             print('   ✅ Filtered to ${paymentsList.length} pending installments out of ${allPaymentsList.length} total');
           }
           
-          // Sort payments by order_id (to group installments together) and then by installment_number
+          // Sort payments by effective due date (nearest first)
           paymentsList.sort((a, b) {
-            final orderIdA = a['orderId']?.toString() ?? '';
-            final orderIdB = b['orderId']?.toString() ?? '';
-            final orderIdCompare = orderIdA.compareTo(orderIdB);
-            if (orderIdCompare != 0) {
-              return orderIdCompare;
+            final isPostponedA = a['isPostponed'] == true;
+            final dateAStr = isPostponedA && a['postponedDueDate'] != null
+                ? a['postponedDueDate'].toString()
+                : a['dueDate']?.toString();
+            
+            final isPostponedB = b['isPostponed'] == true;
+            final dateBStr = isPostponedB && b['postponedDueDate'] != null
+                ? b['postponedDueDate'].toString()
+                : b['dueDate']?.toString();
+            
+            if (dateAStr == null) return 1;
+            if (dateBStr == null) return -1;
+            
+            try {
+              final dateA = DateTime.parse(dateAStr);
+              final dateB = DateTime.parse(dateBStr);
+              return dateA.compareTo(dateB);
+            } catch (e) {
+              return 0;
             }
-            // If same order_id, sort by installment_number
-            final installmentA = a['installmentNumber'] as int? ?? 0;
-            final installmentB = b['installmentNumber'] as int? ?? 0;
-            return installmentA.compareTo(installmentB);
           });
           
           // Extract user.freePostponeUsed from response
@@ -558,7 +568,7 @@ class _Content extends StatelessWidget {
                  ),
                )
              : SliverList.builder(
-                 itemCount: payments.length,
+                 itemCount: payments.isNotEmpty ? 1 : 0,
                  itemBuilder: (context, i) {
                    final payment = payments[i];
                    return Consumer<PostponeService>(
