@@ -82,6 +82,12 @@ export class BnplSession {
     @Column({ name: 'expires_at', type: 'timestamp', nullable: true })
     expiresAt: Date;
 
+    @Column({ name: 'otp', length: 6, nullable: true })
+    otp: string;
+
+    @Column({ name: 'otp_expires_at', type: 'timestamp', nullable: true })
+    otpExpiresAt: Date;
+
     @Column({ name: 'approved_at', type: 'timestamp', nullable: true })
     approvedAt: Date;
 

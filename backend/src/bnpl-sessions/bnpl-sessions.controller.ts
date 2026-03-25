@@ -30,6 +30,15 @@ export class BnplSessionsController {
         return this.sessionsService.getSession(sessionId);
     }
 
+    @Post(':sessionId/verify-otp')
+    @HttpCode(HttpStatus.OK)
+    async verifyOtp(
+        @Param('sessionId') sessionId: string,
+        @Body('otp') otp: string,
+    ) {
+        return this.sessionsService.verifyOtp(sessionId, otp);
+    }
+
     @Post(':sessionId/approve')
     @UseGuards(JwtAuthGuard)
     async approveSession(

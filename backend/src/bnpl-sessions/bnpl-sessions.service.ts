@@ -46,6 +46,14 @@ export class BnplSessionsService {
         const expiresAt = new Date();
         expiresAt.setMinutes(expiresAt.getMinutes() + 30); // 30 minutes expiry
 
+        // Generate OTP for POS sessions
+        let otp = null;
+        let otpExpiresAt = null;
+        if (createSessionDto.customer_phone) {
+            otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+            otpExpiresAt = dayjs().add(5, 'minutes').toDate();
+        }
+
         const session = this.sessionRepository.create({
             sessionId,
             storeId: createSessionDto.store_id,
@@ -62,30 +70,33 @@ export class BnplSessionsService {
             metadata: createSessionDto.metadata,
             status: SessionStatus.PENDING,
             expiresAt,
+            otp,
+            otpExpiresAt,
         });
 
         const savedSession = await this.sessionRepository.save(session);
 
-        // Notify user if phone number is provided
-        if (createSessionDto.customer_phone) {
+        // Notify user with OTP if phone number is provided
+        if (createSessionDto.customer_phone && otp) {
             try {
                 const user = await this.usersService.findByPhone(createSessionDto.customer_phone);
                 if (user) {
                     const storeName = store.nameAr || store.name;
                     await this.notificationsService.sendToUser(
                         user.id,
-                        'طلب دفع جديد - New Payment Request',
-                        `لديك طلب دفع جديد من ${storeName} - You have a new payment request from ${storeName}`,
+                        'رمز التحقق - Verification Code',
+                        `رمز التحقق الخاص بك لعملية الشراء من ${storeName} هو: ${otp}. قم بإعطاء هذا الرمز للتاجر لإتمام العملية.`,
                         {
-                            type: 'pos_session',
+                            type: 'pos_otp',
+                            otp: otp,
                             sessionId: sessionId,
                         },
                         'urgent'
                     );
-                    console.log(`✅ POS Notification sent to user ${user.id} for session ${sessionId}`);
+                    console.log(`✅ POS OTP sent to user ${user.id} for session ${sessionId}: ${otp}`);
                 }
             } catch (error) {
-                console.error('⚠️ Failed to send POS notification:', error.message);
+                console.error('⚠️ Failed to send POS OTP notification:', error.message);
             }
         }
 
@@ -135,6 +146,69 @@ export class BnplSessionsService {
             status: session.status,
             created_at: session.createdAt,
             expires_at: session.expiresAt,
+        };
+    }
+
+    async verifyOtp(sessionId: string, otp: string): Promise<any> {
+        const session = await this.sessionRepository.findOne({
+            where: { sessionId },
+            relations: ['store'],
+        });
+
+        if (!session) {
+            throw new NotFoundException('الجلسة غير موجودة');
+        }
+
+        if (!session.otp || !session.otpExpiresAt) {
+            throw new BadRequestException('لا يوجد رمز تحقق نشط لهذه الجلسة');
+        }
+
+        if (dayjs().isAfter(session.otpExpiresAt)) {
+            throw new BadRequestException('انتهت صلاحية رمز التحقق');
+        }
+
+        if (session.otp !== otp) {
+            throw new BadRequestException('رمز التحقق غير صحيح');
+        }
+
+        // OTP is valid!
+        // Clear OTP fields
+        session.otp = null;
+        session.otpExpiresAt = null;
+        await this.sessionRepository.save(session);
+
+        // Now find the user again to send the FINAL payment link (pos_session)
+        if (session.customerPhone) {
+            try {
+                const user = await this.usersService.findByPhone(session.customerPhone);
+                if (user) {
+                    // Pre-fill user data in session for later approval
+                    session.userId = user.id;
+                    session.customerName = user.name;
+                    session.customerEmail = user.email;
+                    await this.sessionRepository.save(session);
+
+                    const storeName = session.store.nameAr || session.store.name;
+                    await this.notificationsService.sendToUser(
+                        user.id,
+                        'طلب دفع جديد - Payment Request',
+                        `لديك طلب دفع جاري من ${storeName}. اضغط هنا لإتمام الدفع.`,
+                        {
+                            type: 'pos_session',
+                            sessionId: sessionId,
+                        },
+                        'urgent'
+                    );
+                    console.log(`✅ POS Final Payment Notification sent to user ${user.id} for session ${sessionId}`);
+                }
+            } catch (error) {
+                console.error('⚠️ Failed to send final POS notification:', error.message);
+            }
+        }
+
+        return {
+            success: true,
+            message: 'تم التحقق من الرمز بنجاح. تم إرسال رابط الدفع للعميل.',
         };
     }
 
