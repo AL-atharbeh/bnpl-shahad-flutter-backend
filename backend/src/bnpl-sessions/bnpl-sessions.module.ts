@@ -8,6 +8,7 @@ import { Store } from '../stores/entities/store.entity';
 import { PaymentsModule } from '../payments/payments.module';
 import { UsersModule } from '../users/users.module';
 import { RewardsModule } from '../rewards/rewards.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
     imports: [
@@ -15,6 +16,7 @@ import { RewardsModule } from '../rewards/rewards.module';
         forwardRef(() => PaymentsModule),
         UsersModule,
         RewardsModule,
+        NotificationsModule,
     ],
     controllers: [BnplSessionsController],
     providers: [BnplSessionsService],

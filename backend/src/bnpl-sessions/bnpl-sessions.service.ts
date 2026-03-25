@@ -13,6 +13,7 @@ import { UsersService } from '../users/users.service';
 import { v4 as uuidv4 } from 'uuid';
 import * as dayjs from 'dayjs';
 import { ConfigService } from '@nestjs/config';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class BnplSessionsService {
@@ -28,6 +29,7 @@ export class BnplSessionsService {
         private mockPaymentService: MockPaymentService,
         private configService: ConfigService,
         private rewardsService: RewardsService,
+        private notificationsService: NotificationsService,
     ) { }
 
     async createSession(
@@ -63,6 +65,29 @@ export class BnplSessionsService {
         });
 
         const savedSession = await this.sessionRepository.save(session);
+
+        // Notify user if phone number is provided
+        if (createSessionDto.customer_phone) {
+            try {
+                const user = await this.usersService.findByPhone(createSessionDto.customer_phone);
+                if (user) {
+                    const storeName = store.nameAr || store.name;
+                    await this.notificationsService.sendToUser(
+                        user.id,
+                        'طلب دفع جديد - New Payment Request',
+                        `لديك طلب دفع جديد من ${storeName} - You have a new payment request from ${storeName}`,
+                        {
+                            type: 'pos_session',
+                            sessionId: sessionId,
+                        },
+                        'urgent'
+                    );
+                    console.log(`✅ POS Notification sent to user ${user.id} for session ${sessionId}`);
+                }
+            } catch (error) {
+                console.error('⚠️ Failed to send POS notification:', error.message);
+            }
+        }
 
         // Save items if any
         if (createSessionDto.items && createSessionDto.items.length > 0) {
@@ -149,6 +174,15 @@ export class BnplSessionsService {
             session.approvedAt = new Date();
 
             await this.sessionRepository.save(session);
+            
+            // Award 1 point for the purchase session
+            try {
+                await this.rewardsService.awardPointsForSession(userId, session.sessionId, Number(session.totalAmount));
+            } catch (error) {
+                console.error('❌ Failed to award reward points:', error);
+                // Don't fail the whole approval if points awarding fails
+            }
+
             console.log('✅ Session approved (PENDING → User data synced):', sessionId);
 
             return {
