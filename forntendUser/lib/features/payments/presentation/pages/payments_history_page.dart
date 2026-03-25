@@ -68,7 +68,7 @@ class _PaymentsHistoryPageState extends State<PaymentsHistoryPage> {
 
             return _Hist(
               merchant: item['merchantName'] ?? item['storeName'] ?? 'متجر',
-              amount: (item['amount'] as num?)?.toDouble() ?? 0.0,
+              amount: double.tryParse(item['amount'].toString()) ?? 0.0,
               statusKey: 'paid',
               date: date,
               icon: Icons.store_mall_directory_rounded,
