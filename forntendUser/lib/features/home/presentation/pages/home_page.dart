@@ -1309,32 +1309,35 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     final isRTL = languageService.isArabic;
     
     return Container(
-      margin: const EdgeInsets.only(top: 20, left: 20, right: 20),
+      margin: const EdgeInsets.only(top: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                l10n.pendingPayments,
-                style: AppTextStyles.changaH5,
-              ),
-              TextButton(
-                onPressed: () {
-                  // Navigate to payments page
-                  Navigator.of(context).pushNamed('/payments');
-                },
-                child: Text(
-                  l10n.viewAllPayments,
-                  style: GoogleFonts.mada(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  l10n.pendingPayments,
+                  style: AppTextStyles.changaH5,
+                ),
+                TextButton(
+                  onPressed: () {
+                    // Navigate to payments page
+                    Navigator.of(context).pushNamed('/payments');
+                  },
+                  child: Text(
+                    l10n.viewAllPayments,
+                    style: GoogleFonts.mada(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 12),
           _isLoadingPendingPayments
@@ -1359,7 +1362,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                       height: 100,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        reverse: isRTL,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        // Reverse should be false for standard RTL handling in horizontal ListView
+                        reverse: false, 
                         itemCount: _pendingPayments.length,
                         itemBuilder: (context, index) {
                           final payment = _pendingPayments[index];
@@ -1423,7 +1428,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       child: Container(
         width: 320,
         height: 80,
-        margin: EdgeInsets.only(right: isRTL ? 16 : 0, left: isRTL ? 0 : 16),
+        margin: const EdgeInsetsDirectional.only(end: 16),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: BackdropFilter(
@@ -1519,9 +1524,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                       ),
                     ),
                     
-                    // Right Side - Arrow
+                    // End Side - Arrow
                     Icon(
-                      Icons.chevron_right,
+                      isRTL ? Icons.chevron_left : Icons.chevron_right,
                       color: const Color(0xFF1E293B),
                       size: 20,
                     ),
