@@ -1,6 +1,10 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import '../../routing/app_router.dart';
+import '../../main.dart';
+import 'dart:convert';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -91,7 +95,7 @@ class NotificationService {
       notification.title,
       notification.body,
       details,
-      payload: message.data.toString(),
+      payload: json.encode(message.data),
     );
 
     if (kDebugMode) {
@@ -105,8 +109,21 @@ class NotificationService {
       print('Notification tapped: ${response.payload}');
     }
     
-    // TODO: Navigate to appropriate screen based on payload
-    // You can use a global navigator key or a callback function
+    if (response.payload != null) {
+      try {
+        final Map<String, dynamic> data = json.decode(response.payload!);
+        
+        if (data['type'] == 'pos_session' && data['sessionId'] != null) {
+          final sessionId = data['sessionId'] as String;
+          navigatorKey.currentState?.pushNamed(
+            AppRouter.sessionConfirmation,
+            arguments: {'sessionId': sessionId},
+          );
+        }
+      } catch (e) {
+        print('Error handling notification tap: $e');
+      }
+    }
   }
 
   /// Cancel a notification

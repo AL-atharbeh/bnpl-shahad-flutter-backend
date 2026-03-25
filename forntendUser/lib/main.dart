@@ -14,6 +14,8 @@ import 'core/services/notification_service.dart';
 import 'core/services/deep_link_service.dart';
 import 'core/theme/index.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -54,7 +56,13 @@ void main() async {
     onMessageOpenedApp: (message) {
       // Handle notification tap
       print('Notification tapped: ${message.data}');
-      // TODO: Navigate to appropriate screen based on message.data
+      if (message.data['type'] == 'pos_session' && message.data['sessionId'] != null) {
+        final sessionId = message.data['sessionId'] as String;
+        navigatorKey.currentState?.pushNamed(
+          AppRouter.sessionConfirmation,
+          arguments: {'sessionId': sessionId},
+        );
+      }
     },
   );
   
@@ -109,14 +117,13 @@ class BNPLApp extends StatefulWidget {
 
 class _BNPLAppState extends State<BNPLApp> {
   final _deepLinkService = DeepLinkService();
-  final _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
     super.initState();
     // Initialize deep linking after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _deepLinkService.initialize(_navigatorKey);
+      _deepLinkService.initialize(navigatorKey);
     });
   }
 
@@ -125,7 +132,7 @@ class _BNPLAppState extends State<BNPLApp> {
     return Consumer<LanguageService>(
       builder: (context, languageService, child) {
         return MaterialApp(
-          navigatorKey: _navigatorKey,
+          navigatorKey: navigatorKey,
           title: 'BNPL',
           debugShowCheckedModeBanner: false,
           
