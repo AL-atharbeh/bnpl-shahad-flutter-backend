@@ -14,6 +14,7 @@ import '../../features/profile/presentation/pages/privacy_security_page.dart';
 import '../../features/profile/presentation/pages/language_page.dart';
 import '../../features/profile/presentation/pages/bnpl_business_page.dart';
 import '../../features/profile/presentation/pages/notifications_page.dart';
+import '../../features/payments/presentation/pages/payments_page.dart';
 import '../../features/shop/presentation/pages/stores_page.dart';
 import '../../features/shop/presentation/pages/store_details_page.dart';
 import '../../features/shop/presentation/pages/product_details_page.dart';
@@ -45,6 +46,7 @@ class AppRouter {
   static const String allStores = '/all-stores';
   static const String sessionConfirmation = '/session-confirmation';
   static const String search = '/search';
+  static const String payments = '/payments';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     print('🛣️ Generating route: ${settings.name}');
@@ -266,6 +268,12 @@ class AppRouter {
         case search:
           return MaterialPageRoute(
             builder: (_) => const SearchPage(),
+            settings: settings,
+          );
+        
+        case payments:
+          return MaterialPageRoute(
+            builder: (_) => const PaymentsPage(),
             settings: settings,
           );
         
