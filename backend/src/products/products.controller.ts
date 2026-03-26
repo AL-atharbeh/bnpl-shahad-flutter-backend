@@ -31,7 +31,7 @@ export class ProductsController {
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
       destination: (req, file, cb) => {
-        const uploadPath = './uploads/products';
+        const uploadPath = join(process.cwd(), 'uploads/products');
         if (!existsSync(uploadPath)) {
           mkdirSync(uploadPath, { recursive: true });
         }

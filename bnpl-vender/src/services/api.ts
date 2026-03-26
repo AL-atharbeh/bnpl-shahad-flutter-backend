@@ -45,7 +45,11 @@ export const deleteProduct = (id: number) => api.delete(`/products/${id}`);
 export const uploadProductImage = (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.post('/products/upload', formData);
+    return api.post('/products/upload', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
 };
 
 export const getStoreSettings = (storeId: number) => api.get(`/stores/${storeId}`);

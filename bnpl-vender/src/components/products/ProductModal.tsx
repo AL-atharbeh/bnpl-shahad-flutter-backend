@@ -145,7 +145,8 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
             setFormData(prev => ({ ...prev, image_url: uploadedUrl }));
         } catch (err: any) {
             console.error("Upload failed", err);
-            setError("Failed to upload image");
+            const msg = err.response?.data?.message || err.message || "Failed to upload image";
+            setError(msg);
         } finally {
             setUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = "";
