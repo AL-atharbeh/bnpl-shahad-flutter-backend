@@ -53,7 +53,7 @@ export const updateStoreSettings = (storeId: number, data: any) => api.put(`/sto
 export const createStore = (storeData: any) => api.post("/stores", storeData);
 
 // Users & POS Enhancements
-export const findUserByPhone = (phone: string) => api.get(`/users/find-by-phone?phone=${phone}`);
+export const findUserByPhone = (phone: string) => api.get('/users/find-by-phone', { params: { phone } });
 export const getRecentSessions = (storeId: number) => api.get(`/sessions/store/${storeId}/recent`);
 export const requestSettlement = (storeId: number, vendorName: string) => api.post('/settlements/request', { storeId, vendorName });
 export const getCategories = () => api.get('/categories');

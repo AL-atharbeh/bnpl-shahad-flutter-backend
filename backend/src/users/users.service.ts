@@ -30,14 +30,33 @@ export class UsersService {
   }
 
   async findByPhone(phone: string): Promise<User | null> {
-    const phoneWithPlus = phone.startsWith('+') ? phone : `+${phone}`;
-    const phoneWithoutPlus = phone.startsWith('+') ? phone.substring(1) : phone;
+    const cleanPhone = phone.replace(/[^\d+]/g, ''); // Keep only digits and plus
+    const variations = new Set<string>();
+    
+    variations.add(cleanPhone);
+    
+    // Add variations with and without '+'
+    if (cleanPhone.startsWith('+')) {
+      const sansPlus = cleanPhone.substring(1);
+      variations.add(sansPlus);
+      if (sansPlus.startsWith('962')) {
+        variations.add('0' + sansPlus.substring(3));
+      }
+    } else {
+      variations.add('+' + cleanPhone);
+      if (cleanPhone.startsWith('962')) {
+        const local = '0' + cleanPhone.substring(3);
+        variations.add(local);
+        variations.add('+' + local);
+      } else if (cleanPhone.startsWith('0')) {
+        const intl = '962' + cleanPhone.substring(1);
+        variations.add(intl);
+        variations.add('+' + intl);
+      }
+    }
 
     return this.userRepository.findOne({
-      where: [
-        { phone: phoneWithPlus },
-        { phone: phoneWithoutPlus }
-      ]
+      where: Array.from(variations).map(p => ({ phone: p }))
     });
   }
 

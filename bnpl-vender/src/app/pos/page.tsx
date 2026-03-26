@@ -62,19 +62,21 @@ export default function POSPage() {
     }, []);
 
     useEffect(() => {
-        const cleanPhone = customerPhone.replace(/\D/g, "");
-        if (cleanPhone.length >= 9) {
+        // Allow digits and '+' for cleaning
+        const cleanPhone = customerPhone.trim();
+        if (cleanPhone.length >= 7) { // Some formats might be shorter
             const timer = setTimeout(async () => {
                 setSearchLoading(true);
-                let formattedPhone = cleanPhone;
-                if (formattedPhone.startsWith("07")) {
-                    formattedPhone = "962" + formattedPhone.substring(1);
-                } else if (!formattedPhone.startsWith("962")) {
-                    formattedPhone = "962" + formattedPhone;
+                // We send it as is, or slightly cleaned, and let the backend handle the variations
+                let phoneToSearch = cleanPhone;
+                if (phoneToSearch.startsWith("07") && !phoneToSearch.startsWith("+")) {
+                   // Keep the 07 or convert to 962? 
+                   // Let's send 962 because that's our standard internally
+                   phoneToSearch = "962" + phoneToSearch.substring(1);
                 }
                 
                 try {
-                    const res = await findUserByPhone(formattedPhone);
+                    const res = await findUserByPhone(phoneToSearch);
                     if (res.data.success && res.data.data) {
                         setFoundUser(res.data.data);
                     } else {
