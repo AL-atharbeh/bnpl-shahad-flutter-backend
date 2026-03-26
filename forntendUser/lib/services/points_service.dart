@@ -43,7 +43,9 @@ class PointsTransaction {
             ? DateTime.parse(json['createdAt']) 
             : DateTime.now(),
         description: json['description'] as String?,
-        relatedPaymentAmount: (json['amount'] as num?)?.toDouble(),
+        relatedPaymentAmount: json['amount'] != null 
+            ? double.tryParse(json['amount'].toString()) 
+            : null,
       );
     }
     
