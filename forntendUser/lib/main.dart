@@ -50,18 +50,118 @@ void main() async {
   // Setup Firebase message handlers
   firebaseService.setupMessageHandlers(
     onMessageReceived: (message) {
+      if (kDebugMode) {
+        print('🔥 Received foreground message: ${message.messageId}');
+        print('🔥 Message Data: ${message.data}');
+        print('🔥 Message Type: ${message.data['type']}');
+      }
+      
       // Show notification when app is in foreground
       notificationService.showNotification(message);
+
+      // If it's a POS OTP, show a dialog as well
+      if (message.data['type'] == 'pos_otp' && message.data['otp'] != null) {
+        final otp = message.data['otp'] as String;
+        final context = navigatorKey.currentContext;
+        if (context != null) {
+          showDialog(
+            context: context,
+            barrierDismissible: true,
+            builder: (context) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: const Text('رمز التحقق - Verification Code', textAlign: TextAlign.center),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('قم بإعطاء هذا الرمز للتاجر لإتمام العملية:', textAlign: TextAlign.center),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.green),
+                    ),
+                    child: Text(
+                      otp,
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 8,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('إغلاق - Close'),
+                ),
+              ],
+            ),
+          );
+        }
+      }
+
+      // If it's a POS Session Payment, show a confirmation dialog
+      if (message.data['type'] == 'pos_session' && message.data['sessionId'] != null) {
+        final sessionId = message.data['sessionId'] as String;
+        final context = navigatorKey.currentContext;
+        if (context != null) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: const Text('طلب دفع جديد - Payment Request', textAlign: TextAlign.center),
+              content: const Text(
+                'لديك طلب دفع جاري. هل تريد الانتقال لصفحة الدفع الآن؟',
+                textAlign: TextAlign.center,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('لاحقاً - Later'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    navigatorKey.currentState?.pushNamed(
+                      AppRouter.sessionConfirmation,
+                      arguments: {'sessionId': sessionId},
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('ادفع الآن - Pay Now'),
+                ),
+              ],
+            ),
+          );
+        }
+      }
     },
     onMessageOpenedApp: (message) {
       // Handle notification tap
-      print('Notification tapped: ${message.data}');
+      if (kDebugMode) {
+        print('🔥 Notification tapped: ${message.data}');
+        print('🔥 Notification Type: ${message.data['type']}');
+        print('🔥 Session ID: ${message.data['sessionId']}');
+      }
+
       if (message.data['type'] == 'pos_session' && message.data['sessionId'] != null) {
         final sessionId = message.data['sessionId'] as String;
         navigatorKey.currentState?.pushNamed(
           AppRouter.sessionConfirmation,
           arguments: {'sessionId': sessionId},
         );
+      } else if (message.data['type'] == 'pos_otp') {
+        // Just open the app
       }
     },
   );

@@ -177,6 +177,12 @@ export class UsersService {
 
     return this.userRepository.save(user);
   }
+
+  async findAllAdmins(): Promise<User[]> {
+    return this.userRepository.find({
+      where: { role: 'admin' },
+    });
+  }
 }
 
 

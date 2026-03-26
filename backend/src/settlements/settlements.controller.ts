@@ -45,4 +45,12 @@ export class SettlementsController {
     async getSettlementById(@Param('id') id: number) {
         return this.settlementsService.getSettlementById(id);
     }
+    
+    @Post('request')
+    @ApiOperation({ summary: 'Request immediate settlement' })
+    async requestSettlement(
+        @Body() data: { storeId: number; vendorName: string },
+    ) {
+        return this.settlementsService.requestSettlement(data.storeId, data.vendorName);
+    }
 }

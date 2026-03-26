@@ -234,6 +234,55 @@ export class PaymentsService {
   }
 
   /**
+   * Create multiple installments for a session
+   */
+  async createInstallmentsForSession(data: {
+    userId: number;
+    storeId: number;
+    sessionId: string;
+    totalAmount: number;
+    installmentsCount: number;
+    currency: string;
+  }): Promise<Payment[]> {
+    const { userId, storeId, sessionId, totalAmount, installmentsCount, currency } = data;
+    const orderId = `order_${sessionId}`;
+    const installmentAmount = totalAmount / installmentsCount;
+    const installments: Payment[] = [];
+
+    // Check if installments already exist to avoid duplicates
+    const existing = await this.paymentRepository.find({
+      where: { orderId, userId }
+    });
+
+    if (existing.length > 0) {
+      console.log(`[PaymentsService] Installments already exist for ${orderId}, skipping creation`);
+      return existing;
+    }
+
+    for (let i = 1; i <= installmentsCount; i++) {
+      const dueDate = dayjs().add(i - 1, 'month').toDate();
+      const payment = this.paymentRepository.create({
+        userId,
+        storeId,
+        orderId,
+        amount: installmentAmount,
+        currency,
+        installmentsCount,
+        installmentNumber: i,
+        totalAmount,
+        paymentMethod: 'bnpl',
+        status: 'pending',
+        dueDate,
+        paidAt: null,
+      });
+      installments.push(await this.paymentRepository.save(payment));
+    }
+
+    console.log(`[PaymentsService] Created ${installments.length} installments for session ${sessionId}`);
+    return installments;
+  }
+
+  /**
    * Process payment (mark as completed)
    * Also checks if previous installments are paid (if installment_number > 1)
    */

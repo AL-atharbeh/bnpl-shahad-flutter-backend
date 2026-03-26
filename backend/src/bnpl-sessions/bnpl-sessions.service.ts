@@ -274,6 +274,21 @@ export class BnplSessionsService {
             await this.sessionRepository.save(session);
             console.log('✅ Session approved (PAYMENT_PENDING → APPROVED):', sessionId);
 
+            // Create installments if they don't exist yet
+            try {
+                await this.paymentsService.createInstallmentsForSession({
+                    userId: session.userId,
+                    storeId: session.storeId,
+                    sessionId: session.sessionId,
+                    totalAmount: Number(session.totalAmount),
+                    installmentsCount: session.installmentsCount,
+                    currency: session.currency,
+                });
+                console.log('✅ Installments created for session:', sessionId);
+            } catch (error) {
+                console.error('⚠️ Failed to create installments during approval:', error.message);
+            }
+
             // Auto-complete first installment
             const orderId = `order_${sessionId}`;
             try {
@@ -307,9 +322,12 @@ export class BnplSessionsService {
             throw new NotFoundException('الجلسة غير موجودة');
         }
 
-        // Allow PENDING sessions (user verified but not yet approved)
-        // Session will be approved AFTER successful payment
-        if (session.status !== SessionStatus.PENDING && session.status !== SessionStatus.APPROVED) {
+        // Allow PENDING, APPROVED (admin approved) or PAYMENT_PENDING (retry) statuses
+        if (
+            session.status !== SessionStatus.PENDING && 
+            session.status !== SessionStatus.APPROVED &&
+            session.status !== SessionStatus.PAYMENT_PENDING
+        ) {
             throw new BadRequestException('حالة الجلسة غير صالحة');
         }
 
@@ -324,26 +342,15 @@ export class BnplSessionsService {
         const installments = [];
 
         try {
-            // Create ALL installments as 'pending' (including first one)
+            // Calculate installments for the response (DO NOT SAVE to DB yet)
             for (let i = 1; i <= session.installmentsCount; i++) {
                 const dueDate = dayjs().add(i - 1, 'month').toDate();
-
-                const payment = await this.paymentsService.createPayment({
-                    userId: session.userId,
-                    storeId: session.storeId,
-                    orderId: orderId,
-                    amount: installmentAmount,
-                    currency: session.currency,
-                    installmentsCount: session.installmentsCount,
+                installments.push({
                     installmentNumber: i,
-                    totalAmount: Number(session.totalAmount),
-                    paymentMethod: 'bnpl',
-                    status: 'pending', // ALL pending initially
+                    amount: installmentAmount,
                     dueDate: dueDate,
-                    paidAt: null,
+                    status: 'pending',
                 });
-
-                installments.push(payment);
             }
 
             // Generate payment URL for first installment (MOCK)
@@ -383,7 +390,7 @@ export class BnplSessionsService {
             };
         } catch (error) {
             console.error('❌ Error in completeSession:', error);
-            throw new BadRequestException(`فشل في إنشاء الأقساط: ${error.message}`);
+            throw new BadRequestException(`فشل في معالجة الجلسة: ${error.message}`);
         }
     }
 

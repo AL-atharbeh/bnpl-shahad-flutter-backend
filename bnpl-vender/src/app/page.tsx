@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { useRouter } from "next/navigation";
 import {
   TrendingUp,
   Users,
@@ -18,7 +19,7 @@ import {
   Tooltip,
   ResponsiveContainer
 } from 'recharts';
-import { getVendorDashboardStats, getVendorPerformance } from "@/services/api";
+import { getVendorDashboardStats, getVendorPerformance, requestSettlement } from "@/services/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Home() {
@@ -27,6 +28,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [vendor, setVendor] = useState<any>(null);
   const { t, language } = useLanguage();
+  const router = useRouter();
+  const [settlementLoading, setSettlementLoading] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -126,15 +129,36 @@ export default function Home() {
           <div className="glass rounded-2xl p-8 flex flex-col">
             <h3 className="text-lg font-bold text-white mb-6">{t("quickActions")}</h3>
             <div className="space-y-4 flex-1">
-              <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 hover:bg-slate-900/60 transition-colors cursor-pointer group">
+              <div 
+                onClick={() => router.push('/products')}
+                className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 hover:bg-slate-900/60 transition-colors cursor-pointer group"
+              >
                 <h4 className="text-sm font-semibold text-slate-200 group-hover:text-emerald-400">{t("updatePrices")}</h4>
                 <p className="text-[11px] text-slate-500 mt-1">{t("updatePricesDetail")}</p>
               </div>
-              <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 hover:bg-slate-900/60 transition-colors cursor-pointer group">
+              <div 
+                onClick={() => router.push('/products')}
+                className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 hover:bg-slate-900/60 transition-colors cursor-pointer group"
+              >
                 <h4 className="text-sm font-semibold text-slate-200 group-hover:text-blue-400">{t("addBranch")}</h4>
                 <p className="text-[11px] text-slate-500 mt-1">{t("addBranchDetail")}</p>
               </div>
-              <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 hover:bg-slate-900/60 transition-colors cursor-pointer group">
+              <div 
+                onClick={async () => {
+                  if (settlementLoading) return;
+                  setSettlementLoading(true);
+                  try {
+                    await requestSettlement(vendor.storeId, vendor.name);
+                    alert(t("paymentSent")); // Using an existing translation or I can add a new one
+                  } catch (error) {
+                    console.error("Failed to request settlement", error);
+                    alert("Failed to request settlement");
+                  } finally {
+                    setSettlementLoading(false);
+                  }
+                }}
+                className={`rounded-xl border border-slate-800 bg-slate-900/40 p-4 hover:bg-slate-900/60 transition-colors cursor-pointer group ${settlementLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
                 <h4 className="text-sm font-semibold text-slate-200 group-hover:text-amber-400">{t("requestSettlement")}</h4>
                 <p className="text-[11px] text-slate-500 mt-1">{t("requestSettlementDetail")}</p>
               </div>

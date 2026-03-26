@@ -47,7 +47,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 
   List<InAppNotification> get _filtered {
-    final list = List<InAppNotification>.from(_all);
+    final list = _all.where((n) => n.notification != null && n.title.isNotEmpty).toList();
     list.sort((a, b) => b.time.compareTo(a.time)); // الأحدث أولاً
     switch (_activeFilter) {
       case 'unread':
@@ -60,19 +60,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
         return list.where((n) => n.type == 'security').toList();
       default:
         return list;
-    }
-  }
-
-  NotificationType _getNotificationType(String type) {
-    switch (type.toLowerCase()) {
-      case 'payment':
-        return NotificationType.payment;
-      case 'offer':
-        return NotificationType.offer;
-      case 'security':
-        return NotificationType.security;
-      default:
-        return NotificationType.general;
     }
   }
 
@@ -147,7 +134,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                     notification: n,
                                     onReadToggle: () => _toggleRead(n),
                                     onDelete: () => _deleteNotification(n),
-                                    onMuteType: () => _blockNotificationType(_getNotificationType(n.type)),
+                                    onMuteType: () => _blockNotificationType(getNotificationType(n.type)),
                                     onTap: () => _handleNotificationTap(n),
                                   ),
                                 ),
@@ -166,19 +153,26 @@ class _NotificationsPageState extends State<NotificationsPage> {
   // ======== Actions ========
 
   Future<void> _toggleRead(InAppNotification notification) async {
-    if (!notification.isDisplayed) {
+    if (!notification.isRead) {
       await _notificationService.markAsDisplayed(notification.id);
+      // Mark as read in main notification via API
+      final success = await _notificationService.markAsClicked(notification.id);
+      if (success) {
+        _loadNotifications();
+      }
     }
-    // Mark as read in main notification
-    // TODO: Add API call to mark main notification as read
-    setState(() {
-      // Update local state
-    });
   }
 
-  void _markAllAsRead() {
-    // TODO: Implement mark all as read API call
-    _toast(AppLocalizations.of(context)!.allNotificationsMarkedAsRead);
+  Future<void> _markAllAsRead() async {
+    setState(() => _isLoading = true);
+    final success = await _notificationService.markAllAsRead();
+    if (success) {
+      await _loadNotifications();
+      _toast(AppLocalizations.of(context)!.allNotificationsMarkedAsRead);
+    } else {
+      setState(() => _isLoading = false);
+      _toast('فشل تحديد الكل كمقروء', danger: true);
+    }
   }
 
   Future<void> _deleteNotification(InAppNotification notification) async {
@@ -199,22 +193,152 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 
   Future<void> _handleNotificationTap(InAppNotification notification) async {
-    // Mark as displayed and clicked
-    if (!notification.isDisplayed) {
+    // Mark as displayed (which marks as read)
+    if (!notification.isRead) {
       await _notificationService.markAsDisplayed(notification.id);
     }
-    if (!notification.isClicked) {
-      await _notificationService.markAsClicked(notification.id);
-    }
     
-    // Navigate to action URL if available
+    // Show detail popup
+    _showNotificationDetail(notification);
+    
+    // Reload notifications to update state in background
+    _loadNotifications();
+  }
+
+  void _showNotificationDetail(InAppNotification n) {
+    final notificationType = getNotificationType(n.type);
+    final meta = _typeMeta(notificationType);
+    final l10n = AppLocalizations.of(context)!;
+    
+    // Check if it's a payment request (pos_session)
+    bool isPaymentRequest = false;
+    if (n.notification?.metadata != null) {
+      final metadata = n.notification!.metadata!;
+      isPaymentRequest = metadata['type'] == 'pos_session' && metadata['sessionId'] != null;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Top Section with Icon and Close Button
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 12, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: meta.color.withOpacity(0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(meta.icon, color: meta.color, size: 24),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, color: Color(0xFF9CA3AF)),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Content Section
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    n.title,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF111827),
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    n.message,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      height: 1.6,
+                      color: Color(0xFF4B5563),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Bottom Row: Date and Action
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          formatNotificationDate(n.time, Directionality.of(context) == TextDirection.rtl, l10n),
+                          style: const TextStyle(
+                            color: Color(0xFF9CA3AF),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      if ((isPaymentRequest || n.actionButtonText != null) && !n.isClicked)
+                        ElevatedButton(
+                          onPressed: () async {
+                            // Mark as clicked before acting
+                            await _notificationService.markAsClicked(n.id);
+                            
+                            if (mounted) {
+                              Navigator.pop(context);
+                              _performNotificationAction(n);
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isPaymentRequest ? const Color(0xFF111827) : meta.color,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          child: Text(
+                            isPaymentRequest ? "ادفع الآن" : (n.actionButtonText ?? l10n.continueButton),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _performNotificationAction(InAppNotification notification) {
+    if (notification.notification?.metadata != null) {
+      final metadata = notification.notification!.metadata!;
+      if (metadata['type'] == 'pos_session' && metadata['sessionId'] != null) {
+        final sessionId = metadata['sessionId'] as String;
+        Navigator.pushNamed(
+          context,
+          '/session-confirmation',
+          arguments: {'sessionId': sessionId},
+        ).then((_) => _loadNotifications());
+        return;
+      }
+    }
+
     if (notification.actionUrl != null && notification.actionUrl!.isNotEmpty) {
-      // TODO: Navigate to action URL
+      // Logic for action URL navigation could go here
       print('Navigate to: ${notification.actionUrl}');
     }
-    
-    // Reload notifications to update state
-    await _loadNotifications();
   }
 
   // ======== Helpers ========
@@ -229,13 +353,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   String _sectionLabel(DateTime t, bool isRTL) {
     final l10n = AppLocalizations.of(context)!;
+    final localT = t.toLocal();
     final now = DateTime.now();
     final d = DateTime(now.year, now.month, now.day);
     final today = d;
     final yesterday = d.subtract(const Duration(days: 1));
-    final weekStart = d.subtract(Duration(days: d.weekday % 7)); // بداية الأسبوع (الأحد)
+    final weekStart = d.subtract(Duration(days: d.weekday % 7));
 
-    final dateOnly = DateTime(t.year, t.month, t.day);
+    final dateOnly = DateTime(localT.year, localT.month, localT.day);
 
     if (dateOnly == today) return l10n.today;
     if (dateOnly == yesterday) return l10n.yesterday;
@@ -386,7 +511,7 @@ class _DismissibleNotificationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final notificationType = _getNotificationType(notification.type);
+    final notificationType = getNotificationType(notification.type);
     final meta = _typeMeta(notificationType);
     return Dismissible(
       key: ValueKey(notification.id),
@@ -438,7 +563,7 @@ class _DismissibleNotificationCard extends StatelessWidget {
               Text(notification.message, style: const TextStyle(color: Color(0xFF6B7280))),
               const SizedBox(height: 4),
               Text(
-                _format(notification.time, Directionality.of(context) == TextDirection.rtl, l10n),
+                formatNotificationDate(notification.time, Directionality.of(context) == TextDirection.rtl, l10n),
                 style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
               ),
               if (notification.actionButtonText != null)
@@ -487,28 +612,6 @@ class _DismissibleNotificationCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  NotificationType _getNotificationType(String type) {
-    switch (type.toLowerCase()) {
-      case 'payment':
-        return NotificationType.payment;
-      case 'offer':
-        return NotificationType.offer;
-      case 'security':
-        return NotificationType.security;
-      default:
-        return NotificationType.general;
-    }
-  }
-
-  String _format(DateTime t, bool isRTL, AppLocalizations l10n) {
-    final now = DateTime.now();
-    final diff = now.difference(t);
-    if (diff.inMinutes < 60) return l10n.minutesAgo(diff.inMinutes);
-    if (diff.inHours < 24) return l10n.hoursAgo(diff.inHours);
-    if (diff.inDays < 7) return l10n.daysAgo(diff.inDays);
-    return '${t.day}/${t.month}/${t.year}';
   }
 
   Widget _swipeBg(Alignment alignment, IconData icon, Color color) {
@@ -607,4 +710,44 @@ _TypeMeta _typeMeta(NotificationType type) {
     case NotificationType.general:
       return _TypeMeta(color: const Color(0xFF3B82F6), icon: Icons.notifications);
   }
+}
+
+NotificationType getNotificationType(String type) {
+  switch (type.toLowerCase()) {
+    case 'payment':
+      return NotificationType.payment;
+    case 'offer':
+      return NotificationType.offer;
+    case 'security':
+      return NotificationType.security;
+    default:
+      return NotificationType.general;
+  }
+}
+
+String formatNotificationDate(DateTime t, bool isRTL, AppLocalizations l10n) {
+  final localT = t.toLocal();
+  final now = DateTime.now();
+  final dateOnly = DateTime(localT.year, localT.month, localT.day);
+  final todayOnly = DateTime(now.year, now.month, now.day);
+  
+  final String hour = localT.hour.toString().padLeft(2, '0');
+  final String minute = localT.minute.toString().padLeft(2, '0');
+  final String timeStr = '$hour:$minute';
+
+  if (dateOnly == todayOnly) {
+    return timeStr;
+  }
+  
+  final yesterdayOnly = todayOnly.subtract(const Duration(days: 1));
+  if (dateOnly == yesterdayOnly) {
+    return isRTL ? 'أمس $timeStr' : 'Yesterday $timeStr';
+  }
+  
+  final diff = now.difference(localT);
+  if (diff.inDays < 7) {
+    return l10n.daysAgo(diff.inDays);
+  }
+  
+  return '${localT.day}/${localT.month}/${localT.year} $timeStr';
 }

@@ -33,6 +33,7 @@ class ApiPaths {
   static const String inAppNotificationsStats = '/in-app-notifications/stats';
   static const String markInAppNotificationDisplayed = '/in-app-notifications/{id}/displayed';
   static const String markInAppNotificationClicked = '/in-app-notifications/{id}/clicked';
+  static const String markAllInAppNotificationsRead = '/notifications/read-all';
   
   // Settings
   static const String appSettings = '/settings';

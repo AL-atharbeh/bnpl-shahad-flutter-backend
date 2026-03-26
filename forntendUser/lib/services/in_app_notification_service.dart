@@ -110,6 +110,17 @@ class InAppNotificationService {
     }
   }
 
+  /// Mark all notifications as read
+  Future<bool> markAllAsRead() async {
+    try {
+      final response = await _apiService.put(ApiPaths.markAllInAppNotificationsRead, {});
+      return response['success'] == true;
+    } catch (e) {
+      print('❌ Error marking all notifications as read: $e');
+      return false;
+    }
+  }
+
   /// Delete in-app notification
   Future<bool> deleteNotification(int id) async {
     try {

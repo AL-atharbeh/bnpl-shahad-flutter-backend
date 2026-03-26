@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Settlement } from './entities/settlement.entity';
 import { Payment } from '../payments/entities/payment.entity';
+import { UsersService } from '../users/users.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class SettlementsService {
@@ -11,6 +13,8 @@ export class SettlementsService {
         private settlementRepository: Repository<Settlement>,
         @InjectRepository(Payment)
         private paymentRepository: Repository<Payment>,
+        private usersService: UsersService,
+        private notificationsService: NotificationsService,
     ) { }
 
     async getSettlementStats(storeId: number) {
@@ -125,6 +129,29 @@ export class SettlementsService {
         return {
             success: true,
             data: settlement,
+        };
+    }
+
+    async requestSettlement(storeId: number, vendorName: string) {
+        // Find all admins
+        const admins = await this.usersService.findAllAdmins();
+
+        // Send notification to each admin
+        const title = 'طلب تسوية جديد';
+        const body = `قام المورد ${vendorName} بطلب تسوية فورية للمحل رقم ${storeId}`;
+        const data = {
+            type: 'settlement_request',
+            storeId: storeId.toString(),
+            vendorName: vendorName,
+        };
+
+        for (const admin of admins) {
+            await this.notificationsService.sendToUser(admin.id, title, body, data, 'urgent');
+        }
+
+        return {
+            success: true,
+            message: 'تم إرسال طلب التسوية بنجاح',
         };
     }
 }
