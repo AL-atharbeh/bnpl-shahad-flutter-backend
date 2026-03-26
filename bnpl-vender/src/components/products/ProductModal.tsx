@@ -43,10 +43,132 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
         description: "",
         description_ar: "",
         price: "",
+        discount_price: "",
         category_id: "",
         image_url: "",
+        stock_quantity: "0",
         in_stock: true
     });
+
+    const [isDragging, setIsDragging] = useState(false);
+
+    useEffect(() => {
+        if (product) {
+            setFormData({
+                name: product.name || "",
+                name_ar: product.name_ar || "",
+                description: product.description || "",
+                description_ar: product.description_ar || "",
+                price: product.price?.toString() || "",
+                discount_price: product.discountPrice?.toString() || "",
+                category_id: product.category_id?.toString() || "",
+                image_url: product.image_url || "",
+                stock_quantity: (product as any).stockQuantity?.toString() || "0",
+                in_stock: product.in_stock !== false
+            });
+        } else {
+            setFormData({
+                name: "",
+                name_ar: "",
+                description: "",
+                description_ar: "",
+                price: "",
+                discount_price: "",
+                category_id: "",
+                image_url: "",
+                stock_quantity: "50", // Default some stock
+                in_stock: true
+            });
+        }
+    }, [product, isOpen]);
+
+    const resizeImage = (file: File): Promise<File> => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target?.result as string;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    const MAX_HEIGHT = 800;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx?.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            const resizedFile = new File([blob], file.name, {
+                                type: 'image/jpeg',
+                                lastModified: Date.now(),
+                            });
+                            resolve(resizedFile);
+                        } else {
+                            resolve(file);
+                        }
+                    }, 'image/jpeg', 0.8);
+                };
+            };
+        });
+    };
+
+    const handleImageUpload = async (file: File) => {
+        if (!file) return;
+
+        setUploading(true);
+        setError(null);
+
+        try {
+            // Resize image before upload to optimize
+            const optimizedFile = await resizeImage(file);
+            const res = await uploadProductImage(optimizedFile);
+            
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://bnpl-shahad-flutter-backend.onrender.com/api/v1';
+            const uploadedUrl = `${baseUrl}/products/uploads/${res.data.data.filename}`;
+            setFormData(prev => ({ ...prev, image_url: uploadedUrl }));
+        } catch (err: any) {
+            console.error("Upload failed", err);
+            setError("Failed to upload image");
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+        }
+    };
+
+    const onDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const onDragLeave = () => {
+        setIsDragging(false);
+    };
+
+    const onDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const file = e.dataTransfer.files?.[0];
+        if (file && file.type.startsWith('image/')) {
+            handleImageUpload(file);
+        }
+    };
 
     useEffect(() => {
         async function fetchCategories() {
@@ -62,60 +184,9 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
         }
     }, [isOpen]);
 
-    useEffect(() => {
-        if (product) {
-            setFormData({
-                name: product.name || "",
-                name_ar: product.name_ar || "",
-                description: product.description || "",
-                description_ar: product.description_ar || "",
-                price: product.price?.toString() || "",
-                category_id: product.category_id?.toString() || "",
-                image_url: product.image_url || "",
-                in_stock: product.in_stock !== false
-            });
-        } else {
-            setFormData({
-                name: "",
-                name_ar: "",
-                description: "",
-                description_ar: "",
-                price: "",
-                category_id: "",
-                image_url: "",
-                in_stock: true
-            });
-        }
-        setError(null);
-    }, [product, isOpen]);
-
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file) return;
-
-        setUploading(true);
-        setError(null);
-
-        try {
-            const res = await uploadProductImage(file);
-            // Construct full URL using explicit base URL + filename
-            // The backend returns { url: '/api/v1/...', filename: '...' }
-            // We use the filename to construct the full absolute URL for the frontend to render correctly
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
-            // Assuming the API_URL points to /api/v1, we need to go up one level to hit the root if serve-static was root,
-            // BUT our controller serves at /api/v1/products/uploads/:filename.
-            // So baseUrl + '/products/uploads/' + filename should work.
-
-            const uploadedUrl = `${baseUrl}/products/uploads/${res.data.data.filename}`;
-            setFormData(prev => ({ ...prev, image_url: uploadedUrl }));
-        } catch (err: any) {
-            console.error("Upload failed", err);
-            setError("Failed to upload image");
-        } finally {
-            setUploading(false);
-            // Clear input value so same file can be selected again if needed
-            if (fileInputRef.current) fileInputRef.current.value = "";
-        }
+        if (file) handleImageUpload(file);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -131,8 +202,9 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
             const payload = {
                 ...formData,
                 price: parseFloat(formData.price),
+                discount_price: formData.discount_price ? parseFloat(formData.discount_price) : undefined,
+                stock_quantity: parseInt(formData.stock_quantity),
                 category_id: formData.category_id ? parseInt(formData.category_id) : undefined,
-                in_stock: formData.in_stock,
                 store_id: user.storeId,
             };
 
@@ -315,38 +387,61 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
                                                         Pricing & Inventory
                                                     </h4>
 
-                                                    {/* Price */}
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        {/* Price */}
+                                                        <div className="space-y-2">
+                                                            <label className="text-sm font-medium text-slate-300">{t("productPrice")}</label>
+                                                            <div className="relative group">
+                                                                <input
+                                                                    type="number"
+                                                                    required
+                                                                    min="0"
+                                                                    step="0.01"
+                                                                    value={formData.price}
+                                                                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                                                                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-10 text-white placeholder-slate-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all font-mono"
+                                                                    placeholder="0.00"
+                                                                />
+                                                                <div className="absolute left-3 top-3.5 text-slate-500 group-focus-within:text-emerald-500 transition-colors text-xs uppercase">
+                                                                    {t("currency")}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Discount Price */}
+                                                        <div className="space-y-2">
+                                                            <label className="text-sm font-medium text-slate-300">{language === 'ar' ? 'السعر بعد الخصم' : 'Discount Price'}</label>
+                                                            <div className="relative group">
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    step="0.01"
+                                                                    value={formData.discount_price}
+                                                                    onChange={(e) => setFormData({ ...formData, discount_price: e.target.value })}
+                                                                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-10 text-white placeholder-slate-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all font-mono"
+                                                                    placeholder="0.00"
+                                                                />
+                                                                <div className="absolute left-3 top-3.5 text-slate-500 group-focus-within:text-emerald-500 transition-colors text-xs uppercase">
+                                                                    {t("currency")}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Stock Quantity */}
                                                     <div className="space-y-2">
-                                                        <label className="text-sm font-medium text-slate-300">{t("productPrice")}</label>
+                                                        <label className="text-sm font-medium text-slate-300">{language === 'ar' ? 'كمية المخزون' : 'Stock Quantity'}</label>
                                                         <div className="relative group">
                                                             <input
                                                                 type="number"
                                                                 required
                                                                 min="0"
-                                                                step="0.01"
-                                                                value={formData.price}
-                                                                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                                                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-10 text-white placeholder-slate-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all font-mono text-lg"
-                                                                placeholder="0.00"
+                                                                value={formData.stock_quantity}
+                                                                onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
+                                                                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-10 text-white placeholder-slate-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all font-mono"
+                                                                placeholder="0"
                                                             />
-                                                            <div className="absolute left-3 top-3.5 text-slate-500 group-focus-within:text-emerald-500 transition-colors">
-                                                                {t("currency")}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Stock Toggle */}
-                                                    <div className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer" onClick={() => setFormData({ ...formData, in_stock: !formData.in_stock })}>
-                                                        <div className="flex flex-col">
-                                                            <span className="text-sm font-medium text-white">{t("stockStatus")}</span>
-                                                            <span className={`text-xs ${formData.in_stock ? 'text-emerald-400' : 'text-slate-400'}`}>
-                                                                {formData.in_stock ? t("inStock") : t("outOfStock")}
-                                                            </span>
-                                                        </div>
-                                                        <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-[#0B1215] ${formData.in_stock ? 'bg-emerald-500' : 'bg-slate-700'}`}>
-                                                            <span
-                                                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.in_stock ? 'translate-x-6' : 'translate-x-1'}`}
-                                                            />
+                                                            <Package className="absolute left-3 top-3.5 h-4 w-4 text-slate-500 group-focus-within:text-emerald-500 transition-colors" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -366,7 +461,7 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
                                                             ref={fileInputRef}
                                                             className="hidden"
                                                             accept="image/*"
-                                                            onChange={handleImageUpload}
+                                                            onChange={handleFileChange}
                                                         />
 
                                                         {formData.image_url ? (
@@ -377,7 +472,6 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
                                                                     className="w-full h-full object-contain"
                                                                     onError={(e) => (e.target as HTMLImageElement).src = "https://placehold.co/600x400/000000/FFF?text=Invalid+Image"}
                                                                 />
-                                                                {/* Loading overlay when overwriting? No, uploading is global for the area */}
                                                                 {uploading && (
                                                                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                                                                         <Loader2 className="h-8 w-8 text-emerald-500 animate-spin" />
@@ -406,7 +500,12 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
                                                         ) : (
                                                             <div
                                                                 onClick={() => !uploading && fileInputRef.current?.click()}
-                                                                className={`relative rounded-xl border-2 border-dashed border-white/10 bg-white/5 p-8 text-center transition-all group cursor-pointer ${uploading ? 'opacity-50 cursor-wait' : 'hover:border-emerald-500/50 hover:bg-white/10'}`}
+                                                                onDragOver={onDragOver}
+                                                                onDragLeave={onDragLeave}
+                                                                onDrop={onDrop}
+                                                                className={`relative rounded-xl border-2 border-dashed p-8 text-center transition-all group cursor-pointer ${
+                                                                    isDragging ? 'border-emerald-500 bg-emerald-500/10 scale-[1.02]' : 'border-white/10 bg-white/5 hover:border-emerald-500/50 hover:bg-white/10'
+                                                                } ${uploading ? 'opacity-50 cursor-wait' : ''}`}
                                                             >
                                                                 {uploading ? (
                                                                     <div className="flex flex-col items-center gap-2">
@@ -415,10 +514,12 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
                                                                     </div>
                                                                 ) : (
                                                                     <>
-                                                                        <ImageIcon className="mx-auto h-12 w-12 text-slate-400 group-hover:text-emerald-400 transition-colors" />
+                                                                        <ImageIcon className={`mx-auto h-12 w-12 transition-colors ${isDragging ? 'text-emerald-400' : 'text-slate-400 group-hover:text-emerald-400'}`} />
                                                                         <div className="mt-4 flex flex-col items-center gap-1">
-                                                                            <span className="text-sm font-medium text-slate-300">Click to upload image</span>
-                                                                            <span className="text-xs text-slate-500">SVG, PNG, JPG or GIF</span>
+                                                                            <span className="text-sm font-medium text-slate-300">
+                                                                                {isDragging ? 'Drop to upload' : 'Click or drag image here'}
+                                                                            </span>
+                                                                            <span className="text-xs text-slate-500">Supports JPG, PNG, GIF (Auto-resized)</span>
                                                                         </div>
                                                                     </>
                                                                 )}

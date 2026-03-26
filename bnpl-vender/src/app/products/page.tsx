@@ -112,8 +112,9 @@ export default function ProductsPage() {
                             <thead className="bg-[#01281e] text-xs uppercase text-slate-400 border-b border-emerald-900/30">
                                 <tr>
                                     <th className="px-6 py-4 font-bold">{t("productName")}</th>
-                                    <th className="px-6 py-4 font-bold">{t("category")}</th>
                                     <th className="px-6 py-4 font-bold">{t("productPrice")}</th>
+                                    <th className="px-6 py-4 font-bold">{language === 'ar' ? 'المبيعات' : 'Sales'}</th>
+                                    <th className="px-6 py-4 font-bold">{language === 'ar' ? 'الأرباح' : 'Earnings'}</th>
                                     <th className="px-6 py-4 font-bold">{t("stockStatus")}</th>
                                     <th className="px-6 py-4 font-bold text-right">{t("actions")}</th>
                                 </tr>
@@ -121,20 +122,24 @@ export default function ProductsPage() {
                             <tbody className="divide-y divide-emerald-900/10 text-sm">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-slate-500 italic">
+                                        <td colSpan={6} className="px-6 py-12 text-center text-slate-500 italic">
                                             {t("loading")}
                                         </td>
                                     </tr>
                                 ) : filteredProducts.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                                        <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
                                             <div className="flex flex-col items-center justify-center gap-2">
                                                 <Package className="h-8 w-8 text-slate-600 mb-2" />
                                                 <p>{t("noTransactions")?.replace("transactions", "products") || "No products found"}</p>
                                             </div>
                                         </td>
                                     </tr>
-                                ) : filteredProducts.map((product) => (
+                                ) : filteredProducts.map((product) => {
+                                    const stockCount = (product as any).stockQuantity || 0;
+                                    const stockStatus = stockCount === 0 ? 'out' : stockCount <= 10 ? 'low' : 'in';
+                                    
+                                    return (
                                     <tr key={product.id} className="hover:bg-emerald-500/5 transition-colors group">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
@@ -153,19 +158,39 @@ export default function ProductsPage() {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-slate-300">
-                                            {product.category || "-"}
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col">
+                                                {product.discountPrice ? (
+                                                    <>
+                                                        <span className="text-emerald-400 font-bold">{product.discountPrice} <span className="text-[10px] uppercase font-normal">{t("currency")}</span></span>
+                                                        <span className="text-xs text-slate-500 line-through decoration-red-500/50">{product.price}</span>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-white font-bold">{product.price} <span className="text-[10px] uppercase font-normal">{t("currency")}</span></span>
+                                                )}
+                                            </div>
                                         </td>
-                                        <td className="px-6 py-4 font-bold text-white">
-                                            {product.price} <span className="text-xs font-normal text-slate-500">{t("currency")}</span>
+                                        <td className="px-6 py-4 text-slate-300 font-medium">
+                                            {(product as any).salesCount || 0}
+                                        </td>
+                                        <td className="px-6 py-4 text-emerald-400 font-bold">
+                                            {(product as any).totalRevenue || 0} <span className="text-[10px] font-normal text-slate-500">{t("currency")}</span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${product.in_stock
-                                                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                                                : "bg-red-500/10 text-red-400 border border-red-500/20"
-                                                }`}>
-                                                <span className={`h-1.5 w-1.5 rounded-full ${product.in_stock ? "bg-emerald-400" : "bg-red-400"}`} />
-                                                {product.in_stock ? t("inStock") : t("outOfStock")}
+                                            <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+                                                stockStatus === 'in' ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
+                                                stockStatus === 'low' ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" :
+                                                "bg-red-500/10 text-red-400 border border-red-500/20"
+                                            }`}>
+                                                <span className={`h-1.5 w-1.5 rounded-full ${
+                                                    stockStatus === 'in' ? "bg-emerald-400" :
+                                                    stockStatus === 'low' ? "bg-orange-400" :
+                                                    "bg-red-400"
+                                                }`} />
+                                                {stockStatus === 'in' ? (language === 'ar' ? 'متوفر' : 'In Stock') :
+                                                 stockStatus === 'low' ? (language === 'ar' ? 'كمية منخفضة' : 'Low Stock') :
+                                                 (language === 'ar' ? 'نفذت الكمية' : 'Out of Stock')}
+                                                <span className="ml-1 opacity-60">({stockCount})</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-right">
@@ -187,7 +212,7 @@ export default function ProductsPage() {
                                             </div>
                                         </td>
                                     </tr>
-                                ))}
+                                )})}
                             </tbody>
                         </table>
                     </div>

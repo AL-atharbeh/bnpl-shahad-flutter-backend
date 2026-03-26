@@ -206,6 +206,7 @@ export default function POSPage() {
                 customer_phone: paymentMethod === "phone" ? formattedPhone : undefined,
                 installments_count: Number(installments),
                 items: cart.map(item => ({
+                    product_id: item.id,
                     name: (language === "ar" ? item.name_ar : item.name) || item.name,
                     quantity: Number(item.quantity),
                     price: Number(Number(item.price).toFixed(2))

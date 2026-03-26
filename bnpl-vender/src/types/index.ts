@@ -13,6 +13,10 @@ export interface Product {
     product_url?: string;
     images?: string[];
     in_stock: boolean;
+    stockQuantity?: number;
+    discountPrice?: number;
+    salesCount?: number;
+    totalRevenue?: number;
     rating?: number;
     reviews_count?: number;
     is_active: boolean;

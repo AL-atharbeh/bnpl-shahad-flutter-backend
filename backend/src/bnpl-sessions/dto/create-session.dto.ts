@@ -14,9 +14,9 @@ export class SessionItemDto {
     @Min(0)
     price: number;
 
-    @IsString()
+    @IsNumber()
     @IsOptional()
-    description?: string;
+    product_id?: number;
 
     @IsString()
     @IsOptional()

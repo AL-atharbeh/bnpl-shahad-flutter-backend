@@ -55,6 +55,18 @@ export class CreateProductDto {
   @IsString({ each: true })
   images?: string[];
 
+  @Type(() => Number)
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  stock_quantity?: number;
+
+  @Type(() => Number)
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discount_price?: number;
+
   @Type(() => Boolean)
   @IsOptional()
   @IsBoolean()

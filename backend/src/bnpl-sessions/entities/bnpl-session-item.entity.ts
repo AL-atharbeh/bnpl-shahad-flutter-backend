@@ -15,6 +15,9 @@ export class BnplSessionItem {
     @Column({ name: 'session_id' })
     sessionId: number;
 
+    @Column({ name: 'product_id', nullable: true })
+    productId: number;
+
     @Column({ length: 255 })
     name: string;
 

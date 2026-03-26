@@ -15,6 +15,8 @@ import * as dayjs from 'dayjs';
 import { ConfigService } from '@nestjs/config';
 import { NotificationsService } from '../notifications/notifications.service';
 
+import { Product } from '../products/entities/product.entity';
+
 @Injectable()
 export class BnplSessionsService {
     constructor(
@@ -24,6 +26,8 @@ export class BnplSessionsService {
         private sessionItemRepository: Repository<BnplSessionItem>,
         @InjectRepository(Store)
         private storeRepository: Repository<Store>,
+        @InjectRepository(Product)
+        private productRepository: Repository<Product>,
         private paymentsService: PaymentsService,
         private usersService: UsersService,
         private mockPaymentService: MockPaymentService,
@@ -102,12 +106,28 @@ export class BnplSessionsService {
 
         // Save items if any
         if (createSessionDto.items && createSessionDto.items.length > 0) {
-            const items = createSessionDto.items.map(itemDto =>
-                this.sessionItemRepository.create({
+            const items = [];
+            for (const itemDto of createSessionDto.items) {
+                items.push(this.sessionItemRepository.create({
                     ...itemDto,
+                    productId: itemDto.product_id, // Map snake_case to camelCase
                     session: savedSession,
-                })
-            );
+                }));
+
+                // Deduct stock if product_id is provided
+                if (itemDto.product_id) {
+                    try {
+                        const product = await this.productRepository.findOne({ where: { id: itemDto.product_id } });
+                        if (product && product.stockQuantity >= itemDto.quantity) {
+                            product.stockQuantity -= itemDto.quantity;
+                            product.inStock = product.stockQuantity > 0;
+                            await this.productRepository.save(product);
+                        }
+                    } catch (err) {
+                        console.error(`Failed to deduct stock for product ${itemDto.product_id}:`, err);
+                    }
+                }
+            }
             await this.sessionItemRepository.save(items);
         }
 

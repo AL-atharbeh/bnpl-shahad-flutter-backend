@@ -10,9 +10,11 @@ import { UsersModule } from '../users/users.module';
 import { RewardsModule } from '../rewards/rewards.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 
+import { Product } from '../products/entities/product.entity';
+
 @Module({
     imports: [
-        TypeOrmModule.forFeature([BnplSession, BnplSessionItem, Store]),
+        TypeOrmModule.forFeature([BnplSession, BnplSessionItem, Store, Product]),
         forwardRef(() => PaymentsModule),
         UsersModule,
         RewardsModule,

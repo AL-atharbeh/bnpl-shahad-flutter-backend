@@ -56,6 +56,18 @@ export class Product {
   @Column({ name: 'in_stock', default: true })
   inStock: boolean;
 
+  @Column({ name: 'stock_quantity', default: 0 })
+  stockQuantity: number;
+
+  @Column({ name: 'discount_price', type: 'decimal', precision: 10, scale: 2, nullable: true })
+  discountPrice: number;
+
+  @Column({ name: 'sales_count', default: 0 })
+  salesCount: number;
+
+  @Column({ name: 'total_revenue', type: 'decimal', precision: 10, scale: 2, default: 0 })
+  totalRevenue: number;
+
   @Column({ type: 'decimal', precision: 3, scale: 2, default: 0 })
   rating: number;
 
