@@ -39,8 +39,10 @@ export default function POSPage() {
     const [cart, setCart] = useState<any[]>([]);
     const [customerPhone, setCustomerPhone] = useState("");
     const [foundUser, setFoundUser] = useState<{ name: string; isVerified: boolean } | null>(null);
+    const [searchLoading, setSearchLoading] = useState(false);
     const [installments, setInstallments] = useState(4);
-    const [discount, setDiscount] = useState(0); // Optional manual discount
+    const [discount, setDiscount] = useState(0); 
+    const [discountType, setDiscountType] = useState<"fixed" | "percent">("fixed");
     const [paymentMethod, setPaymentMethod] = useState<"phone" | "qr">("phone");
     const [recentSessions, setRecentSessions] = useState<any[]>([]);
 
@@ -60,26 +62,34 @@ export default function POSPage() {
     }, []);
 
     useEffect(() => {
-        if (customerPhone && customerPhone.length >= 10) {
+        const cleanPhone = customerPhone.replace(/\D/g, "");
+        if (cleanPhone.length >= 9) {
             const timer = setTimeout(async () => {
-                let formattedPhone = customerPhone.trim();
+                setSearchLoading(true);
+                let formattedPhone = cleanPhone;
                 if (formattedPhone.startsWith("07")) {
                     formattedPhone = "962" + formattedPhone.substring(1);
+                } else if (!formattedPhone.startsWith("962")) {
+                    formattedPhone = "962" + formattedPhone;
                 }
+                
                 try {
                     const res = await findUserByPhone(formattedPhone);
-                    if (res.data.success) {
+                    if (res.data.success && res.data.data) {
                         setFoundUser(res.data.data);
                     } else {
                         setFoundUser(null);
                     }
                 } catch (err) {
                     setFoundUser(null);
+                } finally {
+                    setSearchLoading(false);
                 }
-            }, 500);
+            }, 600);
             return () => clearTimeout(timer);
         } else {
             setFoundUser(null);
+            setSearchLoading(false);
         }
     }, [customerPhone]);
 
@@ -161,7 +171,8 @@ export default function POSPage() {
     };
 
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const totalAmount = Math.max(0, subtotal - discount);
+    const discountAmount = discountType === "percent" ? (subtotal * discount) / 100 : discount;
+    const totalAmount = Math.max(0, subtotal - discountAmount);
     const installmentAmount = totalAmount / installments;
 
     const handleCreateSession = async () => {
@@ -199,6 +210,8 @@ export default function POSPage() {
                 })),
                 metadata: {
                    discount_applied: discount,
+                   discount_type: discountType,
+                   discount_amount: discountAmount,
                    subtotal: subtotal
                 }
             };
@@ -528,6 +541,20 @@ export default function POSPage() {
                                     {/* Manual Discount Field */}
                                     <div className="flex items-center gap-2">
                                         <span className="text-[10px] font-bold text-slate-500 flex-1">{language === "ar" ? "الخصم اليدوي" : "Manual Discount"}</span>
+                                        <div className="flex items-center bg-white/5 rounded-lg p-0.5 border border-white/10">
+                                            <button 
+                                                onClick={() => setDiscountType("fixed")}
+                                                className={`px-1.5 py-0.5 rounded text-[8px] font-black transition-all ${discountType === "fixed" ? "bg-emerald-500 text-[#01160e]" : "text-slate-500"}`}
+                                            >
+                                                {t("currency")}
+                                            </button>
+                                            <button 
+                                                onClick={() => setDiscountType("percent")}
+                                                className={`px-1.5 py-0.5 rounded text-[8px] font-black transition-all ${discountType === "percent" ? "bg-emerald-500 text-[#01160e]" : "text-slate-500"}`}
+                                            >
+                                                %
+                                            </button>
+                                        </div>
                                         <input
                                           type="number"
                                           value={discount || ''}
@@ -542,7 +569,7 @@ export default function POSPage() {
                                         <span className="text-xl font-black text-emerald-400">{totalAmount.toLocaleString()} {t("currency")}</span>
                                     </div>
                                     
-                                    {/* Monthly Breakdown Point 1 */}
+                                    {/* Monthly Breakdown */}
                                     <div className="mt-4 p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20 flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <Clock className="h-3 w-3 text-emerald-500" />
@@ -563,17 +590,38 @@ export default function POSPage() {
                                                 value={customerPhone}
                                                 onChange={e => setCustomerPhone(e.target.value)}
                                                 placeholder="07xxxxxxxx"
-                                                className={`w-full rounded-2xl border border-white/5 bg-[#011f18] py-3.5 ${language === "ar" ? "pr-10 pl-4" : "pl-10 pr-4"} text-xs text-slate-200 outline-none focus:border-emerald-500/50 transition-all`}
+                                                className={`w-full rounded-2xl border border-white/5 bg-[#011f18] py-3.5 ${language === "ar" ? "pr-10 pl-10" : "pl-10 pr-10"} text-xs text-slate-200 outline-none focus:border-emerald-500/50 transition-all`}
                                             />
-                                            {/* Found User Indicator Point 4 */}
-                                            {foundUser && (
-                                                <div className="absolute top-full left-0 right-0 mt-2 px-3 py-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20 flex items-center gap-2 animate-in slide-in-from-top-1 duration-300">
-                                                    <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-                                                    <span className="text-[10px] font-black text-emerald-400">{foundUser.name}</span>
-                                                    {foundUser.isVerified && <span className="bg-emerald-500/20 text-emerald-500 px-1 rounded text-[8px]">{language === 'ar' ? 'موثق' : 'Verified'}</span>}
+                                            {searchLoading && (
+                                                <div className={`absolute ${language === "ar" ? "left-3" : "right-3"} top-1/2 -translate-y-1/2`}>
+                                                    <Loader2 className="h-4 w-4 text-emerald-500 animate-spin" />
                                                 </div>
                                             )}
                                         </div>
+                                        
+                                        {/* Found User Indicator */}
+                                        {foundUser ? (
+                                            <div className="px-3 py-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="h-6 w-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[11px] font-black text-white">{foundUser.name}</span>
+                                                        <span className="text-[9px] text-emerald-500/70">{foundUser.isVerified ? (language === 'ar' ? 'حساب موثق' : 'Verified Account') : (language === 'ar' ? 'حساب نشط' : 'Active Account')}</span>
+                                                    </div>
+                                                </div>
+                                                {foundUser.isVerified && (
+                                                    <div className="bg-emerald-500 text-[#01160e] px-2 py-0.5 rounded-full text-[8px] font-black uppercase">
+                                                        {language === 'ar' ? 'جاهز' : 'Ready'}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : customerPhone.length >= 9 && !searchLoading && (
+                                            <div className="px-3 py-2 bg-red-500/5 rounded-xl border border-red-500/10 text-[9px] text-red-400 font-bold">
+                                                {language === "ar" ? "رقم الهاتف غير مسجل في النظام" : "Phone number not registered"}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
