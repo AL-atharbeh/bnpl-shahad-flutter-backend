@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, In, LessThanOrEqual, MoreThanOrEqual, IsNull } from 'typeorm';
 import { Store } from './entities/store.entity';
 import { Deal } from '../deals/entities/deal.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class StoresService {
@@ -11,6 +13,8 @@ export class StoresService {
     private storeRepository: Repository<Store>,
     @InjectRepository(Deal)
     private dealRepository: Repository<Deal>,
+    private notificationsService: NotificationsService,
+    private usersService: UsersService,
   ) { }
 
   async getAllStores(categoryId?: number, topStore?: boolean, genderCategoryId?: number): Promise<Store[]> {
@@ -162,21 +166,38 @@ export class StoresService {
   }
 
   /**
-   * Create a new store
+   * Create a new store (default status: pending)
    */
   async createStore(createStoreDto: any): Promise<Store> {
-    const store = this.storeRepository.create({
+    const store = (this.storeRepository.create({
       ...createStoreDto,
-      isActive: createStoreDto.isActive ?? true,
+      isActive: false, // New stores are inactive until approved
+      status: 'pending', // New stores are pending until approved
       topStore: createStoreDto.topStore ?? false,
       rating: createStoreDto.rating ?? 0,
       commissionRate: createStoreDto.commissionRate ?? 2.5,
       minOrderAmount: createStoreDto.minOrderAmount ?? 50,
       maxOrderAmount: createStoreDto.maxOrderAmount ?? 5000,
       productsCount: 0,
-    });
+    }) as unknown) as Store;
 
-    return (await this.storeRepository.save(store)) as unknown as Store;
+    const savedStore = await this.storeRepository.save(store);
+
+    // Notify Admins
+    const admins = await this.usersService.findAllAdmins();
+    const notificationTitle = 'طلب إضافة متجر جديد';
+    const notificationBody = `قام المورد بطلب إضافة متجر جديد باسم: ${store.nameAr || store.name}`;
+    const notificationData = {
+      type: 'new_store_request',
+      storeId: savedStore.id.toString(),
+      storeName: savedStore.name,
+    };
+
+    for (const admin of admins) {
+      await this.notificationsService.sendToUser(admin.id, notificationTitle, notificationBody, notificationData, 'urgent');
+    }
+
+    return savedStore;
   }
 
   /**

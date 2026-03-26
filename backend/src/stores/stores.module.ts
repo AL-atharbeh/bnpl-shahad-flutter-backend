@@ -5,9 +5,16 @@ import { StoresService } from './stores.service';
 import { Store } from './entities/store.entity';
 import { ProductsModule } from '../products/products.module';
 import { Deal } from '../deals/entities/deal.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Store, Deal]), ProductsModule],
+  imports: [
+    TypeOrmModule.forFeature([Store, Deal]),
+    ProductsModule,
+    NotificationsModule,
+    UsersModule,
+  ],
   controllers: [StoresController],
   providers: [StoresService],
   exports: [StoresService],

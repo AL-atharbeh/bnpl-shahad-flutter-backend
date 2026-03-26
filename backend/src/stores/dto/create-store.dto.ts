@@ -61,4 +61,12 @@ export class CreateStoreDto {
     @IsBoolean()
     @IsOptional()
     topStore?: boolean;
+
+    @IsNumber()
+    @IsOptional()
+    vendorId?: number;
+
+    @IsString()
+    @IsOptional()
+    status?: string;
 }

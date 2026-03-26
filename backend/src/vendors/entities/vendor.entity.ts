@@ -5,6 +5,7 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
     ManyToOne,
+    OneToMany,
     JoinColumn,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
@@ -34,6 +35,9 @@ export class Vendor {
     @ManyToOne(() => Store)
     @JoinColumn({ name: 'store_id' })
     store: Store;
+
+    @OneToMany(() => Store, (store) => store.vendor)
+    stores: Store[];
 
     @Column({ name: 'is_active', default: true })
     isActive: boolean;

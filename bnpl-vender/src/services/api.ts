@@ -50,6 +50,7 @@ export const uploadProductImage = (file: File) => {
 
 export const getStoreSettings = (storeId: number) => api.get(`/stores/${storeId}`);
 export const updateStoreSettings = (storeId: number, data: any) => api.put(`/stores/${storeId}`, data);
+export const createStore = (data: any) => api.post('/stores', data);
 export const requestSettlement = (storeId: number, vendorName: string) => api.post('/settlements/request', { storeId, vendorName });
 export const getCategories = () => api.get('/categories');
 

@@ -12,6 +12,7 @@ import { Product } from '../../products/entities/product.entity';
 import { Payment } from '../../payments/entities/payment.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { Deal } from '../../deals/entities/deal.entity';
+import { Vendor } from '../../vendors/entities/vendor.entity';
 
 @Entity('stores')
 export class Store {
@@ -84,6 +85,12 @@ export class Store {
   @Column({ name: 'products_count', default: 0 })
   productsCount: number;
 
+  @Column({ name: 'vendor_id', nullable: true })
+  vendorId: number;
+
+  @Column({ length: 20, default: 'approved' })
+  status: string; // 'pending' | 'approved' | 'rejected'
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
@@ -103,5 +110,9 @@ export class Store {
 
   @OneToMany(() => Payment, (payment) => payment.store)
   payments: Payment[];
+
+  @ManyToOne(() => Vendor, (vendor) => vendor.stores)
+  @JoinColumn({ name: 'vendor_id' })
+  vendor: Vendor;
 }
 
