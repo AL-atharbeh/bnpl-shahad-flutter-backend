@@ -412,24 +412,12 @@ export default function POSPage() {
                                     <span className="text-2xl font-black text-emerald-400">{totalAmount.toLocaleString()} {t("currency")}</span>
                                 </div>
 
-                                {/* Flow Selector */}
+                                {/* Flow: Phone ONLY */}
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">{t("paymentMethod")}</label>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <button
-                                            onClick={() => setPaymentMethod("phone")}
-                                            className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${paymentMethod === "phone" ? "bg-emerald-500/10 border-emerald-500 text-emerald-400" : "bg-white/5 border-white/5 text-slate-500"}`}
-                                        >
-                                            <Phone className="h-5 w-5" />
-                                            <span className="text-[10px] font-bold text-center">{t("sendToPhone")}</span>
-                                        </button>
-                                        <button
-                                            onClick={() => setPaymentMethod("qr")}
-                                            className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${paymentMethod === "qr" ? "bg-emerald-500/10 border-emerald-500 text-emerald-400" : "bg-white/5 border-white/5 text-slate-500"}`}
-                                        >
-                                            <QrCode className="h-5 w-5" />
-                                            <span className="text-[10px] font-bold text-center">{t("scanQR")}</span>
-                                        </button>
+                                    <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">{t("customerInfo")}</label>
+                                    <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                                        <Phone className="h-5 w-5" />
+                                        <span className="text-sm font-bold">{t("sendToPhone")}</span>
                                     </div>
                                 </div>
 
@@ -451,20 +439,6 @@ export default function POSPage() {
                                         </div>
                                     )}
 
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-500">{t("installmentsCount")}</label>
-                                        <div className="flex gap-2">
-                                            {[2, 3, 4].map(n => (
-                                                <button
-                                                    key={n}
-                                                    onClick={() => setInstallments(n)}
-                                                    className={`flex-1 py-2 rounded-xl border text-sm font-bold transition-all ${installments === n ? "bg-emerald-500 text-[#01160e] border-emerald-500 shadow-lg shadow-emerald-500/20" : "bg-white/5 border-white/5 text-slate-500 hover:text-slate-200"}`}
-                                                >
-                                                    {n}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
                                 </div>
 
                                 {/* Action */}
