@@ -51,8 +51,17 @@ export interface StoreStats {
 
 export const storesService = {
     getAll: async () => {
-        const response = await api.get<{ success: boolean; data: Store[] }>('/stores/admin/all');
-        return response.data;
+        try {
+            const response = await api.get<{ success: boolean; data: Store[] }>('/stores/admin/all');
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 404) {
+                console.warn("Admin endpoint 404, falling back to public stores endpoint during deployment...");
+                const response = await api.get<{ success: boolean; data: Store[] }>('/stores');
+                return response.data;
+            }
+            throw error;
+        }
     },
 
     getStats: async (): Promise<StoreStats | null> => {
