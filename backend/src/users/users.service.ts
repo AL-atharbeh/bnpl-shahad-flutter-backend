@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { User } from './entities/user.entity';
 import { Payment } from '../payments/entities/payment.entity';
 
@@ -55,9 +55,11 @@ export class UsersService {
       }
     }
 
-    return this.userRepository.findOne({
-      where: Array.from(variations).map(p => ({ phone: p }))
+    const foundUser = await this.userRepository.findOne({
+      where: { phone: In(Array.from(variations)) }
     });
+    
+    return foundUser;
   }
 
   async updateProfile(userId: number, updateData: Partial<User>): Promise<User> {
