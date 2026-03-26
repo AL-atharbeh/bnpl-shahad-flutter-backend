@@ -31,6 +31,29 @@ export class StoresController {
     };
   }
 
+  @Get('admin/all')
+  @ApiOperation({ summary: 'Get all stores for admin (includes pending/inactive)' })
+  async getAllAdminStores() {
+    const stores = await this.storesService.getAllAdminStores();
+    return {
+      success: true,
+      data: stores,
+    };
+  }
+
+  @Put('admin/:id/status')
+  @ApiOperation({ summary: 'Update store status (approve/reject)' })
+  async updateStoreStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('status') status: string,
+  ) {
+    const store = await this.storesService.updateStoreStatus(id, status);
+    return {
+      success: true,
+      data: store,
+    };
+  }
+
   @Post()
   @ApiOperation({ summary: 'Create new store' })
   async createStore(@Body() createStoreDto: any) {

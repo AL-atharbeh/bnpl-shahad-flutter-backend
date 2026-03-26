@@ -65,7 +65,11 @@ export default function StoresPage() {
       (store.category || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (store.location || "").toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus =
-      statusFilter === "الكل" || (store.isActive ? "نشط" : "غير نشط") === statusFilter;
+      statusFilter === "الكل" || 
+      (statusFilter === "نشط" && store.status === "approved") ||
+      (statusFilter === "قيد المراجعة" && store.status === "pending") ||
+      (statusFilter === "مرفوض" && store.status === "rejected") ||
+      (statusFilter === "متوقف مؤقتًا" && store.status === "suspended");
     return matchesSearch && matchesStatus;
   });
 
@@ -100,6 +104,18 @@ export default function StoresPage() {
 
   const handleExport = () => {
     alert("سيتم تصدير بيانات المتاجر إلى ملف Excel");
+  };
+
+  const handleUpdateStatus = async (id: number, status: string) => {
+    try {
+      if (!confirm(`هل أنت متأكد من تغيير حالة المتجر إلى ${status === 'approved' ? 'نشط' : 'مرفوض'}؟`)) return;
+      await storesService.updateStatus(id, status);
+      await fetchStores();
+      fetchStats();
+    } catch (error) {
+      console.error(`Failed to update store status`, error);
+      alert("حدث خطأ أثناء تحديث حالة المتجر");
+    }
   };
 
   const handleViewStore = (store: Store) => {
@@ -339,6 +355,7 @@ export default function StoresPage() {
               <option value="الكل">كل الحالات</option>
               <option value="نشط">نشط</option>
               <option value="قيد المراجعة">قيد المراجعة</option>
+              <option value="مرفوض">مرفوض</option>
               <option value="متوقف مؤقتًا">متوقف مؤقتًا</option>
             </select>
             <select
@@ -504,9 +521,16 @@ export default function StoresPage() {
                     </td>
                     <td className="px-3 py-3">
                       <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium border ${store.isActive ? statusColors.emerald : statusColors.slate}`}
+                        className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium border ${
+                          store.status === 'approved' ? statusColors.emerald :
+                          store.status === 'pending' ? statusColors.amber :
+                          store.status === 'rejected' ? statusColors.red :
+                          statusColors.slate
+                        }`}
                       >
-                        {store.isActive ? "نشط" : "غير نشط"}
+                        {store.status === 'approved' ? "نشط" :
+                         store.status === 'pending' ? "قيد المراجعة" :
+                         store.status === 'rejected' ? "مرفوض" : "غير محدد"}
                       </span>
                     </td>
                     <td className="px-3 py-3">
@@ -536,17 +560,29 @@ export default function StoresPage() {
                     </td>
                     <td className="px-3 py-3">
                       <div className="flex items-center justify-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                        {store.status === 'pending' && (
+                          <>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleUpdateStatus(store.id, 'approved'); }}
+                              className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-400 hover:bg-emerald-500/20"
+                              title="قبول المتجر"
+                            >
+                              ✓
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleUpdateStatus(store.id, 'rejected'); }}
+                              className="rounded-lg border border-red-500/40 bg-red-500/10 px-2.5 py-1 text-[11px] font-bold text-red-400 hover:bg-red-500/20"
+                              title="رفض المتجر"
+                            >
+                              ✕
+                            </button>
+                          </>
+                        )}
                         <button
                           onClick={() => handleViewStore(store)}
                           className="rounded-lg border border-slate-700 bg-slate-900/60 px-2.5 py-1 text-[11px] text-slate-200 hover:bg-slate-900"
                         >
                           👁️
-                        </button>
-                        <button className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-[11px] text-emerald-200 hover:bg-emerald-500/20">
-                          ✏️
-                        </button>
-                        <button className="rounded-lg border border-red-500/40 bg-red-500/10 px-2.5 py-1 text-[11px] text-red-200 hover:bg-red-500/20">
-                          🚫
                         </button>
                       </div>
                     </td>
@@ -623,9 +659,16 @@ export default function StoresPage() {
                     <span>{selectedStore.location || "غير محدد"}</span>
                     <span>•</span>
                     <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium border ${selectedStore.isActive ? statusColors.emerald : statusColors.slate}`}
+                      className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium border ${
+                        selectedStore.status === 'approved' ? statusColors.emerald :
+                        selectedStore.status === 'pending' ? statusColors.amber :
+                        selectedStore.status === 'rejected' ? statusColors.red :
+                        statusColors.slate
+                      }`}
                     >
-                      {selectedStore.isActive ? "نشط" : "غير نشط"}
+                      {selectedStore.status === 'approved' ? "نشط" :
+                       selectedStore.status === 'pending' ? "قيد المراجعة" :
+                       selectedStore.status === 'rejected' ? "مرفوض" : "غير محدد"}
                     </span>
                   </div>
                 </div>

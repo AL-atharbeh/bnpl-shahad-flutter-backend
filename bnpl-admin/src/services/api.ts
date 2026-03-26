@@ -38,8 +38,10 @@ export const getUsers = (params?: any) => api.get('/users', { params });
 
 // Stores API
 export const getStores = (params?: any) => api.get('/stores', { params });
+export const getAdminStores = () => api.get('/stores/admin/all');
 export const createStore = (data: any) => api.post('/stores', data);
 export const updateStore = (id: number, data: any) => api.put(`/stores/${id}`, data);
+export const updateStoreStatus = (id: number, status: string) => api.put(`/stores/admin/${id}/status`, { status });
 export const deleteStore = (id: number) => api.delete(`/stores/${id}`);
 
 // Sessions API

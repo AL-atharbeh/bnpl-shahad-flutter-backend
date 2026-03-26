@@ -41,6 +41,25 @@ export class StoresService {
     });
   }
 
+  async getAllAdminStores(): Promise<Store[]> {
+    return this.storeRepository.find({
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async updateStoreStatus(id: number, status: string): Promise<Store> {
+    const store = await this.storeRepository.findOne({ where: { id } });
+
+    if (!store) {
+      throw new NotFoundException('المتجر غير موجود');
+    }
+
+    store.status = status;
+    store.isActive = status === 'approved';
+    
+    return this.storeRepository.save(store);
+  }
+
   async getStoreById(id: number): Promise<Store> {
     const store = await this.storeRepository.findOne({
       where: { id, isActive: true },

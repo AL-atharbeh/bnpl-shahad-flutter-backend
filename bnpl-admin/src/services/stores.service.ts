@@ -51,7 +51,7 @@ export interface StoreStats {
 
 export const storesService = {
     getAll: async () => {
-        const response = await api.get<{ success: boolean; data: Store[] }>('/stores');
+        const response = await api.get<{ success: boolean; data: Store[] }>('/stores/admin/all');
         return response.data;
     },
 
@@ -62,6 +62,11 @@ export const storesService = {
 
     toggleTopStore: async (id: number) => {
         const response = await api.put<{ success: boolean; data: Store }>(`/stores/${id}/top-store`);
+        return response.data;
+    },
+
+    updateStatus: async (id: number, status: string) => {
+        const response = await api.put<{ success: boolean; data: Store }>(`/stores/admin/${id}/status`, { status });
         return response.data;
     },
 
