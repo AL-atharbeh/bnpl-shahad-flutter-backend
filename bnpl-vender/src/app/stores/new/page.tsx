@@ -27,8 +27,16 @@ export default function NewStorePage() {
         logoUrl: "",
         websiteUrl: "",
         categoryId: "",
+        genderCategoryId: "",
+        storeUrl: "",
     });
     const [categories, setCategories] = useState<any[]>([]);
+    const genderCategories = [
+        { id: 1, name: "Women", nameAr: "نسائي" },
+        { id: 2, name: "Men", nameAr: "رجالي" },
+        { id: 3, name: "Kids", nameAr: "أطفال" },
+        { id: 4, name: "Unisex/All", nameAr: "للجميع / للجنسين" },
+    ];
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
@@ -107,6 +115,7 @@ export default function NewStorePage() {
                 ...formData,
                 vendorId: user.id,
                 categoryId: formData.categoryId ? parseInt(formData.categoryId) : undefined,
+                genderCategoryId: formData.genderCategoryId ? parseInt(formData.genderCategoryId) : undefined,
                 isActive: false,
                 status: 'pending'
             });
@@ -199,6 +208,44 @@ export default function NewStorePage() {
                                         placeholder="اسم المتجر بالعربي"
                                         dir="rtl"
                                     />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-500 px-1">{language === 'ar' ? 'رابط المتجر الفريد (Slug)' : 'Unique Store URL (Slug)'}</label>
+                                <div className="relative">
+                                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600" />
+                                    <input
+                                        name="storeUrl"
+                                        required
+                                        value={formData.storeUrl}
+                                        onChange={handleChange}
+                                        className="w-full rounded-xl border border-slate-800 bg-slate-900/50 py-3 pl-10 pr-4 text-sm text-slate-200 outline-none focus:border-emerald-500/50 transition-all"
+                                        placeholder="e.g. zara-jordan"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-500 px-1">{language === 'ar' ? 'تصنيف الجنس' : 'Gender Category'}</label>
+                                <div className="relative">
+                                    <Tags className={`absolute ${language === 'ar' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500/50`} />
+                                    <select
+                                        name="genderCategoryId"
+                                        required
+                                        value={formData.genderCategoryId}
+                                        onChange={handleChange}
+                                        className={`w-full rounded-xl border border-slate-800 bg-[#011f18] py-3 ${language === 'ar' ? 'pr-10 pl-4' : 'pl-10 pr-4'} text-sm text-slate-200 outline-none focus:border-emerald-500/50 appearance-none`}
+                                    >
+                                        <option value="">{language === 'ar' ? 'اختر النوع' : 'Select Gender'}</option>
+                                        {genderCategories.map((cat) => (
+                                            <option key={cat.id} value={cat.id}>
+                                                {language === "ar" ? cat.nameAr : cat.name}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
                         </div>

@@ -1,6 +1,8 @@
--- Add vendor_id and status columns to stores table
+-- Add vendor_id, status, gender_category_id and store_url columns to stores table
 ALTER TABLE stores ADD COLUMN vendor_id INT NULL;
 ALTER TABLE stores ADD COLUMN status VARCHAR(20) DEFAULT 'approved';
+ALTER TABLE stores ADD COLUMN gender_category_id INT NULL;
+ALTER TABLE stores ADD COLUMN store_url TEXT NULL;
 
 -- Set existing stores to approved
 UPDATE stores SET status = 'approved';

@@ -69,4 +69,8 @@ export class CreateStoreDto {
     @IsString()
     @IsOptional()
     status?: string;
+
+    @IsNumber()
+    @IsOptional()
+    genderCategoryId?: number;
 }
