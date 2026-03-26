@@ -25,6 +25,11 @@ export class BnplSessionsController {
         return this.sessionsService.createSession(createSessionDto);
     }
 
+    @Get('store/:storeId/recent')
+    async getRecentStoreSessions(@Param('storeId') storeId: string) {
+        return this.sessionsService.getRecentSessionsByStoreId(parseInt(storeId));
+    }
+
     @Get(':sessionId')
     async getSession(@Param('sessionId') sessionId: string) {
         return this.sessionsService.getSession(sessionId);

@@ -134,12 +134,32 @@ export class UsersController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update FCM token for push notifications' })
   async updateFcmToken(@Request() req, @Body('token') token: string) {
-    const user = await this.usersService.updateProfile(req.user.id, {
+    await this.usersService.updateProfile(req.user.id, {
       fcmToken: token,
     });
     return {
       success: true,
       message: 'تم تحديث رمز الإشعارات بنجاح',
+    };
+  }
+
+  @Get('find-by-phone')
+  @ApiOperation({ summary: 'Find user by phone (for POS)' })
+  async findByPhone(@Query('phone') phone: string) {
+    const user = await this.usersService.findByPhone(phone);
+    if (!user) {
+      return {
+        success: false,
+        message: 'المستخدم غير موجود',
+      };
+    }
+    return {
+      success: true,
+      data: {
+        id: user.id,
+        name: user.name,
+        isVerified: user.isPhoneVerified,
+      },
     };
   }
 }

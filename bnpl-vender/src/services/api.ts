@@ -50,7 +50,11 @@ export const uploadProductImage = (file: File) => {
 
 export const getStoreSettings = (storeId: number) => api.get(`/stores/${storeId}`);
 export const updateStoreSettings = (storeId: number, data: any) => api.put(`/stores/${storeId}`, data);
-export const createStore = (data: any) => api.post('/stores', data);
+export const createStore = (storeData: any) => api.post("/stores", storeData);
+
+// Users & POS Enhancements
+export const findUserByPhone = (phone: string) => api.get(`/users/find-by-phone?phone=${phone}`);
+export const getRecentSessions = (storeId: number) => api.get(`/sessions/store/${storeId}/recent`);
 export const requestSettlement = (storeId: number, vendorName: string) => api.post('/settlements/request', { storeId, vendorName });
 export const getCategories = () => api.get('/categories');
 

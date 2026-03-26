@@ -533,7 +533,7 @@ export class BnplSessionsService {
                 count: daySessions.length,
                 approved: daySessions.filter(s => s.status === SessionStatus.APPROVED).length,
                 pending: daySessions.filter(s => s.status === SessionStatus.PENDING).length,
-                rejected: daySessions.filter(s => s.status === SessionStatus.REJECTED).length,
+            rejected: daySessions.filter(s => s.status === SessionStatus.REJECTED).length,
             });
         }
 
@@ -541,5 +541,14 @@ export class BnplSessionsService {
             success: true,
             data: chartData,
         };
+    }
+
+    async getRecentSessionsByStoreId(storeId: number, limit: number = 5) {
+        return this.sessionRepository.find({
+            where: { storeId },
+            relations: ['store', 'user'],
+            order: { createdAt: 'DESC' },
+            take: limit,
+        });
     }
 }
