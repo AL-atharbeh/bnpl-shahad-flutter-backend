@@ -46,6 +46,12 @@ export class CreateProductDto {
   @Min(1)
   categoryId?: number;
 
+  @Type(() => Number)
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  category_id?: number;
+
   @IsOptional()
   @IsString()
   image_url?: string;
@@ -63,9 +69,21 @@ export class CreateProductDto {
 
   @Type(() => Number)
   @IsOptional()
+  @IsInt()
+  @Min(0)
+  stock_quantity?: number;
+
+  @Type(() => Number)
+  @IsOptional()
   @IsNumber()
   @Min(0)
   discountPrice?: number;
+
+  @Type(() => Number)
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discount_price?: number;
 
   @Type(() => Boolean)
   @IsOptional()

@@ -24,8 +24,9 @@ export class ProductsService {
       throw new NotFoundException('المتجر غير موجود');
     }
 
-    if (createProductDto.categoryId) {
-      const category = await this.categoryRepository.findOne({ where: { id: createProductDto.categoryId } });
+    const categoryId = createProductDto.categoryId ?? createProductDto.category_id;
+    if (categoryId) {
+      const category = await this.categoryRepository.findOne({ where: { id: categoryId } });
       if (!category) {
         throw new NotFoundException('الفئة غير موجودة');
       }
@@ -40,11 +41,11 @@ export class ProductsService {
       price: createProductDto.price,
       currency: createProductDto.currency ?? 'JOD',
       category: createProductDto.category,
-      categoryId: createProductDto.categoryId,
+      categoryId: createProductDto.categoryId ?? createProductDto.category_id,
       imageUrl: createProductDto.image_url,
       images: createProductDto.images ?? null,
-      stockQuantity: createProductDto.stockQuantity ?? 0,
-      discountPrice: createProductDto.discountPrice ?? null,
+      stockQuantity: createProductDto.stockQuantity ?? createProductDto.stock_quantity ?? 0,
+      discountPrice: createProductDto.discountPrice ?? createProductDto.discount_price ?? null,
       rating: createProductDto.rating ?? 0,
       reviewsCount: createProductDto.reviews_count ?? 0,
       isActive: createProductDto.is_active ?? true,
@@ -124,8 +125,9 @@ export class ProductsService {
       targetStoreId = updateProductDto.store_id;
     }
 
-    if (updateProductDto.categoryId) {
-      const category = await this.categoryRepository.findOne({ where: { id: updateProductDto.categoryId } });
+    const categoryId = updateProductDto.categoryId ?? updateProductDto.category_id;
+    if (categoryId) {
+      const category = await this.categoryRepository.findOne({ where: { id: categoryId } });
       if (!category) {
         throw new NotFoundException('الفئة غير موجودة');
       }
@@ -142,13 +144,21 @@ export class ProductsService {
     if (updateProductDto.currency !== undefined) updates.currency = updateProductDto.currency;
     if (updateProductDto.category !== undefined) updates.category = updateProductDto.category;
     if (updateProductDto.categoryId !== undefined) updates.categoryId = updateProductDto.categoryId;
+    else if (updateProductDto.category_id !== undefined) updates.categoryId = updateProductDto.category_id;
+    
     if (updateProductDto.image_url !== undefined) updates.imageUrl = updateProductDto.image_url;
     if (updateProductDto.images !== undefined) updates.images = updateProductDto.images;
+    
     if (updateProductDto.stockQuantity !== undefined) {
       updates.stockQuantity = updateProductDto.stockQuantity;
       updates.inStock = updateProductDto.stockQuantity > 0;
+    } else if (updateProductDto.stock_quantity !== undefined) {
+      updates.stockQuantity = updateProductDto.stock_quantity;
+      updates.inStock = updateProductDto.stock_quantity > 0;
     }
+    
     if (updateProductDto.discountPrice !== undefined) updates.discountPrice = updateProductDto.discountPrice;
+    else if (updateProductDto.discount_price !== undefined) updates.discountPrice = updateProductDto.discount_price;
     if (updateProductDto.in_stock !== undefined) updates.inStock = updateProductDto.in_stock;
     if (updateProductDto.rating !== undefined) updates.rating = updateProductDto.rating;
     if (updateProductDto.reviews_count !== undefined) updates.reviewsCount = updateProductDto.reviews_count;
