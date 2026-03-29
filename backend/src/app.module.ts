@@ -23,6 +23,7 @@ import { CommissionSettingsModule } from './commission-settings/commission-setti
 import { SettlementsModule } from './settlements/settlements.module';
 import { ProfitDistributionModule } from './profit-distribution/profit-distribution.module';
 import { ReportsModule } from './reports/reports.module';
+import { BannersModule } from './banners/banners.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { ReportsModule } from './reports/reports.module';
     SettlementsModule,
     ProfitDistributionModule,
     ReportsModule,
+    BannersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
