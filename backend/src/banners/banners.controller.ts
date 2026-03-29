@@ -141,11 +141,15 @@ export class BannersController {
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
       destination: (req, file, cb) => {
-        const uploadPath = join(process.cwd(), 'uploads/banners');
-        if (!existsSync(uploadPath)) {
-          mkdirSync(uploadPath, { recursive: true });
+        try {
+          const uploadPath = join(process.cwd(), 'uploads/banners');
+          if (!existsSync(uploadPath)) {
+            mkdirSync(uploadPath, { recursive: true });
+          }
+          cb(null, uploadPath);
+        } catch (error) {
+          cb(error as Error, '');
         }
-        cb(null, uploadPath);
       },
       filename: (req, file, cb) => {
         const randomName = Array(32).fill(null).map(() => (Math.round(Math.random() * 16)).toString(16)).join('');
@@ -153,10 +157,14 @@ export class BannersController {
       },
     }),
     fileFilter: (req, file, cb) => {
-      if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
-        return cb(new BadRequestException('Only image files are allowed!'), false);
+      // Relaxed check to include common image formats case-insensitively
+      if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp|heic)$/i)) {
+        return cb(new BadRequestException('Invalid file type. Only JPG, PNG, GIF, and WEBP are allowed.'), false);
       }
       cb(null, true);
+    },
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit
     },
   }))
   async uploadBanner(@UploadedFile() file: Express.Multer.File) {
