@@ -178,18 +178,19 @@ void main() async {
   // Update FCM token on server if logged in
   if (isLoggedIn) {
     print('🔐 User is logged in, updating FCM token...');
-    await firebaseService.updateTokenOnServer(null);
+    // Don't await this, let it happen in background
+    firebaseService.updateTokenOnServer(null).catchError((e) => print('❌ Error in background FCM update: $e'));
   } else {
     print('⚠️ User is not logged in, FCM token will be sent after login');
   }
   
-  // Initialize points service
+  // Initialize points service - don't block main startup if it hangs
   final pointsService = PointsService();
-  await pointsService.initialize();
+  pointsService.initialize().catchError((e) => print('❌ Error initializing PointsService: $e'));
   
-  // Initialize postpone service
+  // Initialize postpone service - don't block
   final postponeService = PostponeService();
-  await postponeService.initialize();
+  postponeService.initialize().catchError((e) => print('❌ Error initializing PostponeService: $e'));
   
   runApp(
     MultiProvider(

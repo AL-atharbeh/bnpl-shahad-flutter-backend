@@ -43,10 +43,10 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
         description: "",
         description_ar: "",
         price: "",
-        discount_price: "",
-        category_id: "",
+        discountPrice: "",
+        categoryId: "",
         image_url: "",
-        stock_quantity: "0",
+        stockQuantity: "0",
         in_stock: true
     });
 
@@ -60,10 +60,10 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
                 description: product.description || "",
                 description_ar: product.description_ar || "",
                 price: product.price?.toString() || "",
-                discount_price: product.discountPrice?.toString() || "",
-                category_id: product.category_id?.toString() || "",
+                discountPrice: product.discountPrice?.toString() || "",
+                categoryId: product.category_id?.toString() || "",
                 image_url: product.image_url || "",
-                stock_quantity: (product as any).stockQuantity?.toString() || "0",
+                stockQuantity: (product as any).stockQuantity?.toString() || "0",
                 in_stock: product.in_stock !== false
             });
         } else {
@@ -73,10 +73,10 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
                 description: "",
                 description_ar: "",
                 price: "",
-                discount_price: "",
-                category_id: "",
+                discountPrice: "",
+                categoryId: "",
                 image_url: "",
-                stock_quantity: "50", // Default some stock
+                stockQuantity: "50", // Default some stock
                 in_stock: true
             });
         }
@@ -203,11 +203,16 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
             const payload = {
                 ...formData,
                 price: parseFloat(formData.price),
-                discount_price: formData.discount_price ? parseFloat(formData.discount_price) : undefined,
-                stock_quantity: parseInt(formData.stock_quantity),
-                category_id: formData.category_id ? parseInt(formData.category_id) : undefined,
+                discountPrice: formData.discountPrice ? parseFloat(formData.discountPrice) : undefined,
+                stockQuantity: parseInt(formData.stockQuantity),
+                categoryId: formData.categoryId ? parseInt(formData.categoryId) : undefined,
                 store_id: user.storeId,
             };
+
+            // Remove old snake_case entries that might have been spread from formData
+            delete (payload as any).discount_price;
+            delete (payload as any).stock_quantity;
+            delete (payload as any).category_id;
 
             if (product) {
                 await updateProduct(product.id, payload);
@@ -328,8 +333,8 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
                                                         <div className="relative">
                                                             <select
                                                                 required
-                                                                value={formData.category_id}
-                                                                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                                                                value={formData.categoryId}
+                                                                onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
                                                                 className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-10 text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 appearance-none transition-all"
                                                             >
                                                                 <option value="" disabled className="bg-[#0B1215]">Select Category</option>
@@ -417,8 +422,8 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
                                                                     type="number"
                                                                     min="0"
                                                                     step="0.01"
-                                                                    value={formData.discount_price}
-                                                                    onChange={(e) => setFormData({ ...formData, discount_price: e.target.value })}
+                                                                    value={formData.discountPrice}
+                                                                    onChange={(e) => setFormData({ ...formData, discountPrice: e.target.value })}
                                                                     className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-10 text-white placeholder-slate-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all font-mono"
                                                                     placeholder="0.00"
                                                                 />
@@ -437,8 +442,8 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
                                                                 type="number"
                                                                 required
                                                                 min="0"
-                                                                value={formData.stock_quantity}
-                                                                onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
+                                                                value={formData.stockQuantity}
+                                                                onChange={(e) => setFormData({ ...formData, stockQuantity: e.target.value })}
                                                                 className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-10 text-white placeholder-slate-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all font-mono"
                                                                 placeholder="0"
                                                             />

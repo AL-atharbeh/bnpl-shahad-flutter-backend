@@ -84,9 +84,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
 
   // Legacy fallback banners (will be replaced by database banners)
   final List<String> _fallbackBannerImages = [
-    'assets/images/banner1.jpg',
-    'assets/images/banner2.jpg',
-    'assets/images/banner3.jpg',
+    'assets/images/banner1.jpeg',
   ];
 
   // Legacy fallback categories (will be replaced by database categories)
@@ -1544,7 +1542,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     final l10n = AppLocalizations.of(context)!;
     
     // Use database banners if available, otherwise use fallback
-    final bannersToShow = _banners.isNotEmpty ? _banners : _fallbackBannerImages.map((img) => {'imageUrl': img}).toList();
+    List<Map<String, dynamic>> allBanners = _banners.isNotEmpty 
+        ? _banners 
+        : _fallbackBannerImages.map((img) => {'imageUrl': img}).toList();
+        
+    // Filter to only show "banner1 zara"
+    final bannersToShow = allBanners.where((banner) {
+      final title = banner['title']?.toString().toLowerCase() ?? '';
+      final titleEn = banner['titleEn']?.toString().toLowerCase() ?? '';
+      final imageUrl = banner['imageUrl']?.toString().toLowerCase() ?? '';
+      
+      return title.contains('zara') || 
+             title.contains('زارا') || 
+             titleEn.contains('zara') || 
+             imageUrl.contains('banner1') || 
+             imageUrl.contains('zara');
+    }).toList();
+    
+    // If no specific "Zara" banner found, use the first one from assets as fallback
+    if (bannersToShow.isEmpty) {
+      bannersToShow.add({'imageUrl': 'assets/images/banner1.jpeg'});
+    }
+    
     final bannersCount = bannersToShow.length;
     
     if (_isLoadingBanners && _banners.isEmpty) {

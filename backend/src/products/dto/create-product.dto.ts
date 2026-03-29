@@ -44,7 +44,7 @@ export class CreateProductDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  category_id?: number;
+  categoryId?: number;
 
   @IsOptional()
   @IsString()
@@ -59,13 +59,13 @@ export class CreateProductDto {
   @IsOptional()
   @IsInt()
   @Min(0)
-  stock_quantity?: number;
+  stockQuantity?: number;
 
   @Type(() => Number)
   @IsOptional()
   @IsNumber()
   @Min(0)
-  discount_price?: number;
+  discountPrice?: number;
 
   @Type(() => Boolean)
   @IsOptional()

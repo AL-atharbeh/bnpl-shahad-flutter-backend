@@ -79,6 +79,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+
   
 
 
@@ -153,6 +155,13 @@ flutter:
   #       - asset: fonts/TrajanPro.ttf
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
-  #
+  # flutter_launcher_icons configuration
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/logoapp1.png"
+  adaptive_icon_background: "#00AB4E"
+  adaptive_icon_foreground: "assets/images/logoapp1.png"
+  min_sdk_android: 21 # android min sdk value
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

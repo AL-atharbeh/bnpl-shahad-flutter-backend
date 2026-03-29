@@ -41,7 +41,7 @@ class FirebaseService {
       }
       await Firebase.initializeApp();
       if (kDebugMode) {
-        print('✅ Firebase Core initialized');
+        print('✅ Firebase Core initialized successfully');
       }
 
       // Initialize messaging after Firebase is initialized
