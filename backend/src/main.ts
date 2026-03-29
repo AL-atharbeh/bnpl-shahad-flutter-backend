@@ -61,7 +61,7 @@ async function bootstrap() {
   httpAdapter.get('/', (req, res) => {
     res.json({
       message: 'Welcome to BNPL API',
-      version: '1.0',
+      version: '1.0.1 (Banner Fix Deploy)',
       documentation: '/api/docs',
       apiPrefix: `/${apiPrefix}`,
     });
