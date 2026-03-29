@@ -9,6 +9,7 @@ const navItems = [
   { href: "/dashboard/stores", label: "المتاجر" },
   { href: "/dashboard/categories", label: "التصنيفات" },
   { href: "/dashboard/offers", label: "العروض" },
+  { href: "/dashboard/banners", label: "البانرات" },
   { href: "/dashboard/transactions", label: "المعاملات" },
   { href: "/dashboard/payments", label: "الدفعات" },
   { href: "/dashboard/notifications", label: "الإشعارات" },

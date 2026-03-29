@@ -6,6 +6,7 @@ import '../widgets/welcome_hero.dart';
 import '../widgets/primary_cta.dart';
 import '../../../../services/language_service.dart';
 import '../../../../routing/app_router.dart';
+import '../../../../config/constants/assets.dart'; // Added this
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
@@ -28,17 +29,17 @@ class _WelcomePageState extends State<WelcomePage>
     {
       'title': 'onboardingTitle1',
       'description': 'onboardingDescription1',
-      'image': 'assets/images/onboarding_1.png',
+      'image': Assets.onboarding1,
     },
     {
       'title': 'onboardingTitle2',
       'description': 'onboardingDescription2',
-      'image': 'assets/images/onboarding_2.png',
+      'image': Assets.onboarding2,
     },
     {
       'title': 'onboardingTitle3',
       'description': 'onboardingDescription3',
-      'image': 'assets/images/onboarding_3.png',
+      'image': Assets.onboarding3,
     },
   ];
 
@@ -106,20 +107,16 @@ class _WelcomePageState extends State<WelcomePage>
     }
   }
 
-     void _completeOnboarding() async {
-     // Save that user has seen onboarding
-     final prefs = await SharedPreferences.getInstance();
-     await prefs.setBool('has_seen_onboarding', true);
-     
-     // Navigate to phone input page (new auth system)
-     if (mounted) {
-       Navigator.pushNamedAndRemoveUntil(
-         context,
-         AppRouter.phoneInput,
-         (route) => false,
-       );
-     }
-   }
+  void _completeOnboarding() async {
+    // Save that user has seen onboarding
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_seen_onboarding', true);
+    
+    // Navigate to phone input page (new auth system)
+    if (mounted) {
+      AppRouter.navigateToPhoneInputCinematic(context);
+    }
+  }
 
   void _skipOnboarding() {
     _completeOnboarding();
@@ -129,7 +126,6 @@ class _WelcomePageState extends State<WelcomePage>
     setState(() {
       _currentPage = index;
     });
-    // No animation reset — PageView handles smooth sliding between pages
   }
 
   @override
@@ -140,204 +136,194 @@ class _WelcomePageState extends State<WelcomePage>
     return Consumer<LanguageService>(
       builder: (context, languageService, child) {
         return Scaffold(
-            backgroundColor: theme.colorScheme.background,
-            body: SafeArea(
-              child: FadeTransition(
-                opacity: _entranceFadeAnimation,
-                child: SlideTransition(
-                  position: _entranceSlideAnimation,
-                  child: Column(
-                    children: [
-                      // Top buttons row (Skip and Language)
-                      Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // Language toggle button
-                      Container(
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: theme.colorScheme.primary.withOpacity(0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(20),
-                            onTap: () {
-                              _toggleLanguage();
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.language,
-                                    size: 18,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    _getCurrentLanguageText(),
-                                    style: TextStyle(
-                                      color: theme.colorScheme.primary,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      
-                      // Skip button
-                      TextButton(
-                        onPressed: _skipOnboarding,
-                        child: Text(
-                          l10n.skip,
-                          style: TextStyle(
-                            color: theme.colorScheme.onBackground,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-            
-                // Page content — PageView handles smooth horizontal sliding
-                Expanded(
-                  child: PageView.builder(
-                    controller: _pageController,
-                    onPageChanged: _onPageChanged,
-                    itemCount: _onboardingData.length,
-                    itemBuilder: (context, index) {
-                      final data = _onboardingData[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                        child: Column(
-                          children: [
-                            // Top padding
-                            const SizedBox(height: 40),
-                            
-                            // Hero image
-                            Expanded(
-                              flex: 3,
-                              child: WelcomeHero(
-                                imagePath: data['image']!,
-                                isActive: index == _currentPage,
-                              ),
-                            ),
-                            
-                            const SizedBox(height: 48),
-                            
-                            // Title
-                            Text(
-                              _getLocalizedString(l10n, data['title']!),
-                              style: theme.textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.onBackground,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            
-                            const SizedBox(height: 24),
-                            
-                            // Description
-                            Text(
-                              _getLocalizedString(l10n, data['description']!),
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                color: theme.colorScheme.onBackground.withOpacity(0.7),
-                                height: 1.5,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-            
-                // Bottom section with indicators and buttons
-                Padding(
-                  padding: const EdgeInsets.all(32.0),
-                  child: Column(
-                    children: [
-                      // Page indicators
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(
-                          _onboardingData.length,
-                          (index) => AnimatedContainer(
-                            duration: const Duration(milliseconds: 400),
-                            curve: Curves.easeInOut,
-                            margin: const EdgeInsets.symmetric(horizontal: 6),
-                            width: _currentPage == index ? 32 : 8,
-                            height: 8,
+          backgroundColor: theme.colorScheme.background,
+          body: SafeArea(
+            child: FadeTransition(
+              opacity: _entranceFadeAnimation,
+              child: SlideTransition(
+                position: _entranceSlideAnimation,
+                child: Column(
+                  children: [
+                    // Top buttons row (Skip and Language)
+                    Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Language toggle button
+                          Container(
                             decoration: BoxDecoration(
-                              color: _currentPage == index
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.primary.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(4),
+                              color: theme.colorScheme.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: theme.colorScheme.primary.withOpacity(0.3),
+                                width: 1,
+                              ),
                             ),
-                          ),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 32),
-                      
-                      // Navigation buttons
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: Row(
-                          key: ValueKey<int>(_currentPage > 0 ? 1 : 0),
-                          children: [
-                            // Previous button (only show if not first page)
-                            if (_currentPage > 0) ...[
-                              Expanded(
-                                child: OutlinedButton(
-                                  onPressed: _previousPage,
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(20),
+                                onTap: _toggleLanguage,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.language,
+                                        size: 18,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        _getCurrentLanguageText(),
+                                        style: TextStyle(
+                                          color: theme.colorScheme.primary,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  child: Text(l10n.previous),
                                 ),
                               ),
-                              const SizedBox(width: 16),
-                            ],
-                            
-                            // Next/Get Started button
-                            Expanded(
-                              child: PrimaryCTA(
-                                text: _currentPage == _onboardingData.length - 1
-                                    ? l10n.getStarted
-                                    : l10n.next,
-                                onPressed: _nextPage,
+                            ),
+                          ),
+                          
+                          // Skip button
+                          TextButton(
+                            onPressed: _skipOnboarding,
+                            child: Text(
+                              l10n.skip,
+                              style: TextStyle(
+                                color: theme.colorScheme.onBackground,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+                    ),
+                
+                    // Page content
+                    Expanded(
+                      child: PageView.builder(
+                        controller: _pageController,
+                        onPageChanged: _onPageChanged,
+                        itemCount: _onboardingData.length,
+                        itemBuilder: (context, index) {
+                          final data = _onboardingData[index];
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                            child: Column(
+                              children: [
+                                const SizedBox(height: 40),
+                                
+                                Expanded(
+                                  flex: 3,
+                                  child: WelcomeHero(
+                                    imagePath: data['image']!,
+                                    isActive: index == _currentPage,
+                                  ),
+                                ),
+                                
+                                const SizedBox(height: 48),
+                                
+                                Text(
+                                  _getLocalizedString(l10n, data['title']!),
+                                  style: theme.textTheme.headlineMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onBackground,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                
+                                const SizedBox(height: 24),
+                                
+                                Text(
+                                  _getLocalizedString(l10n, data['description']!),
+                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                    color: theme.colorScheme.onBackground.withOpacity(0.7),
+                                    height: 1.5,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                
+                    // Bottom section
+                    Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(
+                              _onboardingData.length,
+                              (index) => AnimatedContainer(
+                                duration: const Duration(milliseconds: 400),
+                                curve: Curves.easeInOut,
+                                margin: const EdgeInsets.symmetric(horizontal: 6),
+                                width: _currentPage == index ? 32 : 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: _currentPage == index
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.primary.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 32),
+                          
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            child: Row(
+                              key: ValueKey<int>(_currentPage > 0 ? 1 : 0),
+                              children: [
+                                if (_currentPage > 0) ...[
+                                  Expanded(
+                                    child: OutlinedButton(
+                                      onPressed: _previousPage,
+                                      style: OutlinedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                      child: Text(l10n.previous),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                ],
+                                
+                                Expanded(
+                                  child: PrimaryCTA(
+                                    text: _currentPage == _onboardingData.length - 1
+                                        ? l10n.getStarted
+                                        : l10n.next,
+                                    onPressed: _nextPage,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
+            ),
           ),
-    );
+        );
       },
     );
   }
@@ -346,7 +332,6 @@ class _WelcomePageState extends State<WelcomePage>
     final languageService = Provider.of<LanguageService>(context, listen: false);
     
     if (languageService.isArabic) {
-      // Return Arabic text
       switch (key) {
         case 'onboardingTitle1':
           return 'أهلا وسهلا… يلا نبلّش';
@@ -364,7 +349,6 @@ class _WelcomePageState extends State<WelcomePage>
           return key;
       }
     } else {
-      // Return English text
       switch (key) {
         case 'onboardingTitle1':
           return 'Welcome... Let\'s Start';
@@ -393,16 +377,17 @@ class _WelcomePageState extends State<WelcomePage>
     final languageService = Provider.of<LanguageService>(context, listen: false);
     await languageService.toggleLanguage();
     
-    // Show a snackbar to indicate language change
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          languageService.isArabic ? 'تم تغيير اللغة إلى العربية' : 'Language changed to English',
-          textAlign: TextAlign.center,
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            languageService.isArabic ? 'تم تغيير اللغة إلى العربية' : 'Language changed to English',
+            textAlign: TextAlign.center,
+          ),
+          duration: const Duration(seconds: 2),
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
-        duration: const Duration(seconds: 2),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-      ),
-    );
+      );
+    }
   }
 }

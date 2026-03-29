@@ -191,6 +191,7 @@ class _WelcomeHeroState extends State<WelcomeHero>
                               widget.imagePath,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
+                                debugPrint('❌ Error loading onboarding image: $error');
                                 return _buildPlaceholder(theme);
                               },
                             ),

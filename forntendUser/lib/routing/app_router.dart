@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../features/onboarding/presentation/pages/splash_page.dart';
 import '../../features/onboarding/presentation/pages/welcome_page.dart';
@@ -48,16 +49,31 @@ class AppRouter {
   static const String search = '/search';
   static const String payments = '/payments';
 
+  static Route<dynamic> _createCinematicRoute(Widget page, RouteSettings settings) {
+    return PageRouteBuilder(
+      settings: settings,
+      pageBuilder: (context, animation, secondaryAnimation) => page,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        var curvedAnimation = CurvedAnimation(parent: animation, curve: Curves.easeInOutQuart);
+
+        return ClipPath(
+          clipper: _CircularRevealClipper(curvedAnimation.value),
+          child: child,
+        );
+      },
+      transitionDuration: const Duration(milliseconds: 1000),
+    );
+  }
+
   static Route<dynamic> generateRoute(RouteSettings settings) {
-    print('🛣️ Generating route: ${settings.name}');
+    debugPrint('🛣️ Generating route: ${settings.name}');
     
-    // Handle deep link format: /?id=sess_...
     if (settings.name != null && settings.name!.startsWith('/?id=')) {
       final uri = Uri.parse(settings.name!);
       final sessionId = uri.queryParameters['id'];
       
       if (sessionId != null && sessionId.isNotEmpty) {
-        print('🔗 Deep link detected! Session ID: $sessionId');
+        debugPrint('🔗 Deep link detected! Session ID: $sessionId');
         return MaterialPageRoute(
           builder: (_) => SessionConfirmationPage(sessionId: sessionId),
           settings: RouteSettings(
@@ -173,39 +189,35 @@ class AppRouter {
           settings: settings,
         );
       
-             case stores:
+      case stores: {
         final args = settings.arguments as Map<String, dynamic>?;
-        final categoryName = args?['categoryName'] as String? ?? '';
-        final categoryId = args?['categoryId'] as int?;
-                      return MaterialPageRoute(
-                builder: (_) => CategoryBrowsePage(
-                  title: categoryName,
-                  categoryId: categoryId,
-                ),
-                settings: settings,
-              );
+        return MaterialPageRoute(
+          builder: (_) => CategoryBrowsePage(
+            title: args?['categoryName'] as String? ?? '',
+            categoryId: args?['categoryId'] as int?,
+          ),
+          settings: settings,
+        );
+      }
        
        case storeDetails: {
          final args = settings.arguments as Map<String, dynamic>?;
-
          return MaterialPageRoute(
            builder: (_) => StoreDetailsPage(
              storeId: args?['storeId'] as int?,
              storeName:   args?['storeName']   as String? ?? '',
-             logoImage:   args?['storeLogo']   as String? ?? '',      // نستخدم نفس الاسم القادم من الـ arguments
-             bannerImage: args?['storeBanner'] as String? ?? '',      // نمرّرها إلى bannerImage
-             rating:      (args?['rating']     as num?)?.toDouble() ?? 0.0, // تحويل آمن لـ double
+             logoImage:   args?['storeLogo']   as String? ?? '',
+             bannerImage: args?['storeBanner'] as String? ?? '',
+             rating:      (args?['rating']     as num?)?.toDouble() ?? 0.0,
              reviewsCount: args?['reviewsCount'] as int? ?? 0,
              description: args?['description']  as String? ?? '',
            ),
            settings: settings,
          );
-               }
+       }
        
-               case productDetails: {
+       case productDetails: {
           final args = settings.arguments as Map<String, dynamic>?;
-          
-          // إذا كان productId موجود، نمرره فقط (ProductDetailsPage سيجلب البيانات)
           if (args?['productId'] != null) {
             return MaterialPageRoute(
               builder: (_) => ProductDetailsPage(
@@ -214,8 +226,6 @@ class AppRouter {
               settings: settings,
             );
           }
-          
-          // خلاف ذلك، نستخدم البيانات الممررة مباشرة (للتوافق مع الكود القديم)
           return MaterialPageRoute(
             builder: (_) => ProductDetailsPage(
               images: (args?['images'] as List<dynamic>?)?.cast<String>() ?? [],
@@ -232,35 +242,21 @@ class AppRouter {
             settings: settings,
           );
         }
-        case offers: {
+        case offers:
           return MaterialPageRoute(
             builder: (_) => const OffersPage(),
             settings: settings,
           );
-        }
-        case allStores: {
+        case allStores:
           return MaterialPageRoute(
             builder: (_) => const AllStoresPage(),
             settings: settings,
           );
-        }
         
         case sessionConfirmation: {
           final args = settings.arguments as Map<String, dynamic>?;
-          final sessionId = args?['sessionId'] as String?;
-          
-          if (sessionId == null) {
-            return MaterialPageRoute(
-              builder: (_) => Scaffold(
-                body: Center(
-                  child: Text('Session ID is required'),
-                ),
-              ),
-            );
-          }
-          
           return MaterialPageRoute(
-            builder: (_) => SessionConfirmationPage(sessionId: sessionId),
+            builder: (_) => SessionConfirmationPage(sessionId: args?['sessionId'] as String? ?? ''),
             settings: settings,
           );
         }
@@ -280,50 +276,50 @@ class AppRouter {
        default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
-            body: Center(
-              child: Text('Route ${settings.name} not found'),
-            ),
+            body: Center(child: Text('Route ${settings.name} not found')),
           ),
         );
     }
   }
 
   static void navigateToSplash(BuildContext context) {
-    Navigator.pushNamedAndRemoveUntil(
+    Navigator.pushNamedAndRemoveUntil(context, splash, (route) => false);
+  }
+
+  // --- Aliases for Backward Compatibility (using Cinematic by default) ---
+  static void navigateToOnboarding(BuildContext context) => navigateToOnboardingCinematic(context);
+  static void navigateToPhoneInput(BuildContext context) => navigateToPhoneInputCinematic(context);
+  static void navigateToPinLogin(BuildContext context) => navigateToPinLoginCinematic(context);
+  static void navigateToHome(BuildContext context) => navigateToHomeCinematic(context);
+
+  static void navigateToOnboardingCinematic(BuildContext context) {
+    Navigator.pushAndRemoveUntil(
       context,
-      splash,
+      _createCinematicRoute(const WelcomePage(), const RouteSettings(name: onboarding)),
       (route) => false,
     );
   }
 
-  static void navigateToOnboarding(BuildContext context) {
-    Navigator.pushNamedAndRemoveUntil(
+  static void navigateToPhoneInputCinematic(BuildContext context) {
+    Navigator.pushAndRemoveUntil(
       context,
-      onboarding,
+      _createCinematicRoute(const PhoneInputPage(), const RouteSettings(name: phoneInput)),
       (route) => false,
     );
   }
 
-  static void navigateToPhoneInput(BuildContext context) {
-    Navigator.pushNamedAndRemoveUntil(
+  static void navigateToPinLoginCinematic(BuildContext context) {
+    Navigator.pushAndRemoveUntil(
       context,
-      phoneInput,
+      _createCinematicRoute(const PinLoginPage(), const RouteSettings(name: pinLogin)),
       (route) => false,
     );
   }
 
-  static void navigateToPinLogin(BuildContext context) {
-    Navigator.pushNamedAndRemoveUntil(
+  static void navigateToHomeCinematic(BuildContext context) {
+    Navigator.pushAndRemoveUntil(
       context,
-      pinLogin,
-      (route) => false,
-    );
-  }
-
-  static void navigateToHome(BuildContext context) {
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      home,
+      _createCinematicRoute(const HomePage(), const RouteSettings(name: home)),
       (route) => false,
     );
   }
@@ -352,80 +348,40 @@ class AppRouter {
     Navigator.pushNamed(context, bnplBusiness);
   }
 
-    static void navigateToNotifications(BuildContext context) {
+  static void navigateToNotifications(BuildContext context) {
     Navigator.pushNamed(context, notifications);
   }
 
-  static void navigateToCategoryBrowse(BuildContext context, {
-    required String categoryName,
-    int? categoryId,
-  }) {
-    Navigator.pushNamed(
-      context,
-      stores,
-      arguments: {
-        'categoryName': categoryName,
-        'categoryId': categoryId,
-      },
-    );
+  static void navigateToCategoryBrowse(BuildContext context, {required String categoryName, int? categoryId}) {
+    Navigator.pushNamed(context, stores, arguments: {'categoryName': categoryName, 'categoryId': categoryId});
   }
 
-  static void navigateToStoreDetails(
-    BuildContext context, {
-    int? storeId,
-    String? storeName,
-    String? storeLogo,
-    String? storeBanner, // سنمرّرها كـ bannerImage للصفحة
-    double? rating,
-    int? reviewsCount,
-    String? description,
-  }) {
-    Navigator.pushNamed(
-      context,
-      storeDetails,
-      arguments: {
-        if (storeId != null) 'storeId': storeId,
-        if (storeName != null) 'storeName': storeName,
-        if (storeLogo != null) 'storeLogo': storeLogo,
-        if (storeBanner != null) 'storeBanner': storeBanner,
-        if (rating != null) 'rating': rating,
-        if (reviewsCount != null) 'reviewsCount': reviewsCount,
-        if (description != null) 'description': description,
-      },
-    );
+  static void navigateToStoreDetails(BuildContext context, {int? storeId, String? storeName, String? storeLogo, String? storeBanner, double? rating, int? reviewsCount, String? description}) {
+    Navigator.pushNamed(context, storeDetails, arguments: {
+      if (storeId != null) 'storeId': storeId,
+      if (storeName != null) 'storeName': storeName,
+      if (storeLogo != null) 'storeLogo': storeLogo,
+      if (storeBanner != null) 'storeBanner': storeBanner,
+      if (rating != null) 'rating': rating,
+      if (reviewsCount != null) 'reviewsCount': reviewsCount,
+      if (description != null) 'description': description,
+    });
   }
 
-  static void navigateToProductDetails(
-    BuildContext context, {
-    int? productId,
-    List<String>? images,
-    String? title,
-    String? subtitle,
-    String? priceText,
-    String? oldPriceText,
-    int? discountPercent,
-    String? storeName,
-    String? storeLogo,
-    bool onlineOnly = true,
-    Map<String, String>? attributes,
-  }) {
-    Navigator.pushNamed(
-      context,
-      productDetails,
-      arguments: {
-        if (productId != null) 'productId': productId,
-        if (images != null) 'images': images,
-        if (title != null) 'title': title,
-        if (subtitle != null) 'subtitle': subtitle,
-        if (priceText != null) 'priceText': priceText,
-        if (oldPriceText != null) 'oldPriceText': oldPriceText,
-        if (discountPercent != null) 'discountPercent': discountPercent,
-        if (storeName != null) 'storeName': storeName,
-        if (storeLogo != null) 'storeLogo': storeLogo,
-        'onlineOnly': onlineOnly,
-        if (attributes != null) 'attributes': attributes,
-      },
-    );
+  static void navigateToProductDetails(BuildContext context, {int? productId, List<String>? images, String? title, String? subtitle, String? priceText, String? oldPriceText, int? discountPercent, String? storeName, String? storeLogo, bool onlineOnly = true, Map<String, String>? attributes}) {
+    Navigator.pushNamed(context, productDetails, arguments: {
+      if (productId != null) 'productId': productId,
+      if (images != null) 'images': images,
+      if (title != null) 'title': title,
+      if (subtitle != null) 'subtitle': subtitle,
+      if (priceText != null) 'priceText': priceText,
+      if (oldPriceText != null) 'oldPriceText': oldPriceText,
+      if (discountPercent != null) 'discountPercent': discountPercent,
+      if (storeName != null) 'storeName': storeName,
+      if (storeLogo != null) 'storeLogo': storeLogo,
+      'onlineOnly': onlineOnly,
+      if (attributes != null) 'attributes': attributes,
+    });
   }
 
   static void navigateToOffers(BuildContext context) {
@@ -443,4 +399,23 @@ class AppRouter {
   static void goBack(BuildContext context) {
     Navigator.pop(context);
   }
+}
+
+class _CircularRevealClipper extends CustomClipper<Path> {
+  final double fraction;
+  _CircularRevealClipper(this.fraction);
+
+  @override
+  Path getClip(Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final maxRadius = sqrt(size.width * size.width + size.height * size.height);
+    final radius = maxRadius * fraction;
+
+    final path = Path();
+    path.addOval(Rect.fromCircle(center: center, radius: radius));
+    return path;
+  }
+
+  @override
+  bool shouldReclip(_CircularRevealClipper oldClipper) => oldClipper.fraction != fraction;
 }
