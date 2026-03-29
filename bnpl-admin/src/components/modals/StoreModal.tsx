@@ -60,8 +60,11 @@ export default function StoreModal({ isOpen, onClose, onSuccess, editStore }: St
     const fetchVendors = async () => {
         try {
             const result = await storesService.getVendors();
+            console.log("Vendors result:", result);
             if (result && result.data) {
                 setVendors(result.data);
+            } else if (Array.isArray(result)) {
+                setVendors(result);
             }
         } catch (error) {
             console.error("Failed to fetch vendors", error);
