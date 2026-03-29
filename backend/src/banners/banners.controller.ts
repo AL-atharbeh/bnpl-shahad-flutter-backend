@@ -8,8 +8,17 @@ import {
   Body,
   Query,
   ParseIntPipe,
+  UseInterceptors,
+  UploadedFile,
+  Res,
+  BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation, ApiQuery, ApiResponse, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
+import { Response } from 'express';
+import { existsSync, mkdirSync } from 'fs';
 import { BannersService } from './banners.service';
 import { Banner } from './entities/banner.entity';
 
@@ -114,6 +123,67 @@ export class BannersController {
       success: true,
       data: banners,
     };
+  }
+  @Post('upload')
+  @ApiOperation({ summary: 'Upload banner image' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: (req, file, cb) => {
+        const uploadPath = join(process.cwd(), 'uploads/banners');
+        if (!existsSync(uploadPath)) {
+          mkdirSync(uploadPath, { recursive: true });
+        }
+        cb(null, uploadPath);
+      },
+      filename: (req, file, cb) => {
+        const randomName = Array(32).fill(null).map(() => (Math.round(Math.random() * 16)).toString(16)).join('');
+        return cb(null, `${randomName}${extname(file.originalname)}`);
+      },
+    }),
+    fileFilter: (req, file, cb) => {
+      if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
+        return cb(new BadRequestException('Only image files are allowed!'), false);
+      }
+      cb(null, true);
+    },
+  }))
+  async uploadBanner(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('File is not provided');
+    }
+    return {
+      success: true,
+      data: {
+        url: `/api/v1/banners/uploads/${file.filename}`,
+        filename: file.filename
+      }
+    };
+  }
+
+  @Get('uploads/:filename')
+  @ApiOperation({ summary: 'Get banner image' })
+  async getBannerImage(@Param('filename') filename: string, @Res() res: Response) {
+    const filePath = join(process.cwd(), 'uploads/banners', filename);
+    if (existsSync(filePath)) {
+      res.sendFile(filePath);
+    } else {
+      res.status(404).json({
+        success: false,
+        message: 'Image not found',
+      });
+    }
   }
 }
 

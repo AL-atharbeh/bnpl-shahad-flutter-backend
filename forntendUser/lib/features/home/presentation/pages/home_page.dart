@@ -1598,7 +1598,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               itemBuilder: (context, index) {
                 final banner = bannersToShow[index];
                 final imageUrl = banner['imageUrl'] ?? '';
-                final isNetworkImage = imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
                 
                 return Container(
                   width: double.infinity,
@@ -1607,44 +1606,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(0),
-                    child: isNetworkImage
-                        ? Image.network(
-                            imageUrl,
-                            fit: BoxFit.cover,
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Container(
-                                decoration: const BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      Color(0xFF10B981),
-                                      Color(0xFF34D399),
-                                    ],
-                                  ),
-                                ),
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    value: loadingProgress.expectedTotalBytes != null
-                                        ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                                        : null,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              );
-                            },
-                            errorBuilder: (context, error, stackTrace) {
-                              return _buildFallbackBanner(index);
-                            },
-                          )
-                        : Image.asset(
-                            imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return _buildFallbackBanner(index);
-                            },
+                    child: ImageHelper.buildImage(
+                      imageUrl: imageUrl,
+                      fit: BoxFit.cover,
+                      placeholder: Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF10B981),
+                              Color(0xFF34D399),
+                            ],
                           ),
+                        ),
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      errorWidget: _buildFallbackBanner(index),
+                    ),
                   ),
                 );
               },
