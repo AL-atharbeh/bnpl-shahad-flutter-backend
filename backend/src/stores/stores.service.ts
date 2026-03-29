@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, In, LessThanOrEqual, MoreThanOrEqual, IsNull } from 'typeorm';
 import { Store } from './entities/store.entity';
 import { Deal } from '../deals/entities/deal.entity';
+import { Vendor } from '../vendors/entities/vendor.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { UsersService } from '../users/users.service';
 
@@ -13,6 +14,8 @@ export class StoresService {
     private storeRepository: Repository<Store>,
     @InjectRepository(Deal)
     private dealRepository: Repository<Deal>,
+    @InjectRepository(Vendor)
+    private vendorRepository: Repository<Vendor>,
     private notificationsService: NotificationsService,
     private usersService: UsersService,
   ) { }
@@ -223,9 +226,32 @@ export class StoresService {
    * Update store details
    */
   async updateStore(id: number, updateStoreDto: any): Promise<Store> {
-    const store = await this.getStoreById(id);
+    const store = await this.storeRepository.findOne({ where: { id } });
+    if (!store) {
+      throw new NotFoundException('المتجر غير موجود');
+    }
     const updatedStore = Object.assign(store, updateStoreDto);
     return this.storeRepository.save(updatedStore);
+  }
+
+  /**
+   * Delete a store
+   */
+  async deleteStore(id: number): Promise<void> {
+    const store = await this.storeRepository.findOne({ where: { id } });
+    if (!store) {
+      throw new NotFoundException('المتجر غير موجود');
+    }
+    await this.storeRepository.remove(store);
+  }
+
+  /**
+   * Get all vendors for admin dropdown
+   */
+  async getAllVendors(): Promise<Vendor[]> {
+    return this.vendorRepository.find({
+      order: { name: 'ASC' },
+    });
   }
 }
 

@@ -5,12 +5,13 @@ import { StoresService } from './stores.service';
 import { Store } from './entities/store.entity';
 import { ProductsModule } from '../products/products.module';
 import { Deal } from '../deals/entities/deal.entity';
+import { Vendor } from '../vendors/entities/vendor.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Store, Deal]),
+    TypeOrmModule.forFeature([Store, Deal, Vendor]),
     ProductsModule,
     NotificationsModule,
     UsersModule,

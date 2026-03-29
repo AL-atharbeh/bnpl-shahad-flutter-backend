@@ -19,6 +19,7 @@ export interface Store {
     productsCount: number;
     createdAt: string;
     descriptionAr?: string;
+    vendorId?: number;
     // Additional fields for UI (might be computed or joined)
     location?: string;
     status?: string;
@@ -38,6 +39,16 @@ export interface Store {
     delayedOrders?: number;
     payoutCycle?: string;
     topProducts?: string[];
+}
+
+export interface Vendor {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    storeId: number;
+    isActive: boolean;
+    createdAt: string;
 }
 
 export interface StoreStats {
@@ -65,7 +76,6 @@ export const storesService = {
     },
 
     getStats: async (): Promise<StoreStats | null> => {
-        // Return null to force frontend calculation until backend API is ready
         return null;
     },
 
@@ -81,6 +91,21 @@ export const storesService = {
 
     createStore: async (data: Partial<Store>) => {
         const response = await api.post<{ success: boolean; data: Store }>('/stores', data);
+        return response.data;
+    },
+
+    updateStore: async (id: number, data: Partial<Store>) => {
+        const response = await api.put<{ success: boolean; data: Store }>(`/stores/${id}`, data);
+        return response.data;
+    },
+
+    deleteStore: async (id: number) => {
+        const response = await api.delete<{ success: boolean; message: string }>(`/stores/${id}`);
+        return response.data;
+    },
+
+    getVendors: async () => {
+        const response = await api.get<{ success: boolean; data: Vendor[] }>('/stores/admin/vendors');
         return response.data;
     },
 };

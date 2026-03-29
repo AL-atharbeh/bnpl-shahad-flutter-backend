@@ -27,6 +27,7 @@ export default function StoresPage() {
   const [showStoreModal, setShowStoreModal] = useState(false);
   const [selectedFeaturedStore, setSelectedFeaturedStore] = useState("");
   const [showAddStoreModal, setShowAddStoreModal] = useState(false);
+  const [editStore, setEditStore] = useState<Store | null>(null);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -121,6 +122,23 @@ export default function StoresPage() {
   const handleViewStore = (store: Store) => {
     setSelectedStore(store);
     setShowStoreModal(true);
+  };
+
+  const handleEditStore = (store: Store) => {
+    setEditStore(store);
+    setShowAddStoreModal(true);
+  };
+
+  const handleDeleteStore = async (store: Store) => {
+    if (!confirm(`هل أنت متأكد من حذف متجر "${store.name}"؟ هذا الإجراء لا يمكن التراجع عنه.`)) return;
+    try {
+      await storesService.deleteStore(store.id);
+      await fetchStores();
+      fetchStats();
+    } catch (error) {
+      console.error("Failed to delete store", error);
+      alert("حدث خطأ أثناء حذف المتجر");
+    }
   };
 
   const displayStats = stats || {
@@ -559,7 +577,7 @@ export default function StoresPage() {
                       </div>
                     </td>
                     <td className="px-3 py-3">
-                      <div className="flex items-center justify-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                      <div className="flex items-center justify-center gap-1">
                         {store.status === 'pending' && (
                           <>
                             <button
@@ -581,8 +599,23 @@ export default function StoresPage() {
                         <button
                           onClick={() => handleViewStore(store)}
                           className="rounded-lg border border-slate-700 bg-slate-900/60 px-2.5 py-1 text-[11px] text-slate-200 hover:bg-slate-900"
+                          title="عرض التفاصيل"
                         >
                           👁️
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleEditStore(store); }}
+                          className="rounded-lg border border-sky-500/40 bg-sky-500/10 px-2.5 py-1 text-[11px] text-sky-300 hover:bg-sky-500/20"
+                          title="تعديل المتجر"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteStore(store); }}
+                          className="rounded-lg border border-red-500/40 bg-red-500/10 px-2.5 py-1 text-[11px] text-red-400 hover:bg-red-500/20"
+                          title="حذف المتجر"
+                        >
+                          🗑️
                         </button>
                       </div>
                     </td>
@@ -865,11 +898,12 @@ export default function StoresPage() {
         </div>
       )}
 
-      {/* Add Store Modal */}
+      {/* Add/Edit Store Modal */}
       <StoreModal
         isOpen={showAddStoreModal}
-        onClose={() => setShowAddStoreModal(false)}
-        onSuccess={fetchStores}
+        onClose={() => { setShowAddStoreModal(false); setEditStore(null); }}
+        onSuccess={() => { fetchStores(); fetchStats(); }}
+        editStore={editStore}
       />
     </div>
   );

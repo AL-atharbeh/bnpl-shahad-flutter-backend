@@ -1,30 +1,72 @@
 "use client";
 
-import { useState } from "react";
-import { storesService } from "@/services/stores.service";
+import { useState, useEffect } from "react";
+import { Store, Vendor, storesService } from "@/services/stores.service";
 
 interface StoreModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
+    editStore?: Store | null; // If provided, modal is in edit mode
 }
 
-export default function StoreModal({ isOpen, onClose, onSuccess }: StoreModalProps) {
-    const [formData, setFormData] = useState({
-        name: "",
-        nameAr: "",
-        description: "",
-        descriptionAr: "",
-        categoryId: "",
-        logoUrl: "",
-        websiteUrl: "",
-        storeUrl: "",
-        commissionRate: "2.5",
-        minOrderAmount: "50",
-        maxOrderAmount: "5000",
-    });
+const initialFormData = {
+    name: "",
+    nameAr: "",
+    description: "",
+    descriptionAr: "",
+    categoryId: "",
+    logoUrl: "",
+    websiteUrl: "",
+    storeUrl: "",
+    commissionRate: "2.5",
+    minOrderAmount: "50",
+    maxOrderAmount: "5000",
+    vendorId: "",
+};
+
+export default function StoreModal({ isOpen, onClose, onSuccess, editStore }: StoreModalProps) {
+    const [formData, setFormData] = useState(initialFormData);
+    const [vendors, setVendors] = useState<Vendor[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+
+    const isEditMode = !!editStore;
+
+    useEffect(() => {
+        if (isOpen) {
+            fetchVendors();
+            if (editStore) {
+                setFormData({
+                    name: editStore.name || "",
+                    nameAr: editStore.nameAr || "",
+                    description: editStore.description || "",
+                    descriptionAr: editStore.descriptionAr || "",
+                    categoryId: editStore.categoryId?.toString() || "",
+                    logoUrl: editStore.logoUrl || "",
+                    websiteUrl: editStore.websiteUrl || "",
+                    storeUrl: editStore.storeUrl || "",
+                    commissionRate: editStore.commissionRate?.toString() || "2.5",
+                    minOrderAmount: editStore.minOrderAmount?.toString() || "50",
+                    maxOrderAmount: editStore.maxOrderAmount?.toString() || "5000",
+                    vendorId: editStore.vendorId?.toString() || "",
+                });
+            } else {
+                setFormData(initialFormData);
+            }
+        }
+    }, [isOpen, editStore]);
+
+    const fetchVendors = async () => {
+        try {
+            const result = await storesService.getVendors();
+            if (result && result.data) {
+                setVendors(result.data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch vendors", error);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -37,7 +79,7 @@ export default function StoreModal({ isOpen, onClose, onSuccess }: StoreModalPro
 
         setLoading(true);
         try {
-            await storesService.createStore({
+            const payload: any = {
                 name: formData.name,
                 nameAr: formData.nameAr || undefined,
                 description: formData.description || undefined,
@@ -49,28 +91,21 @@ export default function StoreModal({ isOpen, onClose, onSuccess }: StoreModalPro
                 commissionRate: Number(formData.commissionRate),
                 minOrderAmount: Number(formData.minOrderAmount),
                 maxOrderAmount: Number(formData.maxOrderAmount),
-            });
+                vendorId: formData.vendorId ? Number(formData.vendorId) : undefined,
+            };
+
+            if (isEditMode && editStore) {
+                await storesService.updateStore(editStore.id, payload);
+            } else {
+                await storesService.createStore(payload);
+            }
 
             onSuccess();
             onClose();
-
-            // Reset form
-            setFormData({
-                name: "",
-                nameAr: "",
-                description: "",
-                descriptionAr: "",
-                categoryId: "",
-                logoUrl: "",
-                websiteUrl: "",
-                storeUrl: "",
-                commissionRate: "2.5",
-                minOrderAmount: "50",
-                maxOrderAmount: "5000",
-            });
+            setFormData(initialFormData);
         } catch (error) {
-            console.error("Failed to create store", error);
-            setError("فشل في إضافة المتجر. حاول مرة أخرى.");
+            console.error(isEditMode ? "Failed to update store" : "Failed to create store", error);
+            setError(isEditMode ? "فشل في تحديث المتجر. حاول مرة أخرى." : "فشل في إضافة المتجر. حاول مرة أخرى.");
         } finally {
             setLoading(false);
         }
@@ -78,12 +113,16 @@ export default function StoreModal({ isOpen, onClose, onSuccess }: StoreModalPro
 
     if (!isOpen) return null;
 
+    const inputClass = "w-full rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20";
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
             <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-slate-800 bg-[#021f2a] shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
                 {/* Header */}
-                <div className="sticky top-0 flex items-center justify-between border-b border-slate-800 bg-[#021f2a] px-6 py-4">
-                    <h2 className="text-lg font-semibold text-slate-50">إضافة متجر جديد</h2>
+                <div className="sticky top-0 flex items-center justify-between border-b border-slate-800 bg-[#021f2a] px-6 py-4 z-10">
+                    <h2 className="text-lg font-semibold text-slate-50">
+                        {isEditMode ? "تعديل المتجر" : "إضافة متجر جديد"}
+                    </h2>
                     <button
                         onClick={onClose}
                         className="rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-900 hover:text-slate-50 transition-colors"
@@ -100,6 +139,25 @@ export default function StoreModal({ isOpen, onClose, onSuccess }: StoreModalPro
                         </div>
                     )}
 
+                    {/* Vendor Selection */}
+                    <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                            الفيندر (المورّد) <span className="text-slate-500 text-xs">(اختياري)</span>
+                        </label>
+                        <select
+                            value={formData.vendorId}
+                            onChange={(e) => setFormData({ ...formData, vendorId: e.target.value })}
+                            className={inputClass}
+                        >
+                            <option value="">بدون فيندر</option>
+                            {vendors.map((vendor) => (
+                                <option key={vendor.id} value={vendor.id}>
+                                    {vendor.name} — {vendor.phone}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
                     <div className="grid gap-4 md:grid-cols-2">
                         {/* Store Name */}
                         <div>
@@ -110,7 +168,7 @@ export default function StoreModal({ isOpen, onClose, onSuccess }: StoreModalPro
                                 type="text"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                                className={inputClass}
                                 placeholder="Store Name"
                                 required
                             />
@@ -125,7 +183,7 @@ export default function StoreModal({ isOpen, onClose, onSuccess }: StoreModalPro
                                 type="text"
                                 value={formData.nameAr}
                                 onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })}
-                                className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                                className={inputClass}
                                 placeholder="اسم المتجر"
                             />
                         </div>
@@ -140,7 +198,7 @@ export default function StoreModal({ isOpen, onClose, onSuccess }: StoreModalPro
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                             rows={3}
-                            className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                            className={inputClass}
                             placeholder="Store description"
                         />
                     </div>
@@ -154,7 +212,7 @@ export default function StoreModal({ isOpen, onClose, onSuccess }: StoreModalPro
                             value={formData.descriptionAr}
                             onChange={(e) => setFormData({ ...formData, descriptionAr: e.target.value })}
                             rows={3}
-                            className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                            className={inputClass}
                             placeholder="وصف المتجر"
                         />
                     </div>
@@ -169,7 +227,7 @@ export default function StoreModal({ isOpen, onClose, onSuccess }: StoreModalPro
                                 type="number"
                                 value={formData.categoryId}
                                 onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                                className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                                className={inputClass}
                                 placeholder="1"
                             />
                         </div>
@@ -183,7 +241,7 @@ export default function StoreModal({ isOpen, onClose, onSuccess }: StoreModalPro
                                 type="url"
                                 value={formData.logoUrl}
                                 onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-                                className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                                className={inputClass}
                                 placeholder="https://..."
                             />
                         </div>
@@ -199,7 +257,7 @@ export default function StoreModal({ isOpen, onClose, onSuccess }: StoreModalPro
                                 type="url"
                                 value={formData.websiteUrl}
                                 onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
-                                className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                                className={inputClass}
                                 placeholder="https://..."
                             />
                         </div>
@@ -213,7 +271,7 @@ export default function StoreModal({ isOpen, onClose, onSuccess }: StoreModalPro
                                 type="url"
                                 value={formData.storeUrl}
                                 onChange={(e) => setFormData({ ...formData, storeUrl: e.target.value })}
-                                className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                                className={inputClass}
                                 placeholder="https://..."
                             />
                         </div>
@@ -230,7 +288,7 @@ export default function StoreModal({ isOpen, onClose, onSuccess }: StoreModalPro
                                 step="0.1"
                                 value={formData.commissionRate}
                                 onChange={(e) => setFormData({ ...formData, commissionRate: e.target.value })}
-                                className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                                className={inputClass}
                             />
                         </div>
 
@@ -243,7 +301,7 @@ export default function StoreModal({ isOpen, onClose, onSuccess }: StoreModalPro
                                 type="number"
                                 value={formData.minOrderAmount}
                                 onChange={(e) => setFormData({ ...formData, minOrderAmount: e.target.value })}
-                                className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                                className={inputClass}
                             />
                         </div>
 
@@ -256,7 +314,7 @@ export default function StoreModal({ isOpen, onClose, onSuccess }: StoreModalPro
                                 type="number"
                                 value={formData.maxOrderAmount}
                                 onChange={(e) => setFormData({ ...formData, maxOrderAmount: e.target.value })}
-                                className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                                className={inputClass}
                             />
                         </div>
                     </div>
@@ -276,7 +334,9 @@ export default function StoreModal({ isOpen, onClose, onSuccess }: StoreModalPro
                             className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={loading}
                         >
-                            {loading ? "جاري الحفظ..." : "حفظ المتجر"}
+                            {loading
+                                ? (isEditMode ? "جاري التحديث..." : "جاري الحفظ...")
+                                : (isEditMode ? "تحديث المتجر" : "حفظ المتجر")}
                         </button>
                     </div>
                 </form>

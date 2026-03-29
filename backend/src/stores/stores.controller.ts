@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Post, Body, Param, Query, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Put, Post, Delete, Body, Param, Query, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { StoresService } from './stores.service';
 import { ProductsService } from '../products/products.service';
@@ -54,6 +54,16 @@ export class StoresController {
     };
   }
 
+  @Get('admin/vendors')
+  @ApiOperation({ summary: 'Get all vendors for admin dropdown' })
+  async getAllVendors() {
+    const vendors = await this.storesService.getAllVendors();
+    return {
+      success: true,
+      data: vendors,
+    };
+  }
+
   @Post()
   @ApiOperation({ summary: 'Create new store' })
   async createStore(@Body() createStoreDto: any) {
@@ -61,6 +71,16 @@ export class StoresController {
     return {
       success: true,
       data: store,
+    };
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete store' })
+  async deleteStore(@Param('id', ParseIntPipe) id: number) {
+    await this.storesService.deleteStore(id);
+    return {
+      success: true,
+      message: 'تم حذف المتجر بنجاح',
     };
   }
 
