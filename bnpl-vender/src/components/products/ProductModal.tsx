@@ -201,18 +201,18 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
             if (!user?.storeId) throw new Error("Store ID missing");
 
             const payload = {
-                ...formData,
+                name: formData.name,
+                name_ar: formData.name_ar,
+                description: formData.description,
+                description_ar: formData.description_ar,
                 price: parseFloat(formData.price),
-                discountPrice: formData.discountPrice ? parseFloat(formData.discountPrice) : undefined,
-                stockQuantity: parseInt(formData.stockQuantity),
-                categoryId: formData.categoryId ? parseInt(formData.categoryId) : undefined,
+                discount_price: formData.discountPrice ? parseFloat(formData.discountPrice) : undefined,
+                stock_quantity: parseInt(formData.stockQuantity),
+                category_id: formData.categoryId ? parseInt(formData.categoryId) : undefined,
+                image_url: formData.image_url,
+                in_stock: formData.in_stock,
                 store_id: user.storeId,
             };
-
-            // Remove old snake_case entries that might have been spread from formData
-            delete (payload as any).discount_price;
-            delete (payload as any).stock_quantity;
-            delete (payload as any).category_id;
 
             if (product) {
                 await updateProduct(product.id, payload);
@@ -224,7 +224,16 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
             onClose();
         } catch (err: any) {
             console.error("Failed to save product", err);
-            setError(err.response?.data?.message || err.message || "Something went wrong");
+            let errorMessage = "Something went wrong";
+            
+            if (err.response?.data?.message) {
+                const msg = err.response.data.message;
+                errorMessage = Array.isArray(msg) ? msg.join(", ") : msg;
+            } else {
+                errorMessage = err.message || errorMessage;
+            }
+            
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
