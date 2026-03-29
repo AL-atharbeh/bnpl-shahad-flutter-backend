@@ -69,9 +69,10 @@ export default function BannerModal({ isOpen, onClose, onSuccess, editBanner }: 
       if (result.success) {
         setFormData(prev => ({ ...prev, imageUrl: result.data.url }));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Upload failed", err);
-      setError("فشل في رفع الصورة. تأكد من حجم الملف ونوعه.");
+      const errorMessage = err.response?.data?.message || err.message || "فشل في رفع الصورة";
+      setError(`خطأ في الرفع: ${errorMessage}`);
     } finally {
       setUploadLoading(false);
     }
