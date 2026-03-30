@@ -226,14 +226,14 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
             onSuccess();
             onClose();
         } catch (err: any) {
-            console.error("Failed to save product", err);
-            let errorMessage = "Something went wrong";
+            console.error("ahmad - Failed to save product", err.response?.data || err);
+            let errorMessage = "ahmad - Something went wrong";
             
             if (err.response?.data?.message) {
                 const msg = err.response.data.message;
-                errorMessage = Array.isArray(msg) ? msg.join(", ") : msg;
+                errorMessage = `ahmad - ${Array.isArray(msg) ? msg.join(", ") : msg}`;
             } else {
-                errorMessage = err.message || errorMessage;
+                errorMessage = `ahmad - ${err.message || errorMessage}`;
             }
             
             setError(errorMessage);
