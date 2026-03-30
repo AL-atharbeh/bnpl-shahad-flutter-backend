@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Payment } from '../payments/entities/payment.entity';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 
 const BANK_COMMISSION = 0.03;
 const PLATFORM_COMMISSION = 0.02;

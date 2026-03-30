@@ -11,7 +11,7 @@ import { RewardsService } from '../rewards/rewards.service';
 import { MockPaymentService } from '../payments/mock-payment.service';
 import { UsersService } from '../users/users.service';
 import { v4 as uuidv4 } from 'uuid';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 import { ConfigService } from '@nestjs/config';
 import { NotificationsService } from '../notifications/notifications.service';
 

@@ -4,8 +4,8 @@ import { Repository, Between, LessThan, In } from 'typeorm';
 import { Payment } from '../payments/entities/payment.entity';
 import { Store } from '../stores/entities/store.entity';
 import { User } from '../users/entities/user.entity';
-import * as dayjs from 'dayjs';
-import * as quarterOfYear from 'dayjs/plugin/quarterOfYear';
+import dayjs from 'dayjs';
+import quarterOfYear from 'dayjs/plugin/quarterOfYear';
 
 dayjs.extend(quarterOfYear);
 

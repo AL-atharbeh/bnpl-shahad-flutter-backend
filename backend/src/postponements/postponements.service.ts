@@ -4,7 +4,7 @@ import { Repository, MoreThan } from 'typeorm';
 import { Postponement } from './entities/postponement.entity';
 import { PaymentsService } from '../payments/payments.service';
 import { UsersService } from '../users/users.service';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class PostponementsService {
