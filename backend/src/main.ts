@@ -9,8 +9,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
-  // Increase body size limit for image uploads (base64 encoded images can be large)
-  // Default is 100kb, we increase to 10MB for Civil ID images
+  // Increase body size limit for image uploads
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
@@ -43,40 +42,45 @@ async function bootstrap() {
     .setDescription('Buy Now Pay Later - Backend API Documentation')
     .setVersion('1.0')
     .addBearerAuth()
-    .addTag('auth', 'Authentication endpoints')
-    .addTag('users', 'User management endpoints')
-    .addTag('payments', 'Payment endpoints')
-    .addTag('stores', 'Store endpoints')
-    .addTag('products', 'Product endpoints')
-    .addTag('rewards', 'Rewards points endpoints')
-    .addTag('postponements', 'Payment postponement endpoints')
-    .addTag('notifications', 'Notification endpoints')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  // Handle root path (before global prefix)
+  // Handle root path
   const httpAdapter = app.getHttpAdapter();
   httpAdapter.get('/', (req, res) => {
     res.json({
       message: 'Welcome to BNPL API',
-      version: '1.0.1 (Banner Fix Deploy)',
+      version: '1.0.2 (Vercel Fix)',
       documentation: '/api/docs',
       apiPrefix: `/${apiPrefix}`,
     });
   });
 
-  const port = configService.get('PORT', 3000);
-  // Listen on 0.0.0.0 to accept connections from all network interfaces
-  // This allows access from physical devices on the same network
-  await app.listen(port, '0.0.0.0');
+  // For Vercel: We don't call app.listen() if we're exporting the handler
+  if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    const port = configService.get('PORT', 3000);
+    await app.listen(port, '0.0.0.0');
+    console.log(`🚀 BNPL Backend is running on: http://0.0.0.0:${port}`);
+  }
 
-  console.log(`🚀 BNPL Backend is running on: http://0.0.0.0:${port}`);
-  console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
-  console.log(`🔧 API Prefix: /${apiPrefix}`);
-  console.log(`🌐 Accessible from network devices on: http://YOUR_IP:${port}`);
+  return app;
 }
 
-bootstrap();
+// Export for Vercel
+let server;
+export default async (req: any, res: any) => {
+  if (!server) {
+    const app = await bootstrap();
+    await app.init();
+    server = app.getHttpAdapter().getInstance();
+  }
+  return server(req, res);
+};
+
+// Also keep the bootstrap call for local development
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  bootstrap();
+}
 
