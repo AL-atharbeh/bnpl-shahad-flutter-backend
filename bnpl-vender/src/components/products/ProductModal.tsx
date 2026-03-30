@@ -200,19 +200,22 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
             const user = userStr ? JSON.parse(userStr) : null;
             if (!user?.storeId) throw new Error("Store ID missing");
 
-            const payload = {
+            const payload: any = {
                 name: formData.name,
                 name_ar: formData.name_ar,
                 description: formData.description,
                 description_ar: formData.description_ar,
                 price: parseFloat(formData.price),
-                discount_price: formData.discountPrice ? parseFloat(formData.discountPrice) : undefined,
-                stock_quantity: parseInt(formData.stockQuantity),
-                category_id: formData.categoryId ? parseInt(formData.categoryId) : undefined,
-                image_url: formData.image_url,
+                stock_quantity: parseInt(formData.stockQuantity) || 0,
                 in_stock: formData.in_stock,
                 store_id: user.storeId,
             };
+
+            if (formData.discountPrice) payload.discount_price = parseFloat(formData.discountPrice);
+            if (formData.categoryId) payload.category_id = parseInt(formData.categoryId);
+            if (formData.image_url) payload.image_url = formData.image_url;
+
+            console.log("Saving product with payload:", payload);
 
             if (product) {
                 await updateProduct(product.id, payload);
