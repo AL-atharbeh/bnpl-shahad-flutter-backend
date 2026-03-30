@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://bnpl-shahad-flutter-backend.onrender.com/api/v1',
+    baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://beeoons.com/api/v1',
     headers: {
         'Content-Type': 'application/json',
     },

@@ -25,7 +25,7 @@ class EnvDev {
   // Current IP: 172.20.10.2 (update if changed)
   
   // Default: iOS Simulator (localhost)
-  static const String baseUrl = 'https://bnpl-shahad-flutter-backend.onrender.com/api/v1';
+  static const String baseUrl = 'https://beeoons.com/api/v1';
   // static const String baseUrl = 'http://10.0.2.2:3000/api/v1'; // Android Emulator
   
   // Alternative URLs (uncomment the one you need):
