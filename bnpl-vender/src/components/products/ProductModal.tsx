@@ -140,7 +140,7 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
             const optimizedFile = await resizeImage(file);
             const res = await uploadProductImage(optimizedFile);
             
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://beeoons.com/api/v1';
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://bnpl-shahad-flutter-backend-mjae.vercel.app/api/v1';
             const uploadedUrl = `${baseUrl}/products/uploads/${res.data.data.filename}`;
             setFormData(prev => ({ ...prev, image_url: uploadedUrl }));
         } catch (err: any) {
