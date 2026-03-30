@@ -15,12 +15,13 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiQuery, ApiResponse, ApiConsumes, ApiBody } from '@nestjs/swagger';
-import { diskStorage } from 'multer';
+import { memoryStorage } from 'multer';
 import { extname, join } from 'path';
 import { Response } from 'express';
-import { existsSync, mkdirSync } from 'fs';
+import { existsSync } from 'fs';
 import { BannersService } from './banners.service';
 import { Banner } from './entities/banner.entity';
+import { put } from '@vercel/blob';
 
 @ApiTags('banners')
 @Controller('banners')
@@ -139,23 +140,7 @@ export class BannersController {
     },
   })
   @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: (req, file, cb) => {
-        try {
-          const uploadPath = join(process.cwd(), 'uploads/banners');
-          if (!existsSync(uploadPath)) {
-            mkdirSync(uploadPath, { recursive: true });
-          }
-          cb(null, uploadPath);
-        } catch (error) {
-          cb(error as Error, '');
-        }
-      },
-      filename: (req, file, cb) => {
-        const randomName = Array(32).fill(null).map(() => (Math.round(Math.random() * 16)).toString(16)).join('');
-        return cb(null, `${randomName}${extname(file.originalname)}`);
-      },
-    }),
+    storage: memoryStorage(),
     fileFilter: (req, file, cb) => {
       // Relaxed check to include common image formats case-insensitively
       if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp|heic)$/i)) {
@@ -171,13 +156,24 @@ export class BannersController {
     if (!file) {
       throw new BadRequestException('File is not provided');
     }
-    return {
-      success: true,
-      data: {
-        url: `/api/v1/banners/uploads/${file.filename}`,
-        filename: file.filename
-      }
-    };
+
+    try {
+      const filename = `${Date.now()}-${file.originalname}`;
+      const blob = await put(`banners/${filename}`, file.buffer, {
+        access: 'public',
+        addRandomSuffix: true,
+      });
+
+      return {
+        success: true,
+        data: {
+          url: blob.url,
+          filename: filename
+        }
+      };
+    } catch (error) {
+      throw new BadRequestException(`Failed to upload to Vercel Blob: ${error.message}`);
+    }
   }
 
   @Get('uploads/:filename')

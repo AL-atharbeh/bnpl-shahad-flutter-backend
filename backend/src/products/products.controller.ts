@@ -4,10 +4,11 @@ import { ApiTags, ApiOperation, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/s
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { diskStorage } from 'multer';
+import { memoryStorage } from 'multer';
 import { extname, join } from 'path';
 import { Response } from 'express';
-import { existsSync, mkdirSync } from 'fs';
+import { existsSync } from 'fs';
+import { put } from '@vercel/blob';
 
 @ApiTags('products')
 @Controller('products')
@@ -29,19 +30,7 @@ export class ProductsController {
     },
   })
   @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: (req, file, cb) => {
-        const uploadPath = join(process.cwd(), 'uploads/products');
-        if (!existsSync(uploadPath)) {
-          mkdirSync(uploadPath, { recursive: true });
-        }
-        cb(null, uploadPath);
-      },
-      filename: (req, file, cb) => {
-        const randomName = Array(32).fill(null).map(() => (Math.round(Math.random() * 16)).toString(16)).join('');
-        return cb(null, `${randomName}${extname(file.originalname)}`);
-      },
-    }),
+    storage: memoryStorage(),
     fileFilter: (req, file, cb) => {
       if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
         return cb(new BadRequestException('Only image files are allowed!'), false);
@@ -53,17 +42,24 @@ export class ProductsController {
     if (!file) {
       throw new BadRequestException('File is not provided');
     }
-    // Return the URL to access the file
-    // Assumes the server is running on localhost:3000 or typically reachable via relative path logic in frontend
-    // Ideally this returns a full URL or a relative path the frontend knows how to handle
-    // We will return a relative path that our new GET endpoint can serve
-    return {
-      success: true,
-      data: {
-        url: `/api/v1/products/uploads/${file.filename}`,
-        filename: file.filename
-      }
-    };
+
+    try {
+      const filename = `${Date.now()}-${file.originalname}`;
+      const blob = await put(`products/${filename}`, file.buffer, {
+        access: 'public',
+        addRandomSuffix: true,
+      });
+
+      return {
+        success: true,
+        data: {
+          url: blob.url,
+          filename: filename
+        }
+      };
+    } catch (error) {
+      throw new BadRequestException(`Failed to upload to Vercel Blob: ${error.message}`);
+    }
   }
 
   @Get('uploads/:filename')
