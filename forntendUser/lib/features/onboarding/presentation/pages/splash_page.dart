@@ -12,94 +12,54 @@ class SplashPage extends StatefulWidget {
   @override
   State<SplashPage> createState() => _SplashPageState();
 }
-
 class _SplashPageState extends State<SplashPage>
     with TickerProviderStateMixin {
   // ─── Animation Controllers ───
-  late AnimationController _entranceController;  // Snappy Pop-in
-  late AnimationController _parallaxController;  // BG Parallax Flow
-  late AnimationController _floatController;     // Dual-axis Drifting
-  late AnimationController _bgFadeController;    // Global Color Shift
-  
-  // ─── Entrance Animations ───
-  late Animation<double> _scaleAmount;
-  late Animation<double> _opacityAmount;
-  late Animation<double> _slideOffset;
+  late AnimationController _progressController; // For the loading bar
+  late AnimationController _exitController;     // Fade out before exit
 
-  // ─── Global Color Shift ───
-  late Animation<Color?> _bgColor;
+  // ─── Progress Animation ───
+  late Animation<double> _progressAnimation;
 
-  // ─── Cinematic Color Palette ───
+  // ─── Colors ───
   static const Color emeraldBright = Color(0xFF10A37F);
-  static const Color emeraldDark = Color(0xFF042F1F);
   static const Color emeraldDeep = Color(0xFF01120B);
 
   @override
   void initState() {
     super.initState();
 
-    // 1. BG Color Fade: Vibrant -> Deep
-    _bgFadeController = AnimationController(
+    // 1. Progress Bar Animation
+    _progressController = AnimationController(
       duration: const Duration(milliseconds: 3000),
       vsync: this,
     );
-    _bgColor = ColorTween(
-      begin: emeraldDark,
-      end: emeraldDeep,
-    ).animate(CurvedAnimation(
-      parent: _bgFadeController,
-      curve: Curves.easeInOutSine,
-    ));
-
-    // 2. Entrance: Snappy Elastic Pop
-    _entranceController = AnimationController(
-      duration: const Duration(milliseconds: 1600),
-      vsync: this,
-    );
-    _scaleAmount = Tween<double>(begin: 0.4, end: 1.0).animate(
+    _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
-        parent: _entranceController,
-        curve: const Interval(0.0, 0.9, curve: Curves.easeOutBack),
-      ),
-    );
-    _opacityAmount = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _entranceController,
-        curve: const Interval(0.0, 0.4, curve: Curves.easeIn),
-      ),
-    );
-    _slideOffset = Tween<double>(begin: 80.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _entranceController,
-        curve: const Interval(0.0, 0.8, curve: Curves.easeOutQuart),
+        parent: _progressController,
+        curve: Curves.easeInOut,
       ),
     );
 
-    // 3. Parallax Background Flow
-    _parallaxController = AnimationController(
-      duration: const Duration(seconds: 20),
+    // 2. Exit Fade
+    _exitController = AnimationController(
+      duration: const Duration(milliseconds: 500),
       vsync: this,
-    )..repeat();
-
-    // 4. Advanced 3D-like Floating (Dual Sine Waves)
-    _floatController = AnimationController(
-      duration: const Duration(milliseconds: 4000),
-      vsync: this,
-    )..repeat();
+    );
 
     _runSequencedAnimations();
   }
 
   void _runSequencedAnimations() async {
-    // Stage 1: BG starts shifted slightly and Entrance begins
-    _bgFadeController.forward();
-    
-    await Future.delayed(const Duration(milliseconds: 200));
-    _entranceController.forward();
+    // Start loading bar
+    _progressController.forward();
 
-    // Stage 2: Navigation
-    await Future.delayed(const Duration(milliseconds: 3800));
+    // Wait for the bar to finish (matching controller duration)
+    await Future.delayed(const Duration(milliseconds: 3200));
+    
+    // Start exit animation
     if (mounted) {
+      await _exitController.forward();
       _navigateNext();
     }
   }
@@ -153,154 +113,233 @@ class _SplashPageState extends State<SplashPage>
 
   @override
   void dispose() {
-    _entranceController.dispose();
-    _parallaxController.dispose();
-    _floatController.dispose();
-    _bgFadeController.dispose();
+    _progressController.dispose();
+    _exitController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
-      body: AnimatedBuilder(
-        animation: Listenable.merge([_bgFadeController, _parallaxController]),
-        builder: (context, _) {
-          return Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: _bgColor.value ?? emeraldDark,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                // ── Layer 1: Parallax Paritcles (Back Deep) ──
-                _buildParallaxLayer(0.2, emeraldBright.withOpacity(0.05)),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // ── Background Image ──
+          Image.asset(
+            'assets/images/splah.png',
+            fit: BoxFit.cover,
+          ),
 
-                // ── Layer 2: Parallax Digital Lines (Mid) ──
-                _buildDigitalFlowLayer(size, emeraldBright.withOpacity(0.08)),
-
-                // ── Layer 3: Parallax Particles (Front Close) ──
-                _buildParallaxLayer(0.6, Colors.white.withOpacity(0.1)),
-
-                // ── Layer 4: Snappy Cinematic Mascot ──
-                _buildCinematicMascot(size),
-              ],
+          // ── Dark gradient overlay at bottom for text readability ──
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.4),
+                  ],
+                  stops: const [0.7, 1.0],
+                ),
+              ),
             ),
-          );
-        },
+          ),
+
+          // ── Premium Loading System ──
+          Positioned(
+            left: 45,
+            right: 45,
+            bottom: 90,
+            child: FadeTransition(
+              opacity: Tween<double>(begin: 1.0, end: 0.0).animate(_exitController),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 1. Dynamic Status Text
+                  _buildPremiumStatusText(),
+                  const SizedBox(height: 30),
+                  
+                  // 2. The "Unmatched" Progress Bar
+                  _buildUnmatchedProgressBar(),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildParallaxLayer(double speedFactor, Color color) {
-    return CustomPaint(
-      painter: _MotionPainter(
-        progress: _parallaxController.value,
-        speedFactor: speedFactor,
-        color: color,
-        type: _MotionType.particles,
-      ),
+  Widget _buildPremiumStatusText() {
+    return AnimatedBuilder(
+      animation: _progressAnimation,
+      builder: (context, _) {
+        final percent = (_progressAnimation.value * 100).toInt();
+        return Column(
+          children: [
+            Text(
+              'جاري تهيئة نظام شهد',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.95),
+                fontSize: 14,
+                fontWeight: FontWeight.w300,
+                letterSpacing: 2.0,
+                shadows: [
+                  Shadow(color: Colors.black45, blurRadius: 15, offset: Offset(0, 4)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '$percent%',
+              style: const TextStyle(
+                color: Color(0xFF10A37F),
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                fontFamily: 'monospace', // Gives a digital premium feel
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildDigitalFlowLayer(Size size, Color color) {
-    return CustomPaint(
-      painter: _MotionPainter(
-        progress: _parallaxController.value,
-        speedFactor: 0.4,
-        color: color,
-        type: _MotionType.lines,
+  Widget _buildUnmatchedProgressBar() {
+    return Container(
+      height: 14,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white12, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildCinematicMascot(Size size) {
-    return Center(
-      child: AnimatedBuilder(
-        animation: Listenable.merge([_entranceController, _floatController]),
-        builder: (context, _) {
-          // Dual Sine-wave Floating
-          final t = _floatController.value * 2 * pi;
-          final xOffset = sin(t) * 12.0;
-          final yOffset = cos(t * 1.5) * 8.0;
-          final rotation = sin(t * 0.5) * 0.03;
-
-          return Transform.translate(
-            offset: Offset(xOffset, _slideOffset.value + yOffset),
-            child: Transform.rotate(
-              angle: rotation,
-              child: Transform.scale(
-                scale: _scaleAmount.value,
-                child: Opacity(
-                  opacity: _opacityAmount.value,
-                  child: Image.asset(
-                    'assets/images/splashscreen.png',
-                    width: size.width * 0.8,
-                    height: size.width * 0.8,
-                    fit: BoxFit.contain,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Glassmorphic Track Layer
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.white.withOpacity(0.05),
+                      Colors.white.withOpacity(0.12),
+                    ],
                   ),
                 ),
               ),
             ),
-          );
-        },
+          ),
+          
+          // Progress Fill with Shimmer
+          AnimatedBuilder(
+            animation: _progressAnimation,
+            builder: (context, _) {
+              return FractionallySizedBox(
+                widthFactor: _progressAnimation.value,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    gradient: const LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        Color(0xFF042F1F),
+                        Color(0xFF10A37F),
+                        Color(0xFF2ECC71),
+                        Colors.white,
+                      ],
+                      stops: [0.0, 0.4, 0.9, 1.0],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF10A37F).withOpacity(0.6),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Stack(
+                      children: [
+                        // Animated Shine/Shimmer
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: -1.0, end: 2.0),
+                          duration: const Duration(seconds: 2),
+                          curve: Curves.easeInOut,
+                          builder: (context, shine, _) {
+                            return Positioned.fill(
+                              child: Transform.translate(
+                                offset: Offset(shine * 200, 0),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.white.withOpacity(0.0),
+                                        Colors.white.withOpacity(0.4),
+                                        Colors.white.withOpacity(0.0),
+                                      ],
+                                      stops: const [0.3, 0.5, 0.7],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          onEnd: () {}, // Handled by standard rebuild
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          
+          // Focal Point Glow (The "Head" of the progress)
+          AnimatedBuilder(
+            animation: _progressAnimation,
+            builder: (context, _) {
+              if (_progressAnimation.value <= 0) return const SizedBox.shrink();
+              return Positioned(
+                left: (MediaQuery.of(context).size.width - 90) * _progressAnimation.value - 12,
+                top: -10,
+                child: Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF2ECC71).withOpacity(0.8),
+                        blurRadius: 25,
+                        spreadRadius: 8,
+                      ),
+                    ],
+                    gradient: const RadialGradient(
+                      colors: [Colors.white, Colors.transparent],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 }
 
-enum _MotionType { particles, lines }
-
-class _MotionPainter extends CustomPainter {
-  final double progress;
-  final double speedFactor;
-  final Color color;
-  final _MotionType type;
-
-  _MotionPainter({
-    required this.progress,
-    required this.speedFactor,
-    required this.color,
-    required this.type,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rng = Random(type == _MotionType.particles ? 777 : 888);
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    final effectiveProgress = (progress * speedFactor) % 1.0;
-
-    if (type == _MotionType.particles) {
-      for (int i = 0; i < 40; i++) {
-        final baseX = rng.nextDouble() * size.width;
-        final baseY = rng.nextDouble() * size.height;
-        
-        // Drifting motion
-        final x = (baseX + effectiveProgress * size.width * 0.5) % size.width;
-        final y = (baseY - effectiveProgress * size.height * 0.3) % size.height;
-        
-        final pSize = 1.0 + rng.nextDouble() * 2.5;
-        canvas.drawCircle(Offset(x, y), pSize, paint);
-      }
-    } else {
-      // Digital Flow Lines
-      paint.style = PaintingStyle.stroke;
-      paint.strokeWidth = 0.5;
-      for (int i = 0; i < 12; i++) {
-        final y = (rng.nextDouble() * size.height + effectiveProgress * size.height) % size.height;
-        final length = 50.0 + rng.nextDouble() * 100;
-        final x = rng.nextDouble() * size.width;
-        
-        canvas.drawLine(Offset(x, y), Offset(x + length, y), paint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_MotionPainter oldDelegate) => true;
-}
