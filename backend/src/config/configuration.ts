@@ -5,7 +5,7 @@ export default () => ({
     port: parseInt(process.env.DB_PORT || process.env.Port, 10) || 3306,
     username: process.env.DB_USERNAME || process.env.User || 'bnpl_user',
     password: process.env.DB_PASSWORD || process.env.Password || 'bnpl_password',
-    database: process.env.DB_DATABASE || 'bnpl_db', 
+    database: process.env.DB_DATABASE || process.env.DB_NAME || 'bnpl_db', 
     ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
   },
   jwt: {

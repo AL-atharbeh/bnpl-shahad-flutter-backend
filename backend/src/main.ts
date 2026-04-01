@@ -58,29 +58,13 @@ async function bootstrap() {
     });
   });
 
-  // For Vercel: We don't call app.listen() if we're exporting the handler
-  if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
-    const port = configService.get('PORT', 3000);
-    await app.listen(port, '0.0.0.0');
-    console.log(`🚀 BNPL Backend is running on: http://0.0.0.0:${port}`);
-  }
+  // Listen on the port (Railway sets PORT automatically)
+  const port = process.env.PORT || configService.get('PORT', 3000);
+  await app.listen(port, '0.0.0.0');
+  console.log(`🚀 BNPL Backend is running on: http://0.0.0.0:${port}`);
 
   return app;
 }
 
-// Export for Vercel
-let server;
-export default async (req: any, res: any) => {
-  if (!server) {
-    const app = await bootstrap();
-    await app.init();
-    server = app.getHttpAdapter().getInstance();
-  }
-  return server(req, res);
-};
-
-// Also keep the bootstrap call for local development
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
-  bootstrap();
-}
+bootstrap();
 
