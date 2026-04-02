@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متجر التجربة - BNPL Test Store</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">متجر <span>مودرن</span></div>
+            <nav>
+                <ul>
+                    <li><a href="#" class="active">الرئيسية</a></li>
+                    <li><a href="#">المنتجات</a></li>
+                    <li><a href="#">العروض</a></li>
+                </ul>
+            </nav>
+            <div class="cart-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <span class="badge">0</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <h1>جرب تجربة الشراء مع <span>BNPL</span></h1>
+            <p>اختر منتجك المفضل وجرب خيار "اشترِ الآن وادفع لاحقاً" بكل سهولة.</p>
+        </section>
+
+        <section class="products-grid" id="productsGrid">
+            <!-- Product 1 -->
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="test_product_1_watch.png" alt="ساعة ذكية فاخرة">
+                </div>
+                <div class="product-info">
+                    <span class="category">إلكترونيات</span>
+                    <h3>ساعة ذكية فاخرة - الإصدار المحدود</h3>
+                    <div class="price">
+                        <span class="amount">120</span>
+                        <span class="currency">JOD</span>
+                    </div>
+                    <button class="buy-btn" data-id="p1" data-name="ساعة ذكية فاخرة" data-price="120">
+                        شراء الآن
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Product 2 -->
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="test_product_2_perfume.png" alt="عطر النخبة">
+                </div>
+                <div class="product-info">
+                    <span class="category">عطور</span>
+                    <h3>عطر النخبة - 100 مل</h3>
+                    <div class="price">
+                        <span class="amount">85</span>
+                        <span class="currency">JOD</span>
+                    </div>
+                    <button class="buy-btn" data-id="p2" data-name="عطر النخبة" data-price="85">
+                        شراء الآن
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div class="loader-overlay" id="loader">
+        <div class="loader"></div>
+        <p>جاري إنشاء جلسة الدفع...</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

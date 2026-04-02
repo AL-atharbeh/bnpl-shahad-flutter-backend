@@ -4,6 +4,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import * as express from 'express';
+import * as path from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -12,6 +13,9 @@ async function bootstrap() {
   // Increase body size limit for image uploads
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ limit: '10mb', extended: true }));
+  
+  // Serve test store static files
+  app.use('/store-test', express.static(path.join(process.cwd(), 'store-test')));
 
   // Global prefix
   const apiPrefix = configService.get('API_PREFIX', 'api/v1');
