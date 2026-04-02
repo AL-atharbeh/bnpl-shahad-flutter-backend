@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Res,
+  Req,
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -152,7 +153,7 @@ export class BannersController {
       fileSize: 5 * 1024 * 1024, // 5MB limit
     },
   }))
-  async uploadBanner(@UploadedFile() file: Express.Multer.File) {
+  async uploadBanner(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
     if (!file) {
       throw new BadRequestException('File is not provided');
     }
@@ -189,12 +190,16 @@ export class BannersController {
         const filePath = path.join(uploadDir, filename);
         fs.writeFileSync(filePath, file.buffer);
         
-        // Construct local URL - assuming the frontend knows how to handle relative paths or we provide the full one
-        // Better to return the relative path that the @Get('uploads/:filename') expects
+        // Construct absolute URL
+        const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+        const host = req.headers['host'];
+        const apiPrefix = process.env.API_PREFIX || 'api/v1';
+        const absoluteUrl = `${protocol}://${host}/${apiPrefix}/banners/uploads/${filename}`;
+        
         return {
           success: true,
           data: {
-            url: `/banners/uploads/${filename}`,
+            url: absoluteUrl,
             filename: filename,
             isLocal: true
           }

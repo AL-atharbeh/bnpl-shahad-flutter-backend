@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, ParseIntPipe, Post, Body, Put, Delete, UseInterceptors, UploadedFile, Res, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Param, Query, ParseIntPipe, Post, Body, Put, Delete, UseInterceptors, UploadedFile, Res, Req, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
@@ -38,7 +38,7 @@ export class ProductsController {
       cb(null, true);
     },
   }))
-  async uploadProduct(@UploadedFile() file: Express.Multer.File) {
+  async uploadProduct(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
     if (!file) {
       throw new BadRequestException('File is not provided');
     }
@@ -73,10 +73,16 @@ export class ProductsController {
         const filePath = path.join(uploadDir, filename);
         fs.writeFileSync(filePath, file.buffer);
         
+        // Construct absolute URL
+        const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+        const host = req.headers['host'];
+        const apiPrefix = process.env.API_PREFIX || 'api/v1';
+        const absoluteUrl = `${protocol}://${host}/${apiPrefix}/products/uploads/${filename}`;
+
         return {
           success: true,
           data: {
-            url: `/products/uploads/${filename}`,
+            url: absoluteUrl,
             filename: filename,
             isLocal: true
           }

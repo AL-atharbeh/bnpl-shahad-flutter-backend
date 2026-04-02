@@ -139,9 +139,7 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
             // Resize image before upload to optimize
             const optimizedFile = await resizeImage(file);
             const res = await uploadProductImage(optimizedFile);
-            
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://enthusiastic-stillness-production-5dce.up.railway.app/api/v1';
-            const uploadedUrl = `${baseUrl}/products/uploads/${res.data.data.filename}`;
+            const uploadedUrl = res.data.data.url;
             setFormData(prev => ({ ...prev, image_url: uploadedUrl }));
         } catch (err: any) {
             console.error("Upload failed", err);
