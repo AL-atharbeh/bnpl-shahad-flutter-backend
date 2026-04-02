@@ -6,6 +6,8 @@ import { Deal } from '../deals/entities/deal.entity';
 import { Vendor } from '../vendors/entities/vendor.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { UsersService } from '../users/users.service';
+import { CreateStoreDto } from './dto/create-store.dto';
+import { UpdateStoreDto } from './dto/update-store.dto';
 
 @Injectable()
 export class StoresService {
@@ -225,7 +227,7 @@ export class StoresService {
   /**
    * Update store details
    */
-  async updateStore(id: number, updateStoreDto: any): Promise<Store> {
+  async updateStore(id: number, updateStoreDto: UpdateStoreDto): Promise<Store> {
     const store = await this.storeRepository.findOne({ where: { id } });
     if (!store) {
       throw new NotFoundException('المتجر غير موجود');

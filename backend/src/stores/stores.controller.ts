@@ -2,6 +2,8 @@ import { Controller, Get, Put, Post, Delete, Body, Param, Query, ParseIntPipe } 
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { StoresService } from './stores.service';
 import { ProductsService } from '../products/products.service';
+import { CreateStoreDto } from './dto/create-store.dto';
+import { UpdateStoreDto } from './dto/update-store.dto';
 
 @ApiTags('stores')
 @Controller('stores')
@@ -66,7 +68,7 @@ export class StoresController {
 
   @Post()
   @ApiOperation({ summary: 'Create new store' })
-  async createStore(@Body() createStoreDto: any) {
+  async createStore(@Body() createStoreDto: CreateStoreDto) {
     const store = await this.storesService.createStore(createStoreDto);
     return {
       success: true,
@@ -161,7 +163,7 @@ export class StoresController {
   @ApiOperation({ summary: 'Update store details' })
   async updateStore(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateStoreDto: any,
+    @Body() updateStoreDto: UpdateStoreDto,
   ) {
     const store = await this.storesService.updateStore(id, updateStoreDto);
     return {

@@ -285,16 +285,20 @@ export class AuthService {
         isActive: true,
       });
 
-      await this.vendorRepository.save(vendor);
+      const savedVendor = await this.vendorRepository.save(vendor);
 
-      const token = this.generateToken(vendor, 'vendor');
+      // 3. Link vendor back to store
+      savedStore.vendorId = savedVendor.id;
+      await this.storeRepository.save(savedStore);
+
+      const token = this.generateToken(savedVendor, 'vendor');
 
       return {
         success: true,
         message: 'تم إنشاء حساب المورد والمتجر بنجاح',
         data: {
           token,
-          user: this.sanitizeVendor(vendor),
+          user: this.sanitizeVendor(savedVendor),
         },
       };
     } catch (error) {
