@@ -136,13 +136,13 @@ export default function Home() {
                 <h4 className="text-sm font-semibold text-slate-200 group-hover:text-emerald-400">{t("updatePrices")}</h4>
                 <p className="text-[11px] text-slate-500 mt-1">{t("updatePricesDetail")}</p>
               </div>
-              <div 
+{/* <div 
                 onClick={() => router.push('/stores/new')}
                 className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 hover:bg-slate-900/60 transition-colors cursor-pointer group"
               >
                 <h4 className="text-sm font-semibold text-slate-200 group-hover:text-blue-400">{t("addBranch")}</h4>
                 <p className="text-[11px] text-slate-500 mt-1">{t("addBranchDetail")}</p>
-              </div>
+              </div> */}
               <div 
                 onClick={async () => {
                   if (settlementLoading) return;
