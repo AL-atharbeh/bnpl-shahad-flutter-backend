@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Deal, CreateDealDto, dealsService } from "@/services/deals.service";
 import { Store, storesService } from "@/services/stores.service";
 import { Product, productsService } from "@/services/products.service";
+import { bannersService } from "@/services/banners.service";
 
 interface DealModalProps {
     isOpen: boolean;
@@ -20,6 +21,7 @@ export default function DealModal({
     const [stores, setStores] = useState<Store[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
     const [loadingProducts, setLoadingProducts] = useState(false);
+    const [uploadLoading, setUploadLoading] = useState(false);
 
     const [formData, setFormData] = useState<Partial<CreateDealDto>>({
         title: "",
@@ -117,6 +119,25 @@ export default function DealModal({
     const handleStoreChange = (storeId: number) => {
         setFormData({ ...formData, storeId, productId: undefined });
         fetchProducts(storeId);
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploadLoading(true);
+        try {
+            const result = await bannersService.uploadImage(file);
+            if (result.success) {
+                setFormData((prev) => ({ ...prev, imageUrl: result.data.url }));
+            }
+        } catch (err: any) {
+            console.error("Upload failed", err);
+            const errorMessage = err.response?.data?.message || err.message || "فشل في رفع الصورة";
+            alert(`خطأ في الرفع: ${errorMessage}`);
+        } finally {
+            setUploadLoading(false);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -300,18 +321,49 @@ export default function DealModal({
                                 className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-50 focus:border-emerald-500/60 focus:outline-none"
                             />
                         </div>
-                        <div>
-                            <label className="block text-xs text-slate-400 mb-1">
-                                رابط الصورة
-                            </label>
-                            <input
-                                type="text"
-                                value={formData.imageUrl || ""}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, imageUrl: e.target.value })
-                                }
-                                className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-50 focus:border-emerald-500/60 focus:outline-none"
-                            />
+                        <div className="col-span-1 md:col-span-3">
+                            <label className="block text-xs font-medium text-slate-400 mb-2">صورة العرض</label>
+                            <div className="flex flex-col gap-4">
+                                {formData.imageUrl && (
+                                    <div className="relative h-48 w-full md:w-1/2 overflow-hidden rounded-lg border border-slate-700 bg-slate-800 shadow-inner">
+                                        <img src={formData.imageUrl} alt="Preview" className="h-full w-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, imageUrl: "" })}
+                                                className="rounded-full bg-red-500 p-2 text-white shadow-lg hover:bg-red-400 text-xs"
+                                            >
+                                                حذف الصورة
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {!formData.imageUrl && (
+                                    <label className="flex h-32 w-full md:w-1/2 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-700 bg-slate-900/40 transition-all hover:border-emerald-500/50 hover:bg-slate-900/60 group">
+                                        <div className="flex flex-col items-center justify-center pb-6 pt-5">
+                                            <div className="mb-2 rounded-full bg-slate-800 p-2 group-hover:bg-slate-700 group-hover:text-emerald-400 transition-colors">
+                                                <svg className="h-6 w-6 text-slate-400 group-hover:text-emerald-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
+                                                </svg>
+                                            </div>
+                                            <p className="mb-1 text-xs text-slate-400 text-center px-4">
+                                                {uploadLoading ? (
+                                                    <span className="flex items-center gap-2">
+                                                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent"></span>
+                                                        جاري الرفع...
+                                                    </span>
+                                                ) : (
+                                                    <>
+                                                        <span className="font-semibold text-emerald-500">اضغط لرفع الصورة</span> أو اسحبها هنا
+                                                    </>
+                                                )}
+                                            </p>
+                                        </div>
+                                        <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} disabled={uploadLoading} />
+                                    </label>
+                                )}
+                            </div>
                         </div>
                     </div>
 
