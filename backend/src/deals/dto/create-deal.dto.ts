@@ -64,6 +64,10 @@ export class CreateDealDto {
   accentColor?: string;
 
   @IsOptional()
+  @IsString()
+  storeUrl?: string;
+
+  @IsOptional()
   @Type(() => Date)
   @IsDate()
   startDate?: Date;

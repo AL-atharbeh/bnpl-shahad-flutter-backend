@@ -31,6 +31,7 @@ export default function DealModal({
         discountLabel: "خصم",
         discountValue: "",
         imageUrl: "",
+        storeUrl: "",
         badgeColor: "#EF4444",
         accentColor: "#F87171",
         isActive: true,
@@ -52,6 +53,7 @@ export default function DealModal({
                     discountLabel: deal.discountLabel,
                     discountValue: deal.discountValue,
                     imageUrl: deal.imageUrl,
+                    storeUrl: deal.storeUrl,
                     badgeColor: deal.badgeColor,
                     accentColor: deal.accentColor,
                     startDate: deal.startDate ? new Date(deal.startDate) : undefined,
@@ -73,6 +75,7 @@ export default function DealModal({
                     discountLabel: "خصم",
                     discountValue: "",
                     imageUrl: "",
+                    storeUrl: "",
                     badgeColor: "#EF4444",
                     accentColor: "#F87171",
                     isActive: true,
@@ -428,6 +431,22 @@ export default function DealModal({
                                 className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-50 focus:border-emerald-500/60 focus:outline-none"
                             />
                         </div>
+                    </div>
+
+                    {/* Store URL */}
+                    <div>
+                        <label className="block text-xs text-slate-400 mb-1">
+                            رابط المتجر الخارجي (اختياري)
+                        </label>
+                        <input
+                            type="url"
+                            value={formData.storeUrl || ""}
+                            onChange={(e) =>
+                                setFormData({ ...formData, storeUrl: e.target.value })
+                            }
+                            className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-50 focus:border-emerald-500/60 focus:outline-none"
+                            placeholder="https://example.com"
+                        />
                     </div>
 
                     {/* Dates */}

@@ -51,6 +51,7 @@ export interface CreateDealDto {
     discountLabel?: string;
     discountValue?: string;
     imageUrl?: string;
+    storeUrl?: string;
     badgeColor?: string;
     accentColor?: string;
     startDate?: Date;
