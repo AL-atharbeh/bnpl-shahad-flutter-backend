@@ -62,7 +62,9 @@ export const bannersService = {
   uploadImage: async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await api.post<{ success: boolean; data: { url: string; filename: string } }>('/banners/upload', formData);
+    const response = await api.post<{ success: boolean; data: { url: string; filename: string } }>('/banners/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
   },
 };
