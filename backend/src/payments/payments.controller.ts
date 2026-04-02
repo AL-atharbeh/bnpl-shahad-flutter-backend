@@ -19,6 +19,7 @@ import { PostponementsService } from '../postponements/postponements.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UsersService } from '../users/users.service';
 import { BnplSessionsService } from '../bnpl-sessions/bnpl-sessions.service';
+import { StripeService } from './stripe.service';
 
 @ApiTags('payments')
 @Controller('payments')
@@ -29,6 +30,7 @@ export class PaymentsController {
     private readonly postponementsService: PostponementsService,
     private readonly usersService: UsersService,
     private readonly bnplSessionsService: BnplSessionsService,
+    private readonly stripeService: StripeService,
   ) { }
 
   @Get()
@@ -784,22 +786,87 @@ export class PaymentsController {
     }
   }
 
-  @Get('callback/error')
-  @ApiOperation({ summary: 'Handle MyFatoorah error callback' })
-  async handleErrorCallback(
-    @Query('paymentId') paymentId: string,
-    @Query('Id') id: string,
+  @Post('stripe/create-checkout-session')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create Stripe Checkout session for first installment' })
+  async createStripeSession(
+    @Body('amount') amount: number,
+    @Body('sessionId') sessionId: string,
+    @Body('currency') currency: string = 'JOD',
+    @Request() req,
   ) {
-    const actualPaymentId = paymentId || id;
-    console.log(`❌ Payment error callback received: ${actualPaymentId}`);
+    const successUrl = `${req.protocol}://${req.get('host')}/api/v1/payments/stripe/callback/success?sessionId=${sessionId}&stripeSessionId={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${req.protocol}://${req.get('host')}/api/v1/payments/stripe/callback/error?sessionId=${sessionId}`;
+
+    const session = await this.stripeService.createCheckoutSession({
+      amount,
+      currency,
+      customerName: req.user.name || 'Customer',
+      customerEmail: req.user.email || 'customer@example.com',
+      customerReference: sessionId,
+      successUrl,
+      cancelUrl,
+    });
 
     return {
-      success: false,
-      message: 'Payment failed or cancelled',
-      paymentId: actualPaymentId,
+      success: true,
+      data: {
+        url: session.url,
+        sessionId: session.id,
+      },
     };
   }
 
+  @Get('stripe/callback/success')
+  @ApiOperation({ summary: 'Handle Stripe success callback' })
+  async handleStripeSuccess(
+    @Query('sessionId') sessionId: string,
+    @Query('stripeSessionId') stripeSessionId: string,
+    @Res() res,
+  ) {
+    console.log(`✅ Stripe success callback received for session: ${sessionId}`);
+
+    try {
+      const isPaid = await this.stripeService.verifySession(stripeSessionId);
+
+      if (isPaid) {
+        // Approve BNPL session
+        try {
+          const session = await this.bnplSessionsService.getSessionEntity(sessionId);
+          if (session && session.userId) {
+            await this.bnplSessionsService.approveSession(sessionId, session.userId);
+            console.log(`✅ Session ${sessionId} approved via Stripe`);
+          }
+        } catch (error) {
+          console.error(`❌ Failed to approve session ${sessionId} after Stripe payment:`, error.message);
+        }
+
+        // Redirect to success page (absolute URL)
+        const baseUrl = `${res.req.protocol}://${res.req.get('host')}`;
+        return res.redirect(`${baseUrl}/api/v1/payments/callback/success?sessionId=${sessionId}`);
+      } else {
+        const baseUrl = `${res.req.protocol}://${res.req.get('host')}`;
+        return res.redirect(`${baseUrl}/api/v1/payments/callback/error?sessionId=${sessionId}`);
+      }
+    } catch (error) {
+      console.error('❌ Error in Stripe success callback:', error);
+      const baseUrl = `${res.req.protocol}://${res.req.get('host')}`;
+      return res.redirect(`${baseUrl}/api/v1/payments/callback/error?sessionId=${sessionId}`);
+    }
+  }
+
+  @Get('stripe/callback/error')
+  @ApiOperation({ summary: 'Handle Stripe error callback' })
+  async handleStripeError(
+    @Query('sessionId') sessionId: string,
+    @Res() res,
+  ) {
+    console.log(`❌ Stripe error callback received for session: ${sessionId}`);
+    const baseUrl = `${res.req.protocol}://${res.req.get('host')}`;
+    return res.redirect(`${baseUrl}/api/v1/payments/callback/error?sessionId=${sessionId}`);
+  }
+  
   // Admin endpoints
   @Get('admin/stats')
   @ApiOperation({ summary: 'Get payments statistics for admin' })

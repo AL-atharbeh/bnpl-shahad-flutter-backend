@@ -5,6 +5,7 @@ import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { MyFatoorahService } from './myfatoorah.service';
 import { MockPaymentService } from './mock-payment.service';
+import { StripeService } from './stripe.service';
 import { Payment } from './entities/payment.entity';
 import { RewardsModule } from '../rewards/rewards.module';
 import { PostponementsModule } from '../postponements/postponements.module';
@@ -21,7 +22,7 @@ import { BnplSessionsModule } from '../bnpl-sessions/bnpl-sessions.module';
     forwardRef(() => BnplSessionsModule),
   ],
   controllers: [PaymentsController],
-  providers: [PaymentsService, MyFatoorahService, MockPaymentService],
-  exports: [PaymentsService, MyFatoorahService, MockPaymentService],
+  providers: [PaymentsService, MyFatoorahService, StripeService, MockPaymentService],
+  exports: [PaymentsService, MyFatoorahService, StripeService, MockPaymentService],
 })
 export class PaymentsModule { }

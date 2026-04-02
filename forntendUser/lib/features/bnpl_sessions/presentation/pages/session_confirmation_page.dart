@@ -93,16 +93,21 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
       // This is needed so completeSession can find the userId
       await _sessionService.approveSession(widget.sessionId);
       
-      // Get payment URL (this creates installments as pending)
-      final result = await _sessionService.completeSession(widget.sessionId);
+      // Get payment URL (Stripe Checkout Session)
+      final installmentAmount = totalAmount / _session!.installmentsCount;
+      final result = await _sessionService.initiateStripePayment(
+        sessionId: widget.sessionId,
+        amount: installmentAmount,
+        currency: _session!.currency,
+      );
       
-      print('📦 Complete session result: $result');
+      print('📦 Stripe session result: $result');
 
       if (mounted) {
         // Check if payment is required
-        if (result['payment_required'] == true && result['payment_url'] != null) {
-          final paymentUrl = result['payment_url'];
-          print('💳 Opening payment WebView: $paymentUrl');
+        if (result['success'] == true && result['data'] != null && result['data']['url'] != null) {
+          final paymentUrl = result['data']['url'];
+          print('💳 Opening Stripe WebView: $paymentUrl');
 
           // Open payment WebView
           final paymentSuccess = await Navigator.push<bool>(

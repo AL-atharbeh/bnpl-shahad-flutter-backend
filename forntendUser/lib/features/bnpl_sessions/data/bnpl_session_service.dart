@@ -94,6 +94,42 @@ class BnplSessionService {
     }
   }
 
+  Future<Map<String, dynamic>> initiateStripePayment({
+    required String sessionId,
+    required double amount,
+    String currency = 'JOD',
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('user_token');
+
+      if (token == null) {
+        throw Exception('يجب تسجيل الدخول أولاً لإتمام الطلب');
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/payments/stripe/create-checkout-session'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode({
+          'sessionId': sessionId,
+          'amount': amount,
+          'currency': currency,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('فشل في بدء عملية الدفع عبر Stripe');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<Map<String, dynamic>> rejectSession(String sessionId) async {
     try {
       final response = await http.post(
