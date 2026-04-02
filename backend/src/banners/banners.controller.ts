@@ -158,21 +158,50 @@ export class BannersController {
     }
 
     try {
-      const filename = `${Date.now()}-${file.originalname}`;
-      const blob = await put(`banners/${filename}`, file.buffer, {
-        access: 'public',
-        addRandomSuffix: true,
-      });
+      const filename = `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`;
+      
+      // Check if Vercel Blob Token is present
+      const token = process.env.BLOB_READ_WRITE_TOKEN;
+      
+      if (token) {
+        const blob = await put(`banners/${filename}`, file.buffer, {
+          access: 'public',
+          addRandomSuffix: true,
+        });
 
-      return {
-        success: true,
-        data: {
-          url: blob.url,
-          filename: filename
+        return {
+          success: true,
+          data: {
+            url: blob.url,
+            filename: filename
+          }
+        };
+      } else {
+        // Fallback to local storage
+        const fs = require('fs');
+        const path = require('path');
+        const uploadDir = path.join(process.cwd(), 'uploads/banners');
+        
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
         }
-      };
+        
+        const filePath = path.join(uploadDir, filename);
+        fs.writeFileSync(filePath, file.buffer);
+        
+        // Construct local URL - assuming the frontend knows how to handle relative paths or we provide the full one
+        // Better to return the relative path that the @Get('uploads/:filename') expects
+        return {
+          success: true,
+          data: {
+            url: `/banners/uploads/${filename}`,
+            filename: filename,
+            isLocal: true
+          }
+        };
+      }
     } catch (error) {
-      throw new BadRequestException(`Failed to upload to Vercel Blob: ${error.message}`);
+      throw new BadRequestException(`Failed to upload image: ${error.message}`);
     }
   }
 

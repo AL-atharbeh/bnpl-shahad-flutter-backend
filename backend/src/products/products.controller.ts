@@ -44,21 +44,46 @@ export class ProductsController {
     }
 
     try {
-      const filename = `${Date.now()}-${file.originalname}`;
-      const blob = await put(`products/${filename}`, file.buffer, {
-        access: 'public',
-        addRandomSuffix: true,
-      });
+      const filename = `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`;
+      const token = process.env.BLOB_READ_WRITE_TOKEN;
 
-      return {
-        success: true,
-        data: {
-          url: blob.url,
-          filename: filename
+      if (token) {
+        const blob = await put(`products/${filename}`, file.buffer, {
+          access: 'public',
+          addRandomSuffix: true,
+        });
+
+        return {
+          success: true,
+          data: {
+            url: blob.url,
+            filename: filename
+          }
+        };
+      } else {
+        // Fallback to local storage
+        const fs = require('fs');
+        const path = require('path');
+        const uploadDir = path.join(process.cwd(), 'uploads/products');
+        
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
         }
-      };
+        
+        const filePath = path.join(uploadDir, filename);
+        fs.writeFileSync(filePath, file.buffer);
+        
+        return {
+          success: true,
+          data: {
+            url: `/products/uploads/${filename}`,
+            filename: filename,
+            isLocal: true
+          }
+        };
+      }
     } catch (error) {
-      throw new BadRequestException(`Failed to upload to Vercel Blob: ${error.message}`);
+      throw new BadRequestException(`Failed to upload image: ${error.message}`);
     }
   }
 
