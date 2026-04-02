@@ -14,7 +14,7 @@ import {
     Loader2,
     Package
 } from "lucide-react";
-import { getStoreSettings, updateStoreSettings } from "@/services/api";
+import { getStoreSettings, updateStoreSettings, getCategories } from "@/services/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function SettingsPage() {
@@ -25,10 +25,28 @@ export default function SettingsPage() {
     const [updating, setUpdating] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
+    const [categories, setCategories] = useState<any[]>([]);
+
+    const genderCategories = [
+        { id: 1, name: t("women") },
+        { id: 2, name: t("men") },
+        { id: 3, name: t("kids") },
+        { id: 4, name: t("unisex") },
+    ];
 
     useEffect(() => {
         loadStore();
+        loadCategories();
     }, []);
+
+    async function loadCategories() {
+        try {
+            const res = await getCategories();
+            setCategories(res.data.data);
+        } catch (error) {
+            console.error("Failed to load categories", error);
+        }
+    }
 
     async function loadStore() {
         const userStr = localStorage.getItem("vendor_user");
@@ -45,7 +63,7 @@ export default function SettingsPage() {
         }
     }
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setStore({ ...store, [e.target.name]: e.target.value });
     };
 
@@ -84,6 +102,7 @@ export default function SettingsPage() {
                 websiteUrl: store.websiteUrl,
                 storeUrl: store.storeUrl,
                 categoryId: store.categoryId,
+                genderCategoryId: store.genderCategoryId,
             });
             setSuccess(true);
             setTimeout(() => setSuccess(false), 3000);
@@ -200,6 +219,47 @@ export default function SettingsPage() {
                                     onChange={handleChange}
                                     className={`w-full rounded-xl border border-emerald-900/30 bg-[#011f18] py-3 px-4 text-sm text-slate-200 outline-none focus:border-emerald-500/50`}
                                 />
+                            </div>
+
+                            <div className="grid gap-6 md:grid-cols-2">
+                                <div className="space-y-2">
+                                    <label className={`text-xs font-bold text-slate-500 ${language === "ar" ? "pr-1" : "pl-1"}`}>{t("mainCategory")}</label>
+                                    <div className="relative">
+                                        <Package className={`absolute ${language === "ar" ? "right-3" : "left-3"} top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600`} />
+                                        <select
+                                            name="categoryId"
+                                            value={store?.categoryId || ""}
+                                            onChange={handleChange}
+                                            className={`w-full rounded-xl border border-emerald-900/30 bg-[#011f18] py-3 ${language === "ar" ? "pr-10 pl-4" : "pl-10 pr-4"} text-sm text-slate-200 outline-none focus:border-emerald-500/50 appearance-none`}
+                                        >
+                                            <option value="">{t("selectCategory") || "Select Category"}</option>
+                                            {categories.map((cat) => (
+                                                <option key={cat.id} value={cat.id}>
+                                                    {language === "ar" ? cat.nameAr : cat.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className={`text-xs font-bold text-slate-500 ${language === "ar" ? "pr-1" : "pl-1"}`}>{t("genderCategory")}</label>
+                                    <div className="relative">
+                                        <Store className={`absolute ${language === "ar" ? "right-3" : "left-3"} top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600`} />
+                                        <select
+                                            name="genderCategoryId"
+                                            value={store?.genderCategoryId || ""}
+                                            onChange={handleChange}
+                                            className={`w-full rounded-xl border border-emerald-900/30 bg-[#011f18] py-3 ${language === "ar" ? "pr-10 pl-4" : "pl-10 pr-4"} text-sm text-slate-200 outline-none focus:border-emerald-500/50 appearance-none`}
+                                        >
+                                            <option value="">{t("selectCategory") || "Select Option"}</option>
+                                            {genderCategories.map((cat) => (
+                                                <option key={cat.id} value={cat.id}>
+                                                    {cat.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="grid gap-6 md:grid-cols-2">

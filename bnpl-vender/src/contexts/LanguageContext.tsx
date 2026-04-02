@@ -143,6 +143,12 @@ const translations: Record<Language, Record<string, string>> = {
         verifiedPartner: "شريك معتمد",
         verifiedPartnerStatus: "الحالة: شريك معتمد",
         loading: "جاري التحميل...",
+        genderCategory: "فئة المتجر (رجال/نساء)",
+        women: "نساء",
+        men: "رجال",
+        kids: "أطفال",
+        unisex: "الكل / للجنسين",
+        mainCategory: "التصنيف الرئيسي للمتجر",
 
         // Auth
         loginTitle: "تسجيل الدخول",
@@ -312,6 +318,12 @@ const translations: Record<Language, Record<string, string>> = {
         verifiedPartner: "Verified Partner",
         verifiedPartnerStatus: "Status: Verified Partner",
         loading: "Loading...",
+        genderCategory: "Store Category (Gender)",
+        women: "Women",
+        men: "Men",
+        kids: "Kids",
+        unisex: "All / Unisex",
+        mainCategory: "Main Store Category",
 
         // Auth
         loginTitle: "Login",
