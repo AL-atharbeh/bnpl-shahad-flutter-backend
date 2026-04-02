@@ -145,8 +145,8 @@ export default function DealModal({
         setLoading(true);
 
         try {
-            if (!formData.storeId || !formData.productId || !formData.title) {
-                alert("يرجى تعبئة الحقول الإلزامية (المتجر، المنتج، العنوان)");
+            if (!formData.storeId || !formData.productId || !formData.title || !formData.imageUrl) {
+                alert("يرجى تعبئة الحقول الإلزامية (المتجر، المنتج، العنوان، صورة العرض)");
                 setLoading(false);
                 return;
             }

@@ -49,9 +49,9 @@ export class CreateDealDto {
   @MaxLength(120)
   discountValue?: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  imageUrl?: string;
+  imageUrl: string;
 
   @IsOptional()
   @IsString()
