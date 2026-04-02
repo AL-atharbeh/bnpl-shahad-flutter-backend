@@ -1,4 +1,12 @@
-const API_BASE_URL = window.location.origin + '/api/v1';
+const PRODUCTION_URL = 'https://enthusiastic-stillness-production-5dce.up.railway.app';
+let origin = window.location.origin;
+
+// If opening file locally or if origin is null, use production
+if (origin === 'null' || !origin.startsWith('http')) {
+    origin = PRODUCTION_URL;
+}
+
+const API_BASE_URL = origin + '/api/v1';
 
 document.addEventListener('DOMContentLoaded', () => {
     const buyButtons = document.querySelectorAll('.buy-btn');
@@ -34,8 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         product_id: 1 // Link to a test product
                     }
                 ],
-                success_url: window.location.href + '?success=true',
-                cancel_url: window.location.href + '?cancel=true'
+                success_url: window.location.href.split('?')[0] + '?success=true',
+                cancel_url: window.location.href.split('?')[0] + '?cancel=true'
             };
 
             console.log('🚀 Creating session:', sessionData);
