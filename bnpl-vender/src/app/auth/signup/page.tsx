@@ -67,8 +67,8 @@ export default function SignupPage() {
             </button>
             <div className="w-full max-w-lg space-y-8">
                 <div className="text-center">
-                    <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mb-6">
-                        <Store className="h-8 w-8 text-emerald-500" />
+                    <div className="inline-flex h-24 w-24 items-center justify-center rounded-3xl bg-emerald-500/10 border border-emerald-500/20 mb-6 overflow-hidden">
+                        <img src="/images/shahd-character.png" alt="Shahd Character" className="h-full w-full object-cover p-1" />
                     </div>
                     <h1 className="text-3xl font-black text-white tracking-tight">{t("joinAsPartner")}</h1>
                     <p className="mt-2 text-sm text-slate-400">{t("signupSubtitle")}</p>

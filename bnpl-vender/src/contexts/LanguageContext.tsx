@@ -168,8 +168,8 @@ const translations: Record<Language, Record<string, string>> = {
         haveAccount: "لديك حساب بالفعل؟",
         loginLinkText: "سجل دخولك",
         loginError: "خطأ في تسجيل الدخول. يرجى التأكد من البيانات.",
-        joinAsPartner: "انضم إلينا كشريك",
-        signupSubtitle: "ابدأ بقبول مدفوعات BNPL في متجرك اليوم",
+        joinAsPartner: "ابدأ قصة نجاحك مع شهد",
+        signupSubtitle: "انضم لآلاف التجار الذين يثقون بخدماتنا المالية المتطورة",
         createAccountAndStart: "إنشاء الحساب والبدء",
 
         // Store Setup
@@ -349,8 +349,8 @@ const translations: Record<Language, Record<string, string>> = {
         haveAccount: "Already have an account?",
         loginLinkText: "Login here",
         loginError: "Login failed. Please check your credentials.",
-        joinAsPartner: "Join as a Partner",
-        signupSubtitle: "Start accepting BNPL payments in your store today",
+        joinAsPartner: "Start Your Success Story with Shahd",
+        signupSubtitle: "Join thousands of merchants who trust our advanced financial services",
         createAccountAndStart: "Create Account and Start",
 
         // Store Setup
