@@ -27,6 +27,7 @@ export class CreateSessionDto {
     @IsNumber()
     store_id: number;
 
+
     @IsString()
     @IsNotEmpty()
     store_order_id: string;

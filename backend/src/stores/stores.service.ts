@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { v4 as uuidv4 } from 'uuid';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, In, LessThanOrEqual, MoreThanOrEqual, IsNull } from 'typeorm';
 import { Store } from './entities/store.entity';
@@ -62,7 +63,20 @@ export class StoresService {
     store.status = status;
     store.isActive = status === 'approved';
     
+    // Generate credentials if they don't exist and store is being approved
+    if (status === 'approved' && (!store.apiKey || !store.apiSecret)) {
+      const { apiKey, apiSecret } = this.generateApiCredentials();
+      store.apiKey = apiKey;
+      store.apiSecret = apiSecret;
+    }
+    
     return this.storeRepository.save(store);
+  }
+
+  private generateApiCredentials(): { apiKey: string; apiSecret: string } {
+    const apiKey = `sh_pk_${uuidv4().replace(/-/g, '').substring(0, 24)}`;
+    const apiSecret = `sh_sk_${uuidv4().replace(/-/g, '')}${uuidv4().replace(/-/g, '')}`;
+    return { apiKey, apiSecret };
   }
 
   async getStoreById(id: number): Promise<Store> {
@@ -204,6 +218,11 @@ export class StoresService {
       maxOrderAmount: createStoreDto.maxOrderAmount ?? 5000,
       productsCount: 0,
     }) as unknown) as Store;
+
+    // Auto-generate keys for new stores (even if pending, so they can see them)
+    const { apiKey, apiSecret } = this.generateApiCredentials();
+    store.apiKey = apiKey;
+    store.apiSecret = apiSecret;
 
     const savedStore = await this.storeRepository.save(store);
 

@@ -8,10 +8,12 @@ import {
     Request,
     HttpCode,
     HttpStatus,
+    Headers,
 } from '@nestjs/common';
 import { BnplSessionsService } from './bnpl-sessions.service';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Request as ExpressRequest } from 'express';
 
 @Controller('sessions')
 export class BnplSessionsController {
@@ -21,8 +23,9 @@ export class BnplSessionsController {
     @HttpCode(HttpStatus.CREATED)
     async createSession(
         @Body() createSessionDto: CreateSessionDto,
+        @Headers('x-api-key') apiKey: string,
     ) {
-        return this.sessionsService.createSession(createSessionDto);
+        return this.sessionsService.createSession(createSessionDto, apiKey);
     }
 
     @Get('store/:storeId/recent')

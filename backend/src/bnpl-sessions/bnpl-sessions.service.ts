@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, UnauthorizedException, HttpCode, HttpStatus, Headers } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BnplSession, SessionStatus } from './entities/bnpl-session.entity';
@@ -38,12 +38,18 @@ export class BnplSessionsService {
 
     async createSession(
         createSessionDto: CreateSessionDto,
+        apiKey: string,
     ): Promise<SessionResponseDto> {
         const store = await this.storeRepository.findOne({
             where: { id: createSessionDto.store_id },
         });
         if (!store) {
             throw new NotFoundException(`Store with ID ${createSessionDto.store_id} not found`);
+        }
+
+        // Validate API Key
+        if (store.apiKey !== apiKey) {
+            throw new UnauthorizedException('Invalid API Key for this store');
         }
 
         const sessionId = `sess_${uuidv4().replace(/-/g, '')}`;

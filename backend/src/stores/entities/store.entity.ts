@@ -7,6 +7,7 @@ import {
   OneToMany,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Product } from '../../products/entities/product.entity';
 import { Payment } from '../../payments/entities/payment.entity';
@@ -90,6 +91,13 @@ export class Store {
 
   @Column({ length: 20, default: 'approved' })
   status: string; // 'pending' | 'approved' | 'rejected'
+
+  @Index()
+  @Column({ name: 'api_key', length: 100, nullable: true, unique: true })
+  apiKey: string;
+
+  @Column({ name: 'api_secret', length: 255, nullable: true })
+  apiSecret: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
