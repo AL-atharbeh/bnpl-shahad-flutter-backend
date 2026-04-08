@@ -12,7 +12,10 @@ import {
     Upload,
     X,
     Loader2,
-    Package
+    Package,
+    Eye,
+    EyeOff,
+    Copy
 } from "lucide-react";
 import { getStoreSettings, updateStoreSettings, getCategories } from "@/services/api";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -25,6 +28,7 @@ export default function SettingsPage() {
     const [updating, setUpdating] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
+    const [showSecret, setShowSecret] = useState(false);
     const [categories, setCategories] = useState<any[]>([]);
 
     const genderCategories = [
@@ -358,7 +362,7 @@ export default function SettingsPage() {
                                                 className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition-colors"
                                                 title={t("copy")}
                                             >
-                                                <Save className="h-4 w-4" /> {/* Fallback icon or add Copy icon */}
+                                                <Copy className="h-4 w-4" />
                                             </button>
                                         )}
                                     </div>
@@ -368,11 +372,36 @@ export default function SettingsPage() {
                                     <label className={`text-xs font-bold text-slate-500 ${language === "ar" ? "pr-1" : "pl-1"}`}>{t("apiSecretLabel")}</label>
                                     <div className="flex items-center gap-2">
                                         <div className="flex-1 rounded-xl border border-emerald-900/30 bg-[#011f18] py-3 px-4 text-sm text-slate-200 font-mono">
-                                            {store?.apiSecret ? "••••••••••••••••••••••••••••" : "Pending approval..."}
+                                            {store?.apiSecret 
+                                                ? (showSecret ? store.apiSecret : "••••••••••••••••••••••••••••") 
+                                                : "Pending approval..."}
                                         </div>
+                                        {store?.apiSecret && (
+                                            <>
+                                                <button 
+                                                    onClick={() => setShowSecret(!showSecret)}
+                                                    className="p-3 rounded-xl bg-slate-800/60 text-slate-400 hover:text-emerald-500 transition-colors"
+                                                    title={showSecret ? "Hide" : "Reveal"}
+                                                >
+                                                    {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                </button>
+                                                <button 
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(store.apiSecret);
+                                                        alert(t("copy") + " ✅");
+                                                    }}
+                                                    className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition-colors"
+                                                    title={t("copy")}
+                                                >
+                                                    <Copy className="h-4 w-4" />
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
-                                    <p className="text-[10px] text-amber-500/70 italic px-1">
-                                        {language === "ar" ? "* لا تشارك المفتاح السري أبداً مع أي شخص خارجي." : "* Never share your Secret Key with anyone."}
+                                    <p className="text-[10px] text-amber-500/60 font-medium">
+                                        {language === "ar" 
+                                            ? "* لا تشارك المفتاح السري أبداً مع أي شخص خارجي." 
+                                            : "* Never share your secret key with anyone."}
                                     </p>
                                 </div>
                             </div>

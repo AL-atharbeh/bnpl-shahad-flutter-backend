@@ -28,6 +28,7 @@ export default function StoresPage() {
   const [selectedFeaturedStore, setSelectedFeaturedStore] = useState("");
   const [showAddStoreModal, setShowAddStoreModal] = useState(false);
   const [editStore, setEditStore] = useState<Store | null>(null);
+  const [showSecret, setShowSecret] = useState(false);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -730,9 +731,22 @@ export default function StoresPage() {
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">API Secret Key</p>
-                    <p className="mt-1 font-mono text-slate-50 bg-slate-900/50 p-2 rounded border border-slate-700">
-                      {selectedStore.apiSecret ? "••••••••••••••••••••••••••••" : "لم يتم توليد مفتاح بعد"}
-                    </p>
+                    <div className="mt-1 flex items-center justify-between font-mono text-slate-50 bg-slate-900/50 p-2 rounded border border-slate-700">
+                      <span className="truncate">
+                        {selectedStore.apiSecret 
+                          ? (showSecret ? selectedStore.apiSecret : "••••••••••••••••••••••••••••") 
+                          : "لم يتم توليد مفتاح بعد"
+                        }
+                      </span>
+                      {selectedStore.apiSecret && (
+                        <button 
+                          onClick={() => setShowSecret(!showSecret)}
+                          className="text-slate-400 hover:text-emerald-400 transition-colors px-2 border-r border-slate-700 mr-2 h-full"
+                        >
+                          {showSecret ? "🙈" : "👁️"}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </section>
@@ -742,7 +756,7 @@ export default function StoresPage() {
                 <h3 className="text-sm font-semibold text-slate-50 mb-3">
                   📋 معلومات المتجر
                 </h3>
-                <div className="grid gap-4 md:grid-cols-2 text-sm">
+                <div className="grid gap-4 md:grid-cols-3 text-sm">
                   <div>
                     <p className="text-xs text-slate-400">جهة الاتصال</p>
                     <p className="mt-1 text-slate-50">
@@ -761,24 +775,74 @@ export default function StoresPage() {
                       {selectedStore.contactEmail || "غير متوفر"}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-xs text-slate-400">العنوان</p>
+                  <div className="md:col-span-2">
+                    <p className="text-xs text-slate-400">العنوان الرئيسي</p>
                     <p className="mt-1 text-slate-50">
                       {selectedStore.address || "غير متوفر"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400">تاريخ الانضمام</p>
-                    <p className="mt-1 text-slate-50">
-                      {selectedStore.createdAt ? new Date(selectedStore.createdAt).toLocaleDateString('ar-KW') : "غير متوفر"}
-                    </p>
-                  </div>
-                  <div>
                     <p className="text-xs text-slate-400">رقم العقد</p>
-                    <p className="mt-1 text-slate-50">
+                    <p className="mt-1 text-slate-50 font-mono text-emerald-400">
                       {"CNT-" + selectedStore.id}
                     </p>
                   </div>
+                </div>
+              </section>
+
+              {/* Financial Settings (New Management Section) */}
+              <section className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-emerald-400 flex items-center gap-2">
+                    <span>💰</span> الإدارة المالية للعمولة والتحويل
+                  </h3>
+                  <span className="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded uppercase">Admin Only</span>
+                </div>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className="text-xs text-slate-400">نسبة العمولة المتفق عليها (%)</label>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="number" 
+                        step="0.1"
+                        value={selectedStore.commissionRate || 2.5}
+                        onChange={(e) => setSelectedStore({...selectedStore, commissionRate: parseFloat(e.target.value)})}
+                        className="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-slate-50 text-sm focus:border-emerald-500 outline-none transition-all"
+                      />
+                      <span className="text-emerald-500 font-bold">%</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-slate-400">دورية تحويل المستحقات (Payout Cycle)</label>
+                    <select 
+                      value={selectedStore.payoutCycle || "weekly"}
+                      onChange={(e) => setSelectedStore({...selectedStore, payoutCycle: e.target.value})}
+                      className="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-slate-50 text-sm focus:border-emerald-500 outline-none appearance-none cursor-pointer"
+                    >
+                      <option value="daily">يومي (Daily)</option>
+                      <option value="weekly">أسبوعي (Weekly)</option>
+                      <option value="monthly">شهري (Monthly)</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="mt-4 flex justify-end">
+                    <button
+                      onClick={async () => {
+                        try {
+                          await storesService.updateStore(selectedStore.id, {
+                            commissionRate: selectedStore.commissionRate,
+                            payoutCycle: selectedStore.payoutCycle
+                          });
+                          alert("تم حفظ الإعدادات المالية بنجاح ✅");
+                          fetchStores();
+                        } catch (error) {
+                          alert("فشل حفظ الإعدادات المالية");
+                        }
+                      }}
+                      className="rounded-lg bg-emerald-500 px-6 py-2.5 text-xs font-bold text-slate-950 hover:bg-emerald-400 shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
+                    >
+                      حفظ إعدادات العمولة والتحويل 💾
+                    </button>
                 </div>
               </section>
 
@@ -814,70 +878,33 @@ export default function StoresPage() {
                       منخفض
                     </span>
                   </div>
-                  <div>
-                    <p className="text-xs text-slate-400">نسبة الالتزام</p>
-                    <p className="mt-1 text-xl font-semibold text-slate-50">
-                      95%
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">التأخيرات</p>
-                    <p className="mt-1 text-xl font-semibold text-amber-300">
-                      0 طلب
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">العمولة</p>
-                    <p className="mt-1 text-xl font-semibold text-slate-50">
-                      {selectedStore.commissionRate}%
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">دورية التحويل</p>
-                    <p className="mt-1 text-xl font-semibold text-slate-50">
-                      أسبوعي
-                    </p>
-                  </div>
                 </div>
               </section>
 
+              {/* Transactions */}
               <section className="rounded-xl border border-slate-800 bg-[#031824] p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-semibold text-slate-50">
-                    💰 التحويلات المالية
-                  </h3>
-                  <span className="text-xs text-slate-400">
-                    آخر تسوية: {selectedStore.pendingPayouts || "لا يوجد"}
-                  </span>
-                </div>
-                <div className="text-center py-4 text-slate-400 text-sm">
-                  لا توجد تحويلات حالياً
-                </div>
-              </section>
-
-              <section className="rounded-xl border border-slate-800 bg-[#031824] p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-slate-50">
-                    🧾 معاملات المتجر
+                    🧾 معاملات المتجر الأخيرة
                   </h3>
                   <button className="text-xs text-emerald-300 hover:text-emerald-200">
-                    عرض جميع معاملات المتجر
+                    عرض الكل
                   </button>
                 </div>
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-slate-800 text-xs">
+                  <table className="min-w-full divide-y divide-slate-800 text-xs text-right" dir="rtl">
                     <thead className="bg-[#041f2e] text-slate-300">
                       <tr>
-                        <th className="px-3 py-2 text-right">العميل</th>
-                        <th className="px-3 py-2 text-right">المبلغ</th>
-                        <th className="px-3 py-2 text-right">التاريخ</th>
-                        <th className="px-3 py-2 text-right">الحالة</th>
+                        <th className="px-3 py-2">العميل</th>
+                        <th className="px-3 py-2">المبلغ</th>
+                        <th className="px-3 py-2">التاريخ</th>
+                        <th className="px-3 py-2 text-center">الحالة</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800 text-slate-100">
                       <tr>
-                        <td colSpan={4} className="px-3 py-8 text-center text-xs text-slate-400">
-                          لا توجد معاملات
+                        <td colSpan={4} className="px-3 py-8 text-center text-xs text-slate-400 italic">
+                          لا توجد معاملات مسجلة لهذا المتجر حالياً
                         </td>
                       </tr>
                     </tbody>

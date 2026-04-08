@@ -73,4 +73,24 @@ export class CreateStoreDto {
     @IsNumber()
     @IsOptional()
     genderCategoryId?: number;
+
+    @IsString()
+    @IsOptional()
+    contactPerson?: string;
+
+    @IsString()
+    @IsOptional()
+    contactPhone?: string;
+
+    @IsString()
+    @IsOptional()
+    contactEmail?: string;
+
+    @IsString()
+    @IsOptional()
+    address?: string;
+
+    @IsString()
+    @IsOptional()
+    payoutCycle?: string;
 }

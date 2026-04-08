@@ -27,6 +27,9 @@ export default function StoreSetupPage() {
         logoUrl: "",
         websiteUrl: "",
         categoryId: "",
+        contactPerson: "",
+        contactPhone: "",
+        address: "",
     });
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -161,8 +164,8 @@ export default function StoreSetupPage() {
 
             <div className="w-full max-w-2xl space-y-8">
                 <div className="text-center">
-                    <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mb-6">
-                        <Store className="h-8 w-8 text-emerald-500" />
+                    <div className="inline-flex h-24 w-24 items-center justify-center rounded-3xl bg-emerald-500/10 border border-emerald-500/20 mb-6 overflow-hidden">
+                        <img src="/images/shahd-character.png" alt="Shahd Character" className="h-full w-full object-cover p-1" />
                     </div>
                     <h1 className="text-3xl font-black text-white tracking-tight">{t("storeSetupTitle")}</h1>
                     <p className="mt-2 text-sm text-slate-400">{t("storeSetupSubtitle")}</p>
@@ -284,6 +287,54 @@ export default function StoreSetupPage() {
                                         placeholder="https://www.zara.com"
                                     />
                                 </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Contact Person */}
+                            <div className="space-y-2">
+                                <label className={`text-xs font-bold text-slate-500 ${language === "ar" ? "pr-1" : "pl-1"}`}>{language === "ar" ? "اسم المسؤول" : "Contact Person"}</label>
+                                <div className="relative">
+                                    <ImageIcon className={`absolute ${language === "ar" ? "right-3" : "left-3"} top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600`} />
+                                    <input
+                                        name="contactPerson"
+                                        value={formData.contactPerson}
+                                        onChange={handleChange}
+                                        className={`w-full rounded-xl border border-slate-800 bg-slate-900/50 py-3 ${language === "ar" ? "pr-10 pl-4" : "pl-10 pr-4"} text-sm text-slate-200 outline-none focus:border-emerald-500/50 transition-all`}
+                                        placeholder={language === "ar" ? "محمد علي" : "John Doe"}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Contact Phone */}
+                            <div className="space-y-2">
+                                <label className={`text-xs font-bold text-slate-500 ${language === "ar" ? "pr-1" : "pl-1"}`}>{language === "ar" ? "رقم هاتف التواصل" : "Contact Phone"}</label>
+                                <div className="relative">
+                                    <Globe className={`absolute ${language === "ar" ? "right-3" : "left-3"} top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600`} />
+                                    <input
+                                        name="contactPhone"
+                                        value={formData.contactPhone}
+                                        onChange={handleChange}
+                                        className={`w-full rounded-xl border border-slate-800 bg-slate-900/50 py-3 ${language === "ar" ? "pr-10 pl-4" : "pl-10 pr-4"} text-sm text-slate-200 outline-none focus:border-emerald-500/50 transition-all`}
+                                        placeholder="+962 7XXXXXXXX"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Address */}
+                        <div className="space-y-2">
+                            <label className={`text-xs font-bold text-slate-500 ${language === "ar" ? "pr-1" : "pl-1"}`}>{language === "ar" ? "العنوان الرئيسي" : "Main Address"}</label>
+                            <div className="relative">
+                                <FileText className={`absolute ${language === "ar" ? "right-3" : "left-3"} top-3 h-4 w-4 text-slate-600`} />
+                                <textarea
+                                    name="address"
+                                    rows={2}
+                                    value={formData.address}
+                                    onChange={handleChange}
+                                    className={`w-full rounded-xl border border-slate-800 bg-slate-900/50 py-3 ${language === "ar" ? "pr-10 pl-4" : "pl-10 pr-4"} text-sm text-slate-200 outline-none focus:border-emerald-500/50 transition-all`}
+                                    placeholder={language === "ar" ? "عمان، شارع مكة..." : "Amman, Mecca St..."}
+                                />
                             </div>
                         </div>
 

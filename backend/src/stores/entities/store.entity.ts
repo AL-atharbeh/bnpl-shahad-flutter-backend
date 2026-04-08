@@ -77,7 +77,7 @@ export class Store {
   @Column({ name: 'supported_currencies', type: 'json', nullable: true })
   supportedCurrencies: string[];
 
-  @Column({ name: 'is_active', default: true })
+  @Column({ name: 'is_active', default: false })
   isActive: boolean;
 
   @Column({ name: 'top_store', type: 'boolean', default: false })
@@ -89,7 +89,7 @@ export class Store {
   @Column({ name: 'vendor_id', nullable: true })
   vendorId: number;
 
-  @Column({ length: 20, default: 'approved' })
+  @Column({ length: 20, default: 'pending' })
   status: string; // 'pending' | 'approved' | 'rejected'
 
   @Index()
@@ -98,6 +98,21 @@ export class Store {
 
   @Column({ name: 'api_secret', length: 255, nullable: true })
   apiSecret: string;
+
+  @Column({ name: 'contact_person', length: 255, nullable: true })
+  contactPerson: string;
+
+  @Column({ name: 'contact_phone', length: 50, nullable: true })
+  contactPhone: string;
+
+  @Column({ name: 'contact_email', length: 255, nullable: true })
+  contactEmail: string;
+
+  @Column({ name: 'address', type: 'text', nullable: true })
+  address: string;
+
+  @Column({ name: 'payout_cycle', length: 50, default: 'weekly' })
+  payoutCycle: string; // 'daily' | 'weekly' | 'monthly'
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
