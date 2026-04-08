@@ -107,7 +107,7 @@
                 <h2 style="margin-bottom: 25px;">اختر وسيلة الدفع</h2>
                 
                 <!-- Credit Card -->
-                <div class="method-card" data-method="card">
+                <div class="method-card selected" data-method="card">
                     <div class="method-icon">💳</div>
                     <div class="method-info">
                         <h4>بطاقة ائتمان / مدى</h4>
@@ -121,15 +121,6 @@
                     <div class="method-info">
                         <h4>Apple Pay</h4>
                         <p>الدفع السريع والآمن من Apple</p>
-                    </div>
-                </div>
-
-                <!-- BNPL Option -->
-                <div class="method-card selected" data-method="bnpl">
-                    <div class="method-icon">🏦</div>
-                    <div class="method-info">
-                        <h4>شهد BNPL <span class="badge-bnpl">جديد</span></h4>
-                        <p>قسم فاتورتك على 4 دفعات بدون رسوم</p>
                     </div>
                 </div>
 
@@ -152,7 +143,7 @@
                     <span>الإجمالي</span>
                     <span id="totalAmount">0.00 JOD</span>
                 </div>
-                <button class="confirm-btn bnpl" id="confirmPayment">إتمام الطلب (شهد BNPL)</button>
+                <button class="confirm-btn" id="confirmPayment">إتمام الطلب</button>
             </div>
         </div>
     </main>
@@ -187,28 +178,11 @@
                 card.addEventListener('click', () => {
                     methods.forEach(m => m.classList.remove('selected'));
                     card.classList.add('selected');
-                    
-                    const method = card.getAttribute('data-method');
-                    if (method === 'bnpl') {
-                        confirmBtn.textContent = 'إتمام الطلب (شهد BNPL)';
-                        confirmBtn.classList.add('bnpl');
-                    } else {
-                        confirmBtn.textContent = 'إتمام الطلب';
-                        confirmBtn.classList.remove('bnpl');
-                    }
                 });
             });
 
             confirmBtn.addEventListener('click', async () => {
-                const selectedMethod = document.querySelector('.method-card.selected').getAttribute('data-method');
-                if (selectedMethod === 'bnpl') {
-                    // Call the BNPL logic from script.js (we'll make it global)
-                    if (window.handleBnplBuy) {
-                        await window.handleBnplBuy(product.id, product.name, product.price);
-                    }
-                } else {
-                    alert('هذه الوسيلة للعرض فقط في هذا المتجر التجريبي. جرب "شهد BNPL" لرؤية التكامل.');
-                }
+                alert('هذه الوسيلة للعرض فقط في هذا المتجر التجريبي.');
             });
         });
     </script>
