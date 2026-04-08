@@ -12,7 +12,7 @@ window.handleBnplBuy = async function(id, name, price) {
     const loader = document.getElementById('loader');
     if (loader) loader.classList.add('active');
 
-    const storeId = parseInt(localStorage.getItem('merchant_store_id')) || 1;
+    const storeId = parseInt(localStorage.getItem('merchant_store_id')) || 3;
 
     try {
         const sessionData = {
@@ -33,7 +33,7 @@ window.handleBnplBuy = async function(id, name, price) {
             cancel_url: window.location.href.split('?')[0].replace('checkout.html', 'index.html') + '?cancel=true'
         };
 
-        const apiKey = localStorage.getItem('merchant_api_key') || 'sh_pk_modernstore_test_88234';
+        const apiKey = localStorage.getItem('merchant_api_key') || 'sh_pk_8daae693027044afb60725da';
 
         const response = await fetch(`${API_BASE_URL}/sessions/create`, {
             method: 'POST',

@@ -14,6 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
 import { ConfigService } from '@nestjs/config';
 import { NotificationsService } from '../notifications/notifications.service';
+import { StripeService } from '../payments/stripe.service';
 
 import { Product } from '../products/entities/product.entity';
 
@@ -34,6 +35,7 @@ export class BnplSessionsService {
         private configService: ConfigService,
         private rewardsService: RewardsService,
         private notificationsService: NotificationsService,
+        private stripeService: StripeService,
     ) { }
 
     async createSession(
@@ -379,19 +381,22 @@ export class BnplSessionsService {
                 });
             }
 
-            // Generate payment URL for first installment (MOCK)
-            console.log('💳 Generating MOCK payment URL for testing...');
+            // Generate payment URL for first installment via STRIPE
+            console.log('💳 Generating Stripe payment session for testing...');
 
-            const paymentResponse = await this.mockPaymentService.executePayment({
+            const baseUrl = this.configService.get('APP_URL') || 'https://yourapp.com';
+            
+            const paymentResponse = await this.stripeService.createCheckoutSession({
                 amount: installmentAmount,
-                currency: session.currency,
+                currency: session.currency || 'JOD',
                 customerName: session.customerName || 'Customer',
                 customerEmail: session.customerEmail || 'customer@example.com',
-                customerPhone: session.customerPhone || '+962790000000',
                 customerReference: sessionId,
+                successUrl: `${baseUrl}/api/v1/payments/stripe/success?session_id={CHECKOUT_SESSION_ID}&client_reference_id=${sessionId}`,
+                cancelUrl: `${baseUrl}/api/v1/payments/stripe/cancel?session_id={CHECKOUT_SESSION_ID}`,
             });
 
-            console.log('✅ Mock Payment URL generated:', paymentResponse.Data.PaymentURL);
+            console.log('✅ Stripe Payment URL generated:', paymentResponse.url);
 
             // Update session status to PAYMENT_PENDING
             session.status = SessionStatus.PAYMENT_PENDING;
@@ -400,7 +405,7 @@ export class BnplSessionsService {
             return {
                 success: true,
                 payment_required: true,
-                payment_url: paymentResponse.Data.PaymentURL,
+                payment_url: paymentResponse.url,
                 message: 'يرجى إكمال دفع القسط الأول',
                 order_id: orderId,
                 first_installment: {
