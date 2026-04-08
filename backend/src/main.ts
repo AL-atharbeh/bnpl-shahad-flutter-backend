@@ -14,8 +14,9 @@ async function bootstrap() {
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ limit: '10mb', extended: true }));
   
-  // Serve test store static files
-  app.use('/store-test', express.static(path.join(process.cwd(), '..', 'store-test')));
+  // Serve test store static files (moved into public for reliable deployment)
+  const publicPath = path.join(process.cwd(), 'public');
+  app.use('/store-test', express.static(path.join(publicPath, 'store-test')));
 
   // Global prefix
   const apiPrefix = configService.get('API_PREFIX', 'api/v1');
