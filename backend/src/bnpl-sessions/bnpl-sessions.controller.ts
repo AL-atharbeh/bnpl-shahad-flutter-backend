@@ -9,8 +9,12 @@ import {
     HttpCode,
     HttpStatus,
     Headers,
+    Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { BnplSessionsService } from './bnpl-sessions.service';
+import * as fs from 'fs';
+import * as path from 'path';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Request as ExpressRequest } from 'express';
@@ -31,6 +35,25 @@ export class BnplSessionsController {
     @Get('store/:storeId/recent')
     async getRecentStoreSessions(@Param('storeId') storeId: string) {
         return this.sessionsService.getRecentSessionsByStoreId(parseInt(storeId));
+    }
+
+    @Get('view/:sessionId')
+    async getSessionView(@Param('sessionId') sessionId: string, @Res() res: Response) {
+        const viewPath = path.join(__dirname, 'views', 'session-approval.html');
+        // Check if file exists, if not try parent dir (depending on build structure)
+        let htmlContent = '';
+        if (fs.existsSync(viewPath)) {
+            htmlContent = fs.readFileSync(viewPath, 'utf8');
+        } else {
+            const fallbackPath = path.join(process.cwd(), 'src', 'bnpl-sessions', 'views', 'session-approval.html');
+            if (fs.existsSync(fallbackPath)) {
+                htmlContent = fs.readFileSync(fallbackPath, 'utf8');
+            } else {
+                return res.status(404).send('Approval page not found');
+            }
+        }
+        res.setHeader('Content-Type', 'text/html');
+        return res.send(htmlContent);
     }
 
     @Get(':sessionId')

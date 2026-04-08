@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة شهد - Shahad Payment Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00AB4E;
+            --primary-light: #f0fdf4;
+            --secondary: #1e293b;
+            --text-main: #0f172a;
+            --text-light: #64748b;
+            --glass: rgba(255, 255, 255, 0.85);
+            --shadow: 0 10px 40px -10px rgba(0,0,0,0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Cairo', 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: var(--text-main);
+        }
+
+        .portal-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            width: 100%;
+            max-width: 480px;
+            border-radius: 32px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            overflow: hidden;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .header {
+            padding: 40px 30px 20px;
+            text-align: center;
+        }
+
+        .logo-container {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 24px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .logo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .portal-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .portal-subtitle {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 25px;
+        }
+
+        .order-info {
+            background: #fff;
+            margin: 0 25px 25px;
+            padding: 20px;
+            border-radius: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #f1f5f9;
+        }
+
+        .order-info .store-name {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .order-info .amount {
+            color: var(--primary);
+            font-weight: 800;
+            font-size: 18px;
+        }
+
+        .installments-section {
+            padding: 0 25px 30px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--secondary);
+            padding-right: 5px;
+        }
+
+        .installment-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 16px;
+            border: 1px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .installment-row.active {
+            background: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(0,171,78,0.08);
+        }
+
+        .step-num {
+            width: 28px;
+            height: 28px;
+            background: #e2e8f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--text-light);
+        }
+
+        .installment-row.active .step-num {
+            background: var(--primary);
+            color: white;
+        }
+
+        .inst-details {
+            flex: 1;
+        }
+
+        .inst-details .label {
+            font-size: 14px;
+            font-weight: 600;
+            display: block;
+        }
+
+        .inst-details .date {
+            font-size: 11px;
+            color: var(--text-light);
+        }
+
+        .inst-amount {
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .login-view {
+            padding: 0 30px 40px;
+            text-align: center;
+        }
+
+        .phone-input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .phone-input-group input {
+            width: 100%;
+            padding: 18px 20px;
+            border-radius: 16px;
+            border: 2px solid #e2e8f0;
+            font-family: inherit;
+            font-size: 16px;
+            text-align: center;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+
+        .phone-input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 18px;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0, 171, 78, 0.2);
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(0, 171, 78, 0.3);
+        }
+
+        .action-btn:disabled {
+            background: #cbd5e1;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .loader {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            display: none;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .secure-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 20px;
+            font-size: 11px;
+            color: var(--text-light);
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="portal-card">
+        <div class="header">
+            <div class="logo-container">
+                <img src="/store-test/logo_shahad.png" alt="Shahad" onerror="this.src='https://ui-avatars.com/api/?name=Shahad&background=00AB4E&color=fff'">
+            </div>
+            <h1 class="portal-title">Shahad</h1>
+            <p class="portal-subtitle">نقسم مشترياتك بكل سهولة وأمان</p>
+        </div>
+
+        <div id="sessionDetails" class="hidden">
+            <div class="order-info">
+                <div>
+                    <p style="font-size: 11px; color: var(--text-light);">متجر</p>
+                    <p class="store-name" id="storeName">...</p>
+                </div>
+                <div style="text-align: left;">
+                    <p style="font-size: 11px; color: var(--text-light);">إجمالي الطلب</p>
+                    <p class="amount" id="totalAmount">...</p>
+                </div>
+            </div>
+
+            <div class="installments-section">
+                <h3 class="section-title">خطة التقسيط (4 دفعات)</h3>
+                <div id="installmentsList"></div>
+            </div>
+        </div>
+
+        <div id="authView" class="login-view">
+            <p style="margin-bottom: 15px; font-weight: 600; font-size: 14px;">سجل دخولك لبدء التقسيط</p>
+            <div class="phone-input-group">
+                <input type="tel" id="phoneInput" placeholder="أدخل رقم هاتفك (مثلاً: 96279...)" value="962791234567">
+            </div>
+            <button class="action-btn" id="loginBtn">دخول ومتابعة</button>
+        </div>
+
+        <div id="payView" class="login-view hidden">
+            <button class="action-btn" id="payBtn">تأكيد ودفع 30.00 JOD</button>
+            <div class="secure-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                مدفوعات آمنة ومضمونة عبر Stripe
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const sessionId = window.location.pathname.split('/').pop();
+        const apiBaseUrl = '/api/v1';
+        let authToken = null;
+
+        async function fetchSession() {
+            try {
+                const response = await fetch(`${apiBaseUrl}/sessions/${sessionId}`);
+                const data = await response.json();
+                
+                if (data) {
+                    document.getElementById('storeName').textContent = data.store?.nameAr || data.store?.name || 'متجر غير معروف';
+                    document.getElementById('totalAmount').textContent = `${parseFloat(data.totalAmount).toFixed(2)} ${data.currency}`;
+                    
+                    const installmentAmount = (data.totalAmount / data.installmentsCount).toFixed(2);
+                    const list = document.getElementById('installmentsList');
+                    list.innerHTML = '';
+                    
+                    const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+                    
+                    for (let i = 1; i <= data.installmentsCount; i++) {
+                        const date = new Date();
+                        date.setMonth(date.getMonth() + (i-1));
+                        const dateStr = i === 1 ? 'الآن' : `${date.getDate()} ${months[date.getMonth()]}`;
+                        
+                        list.innerHTML += `
+                            <div class="installment-row ${i === 1 ? 'active' : ''}">
+                                <div class="step-num">${i}</div>
+                                <div class="inst-details">
+                                    <span class="label">الدفعة ${i === 1 ? 'الأولى' : i === 4 ? 'الأخيرة' : 'القادمة'}</span>
+                                    <span class="date">${dateStr}</span>
+                                </div>
+                                <div class="inst-amount">${installmentAmount} ${data.currency}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    document.getElementById('payBtn').textContent = `تأكيد ودفع ${installmentAmount} ${data.currency}`;
+                    document.getElementById('sessionDetails').classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error('Error fetching session:', err);
+                alert('فشل في جلب بيانات الجلسة');
+            }
+        }
+
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const phone = document.getElementById('phoneInput').value;
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loader" style="display:block"></div>';
+
+            try {
+                // In a real app, this would be a full auth flow. For this demo, we simulate it.
+                // We'll call /auth/login or a bypass for testing
+                const response = await fetch(`${apiBaseUrl}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, password: 'password123' }) // Simulated password
+                });
+                
+                const data = await response.json();
+                if (data.accessToken) {
+                    authToken = data.accessToken;
+                    
+                    // Link user to session
+                    await fetch(`${apiBaseUrl}/sessions/${sessionId}/approve`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+
+                    document.getElementById('authView').classList.add('hidden');
+                    document.getElementById('payView').classList.remove('hidden');
+                } else {
+                    alert('رقم هاتفك غير مسجل في نظام شهد. يرجى التسجيل أولاً.');
+                }
+            } catch (err) {
+                alert('حدث خطأ أثناء تسجيل الدخول');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'دخول ومتابعة';
+            }
+        });
+
+        document.getElementById('payBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('payBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loader" style="display:block"></div>';
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/sessions/${sessionId}/complete`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success && data.payment_url) {
+                    window.location.href = data.payment_url;
+                } else {
+                    alert('فشل في بدء عملية الدفع: ' + (data.message || 'خطأ غير معروف'));
+                }
+            } catch (err) {
+                alert('حدث خطأ أثناء بدء الدفع');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'تأكيد ودفع';
+            }
+        });
+
+        fetchSession();
+    </script>
+</body>
+</html>
