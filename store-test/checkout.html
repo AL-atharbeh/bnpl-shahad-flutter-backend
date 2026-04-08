@@ -124,6 +124,17 @@
                     </div>
                 </div>
 
+                <!-- Shahad Payment Method -->
+                <div class="method-card selected" data-method="bnpl">
+                    <div class="method-icon" style="overflow: hidden; padding: 0;">
+                        <img src="logo_shahad.png" alt="Shahad" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <div class="method-info">
+                        <h4>Shahad <span class="badge-bnpl">جديد</span></h4>
+                        <p>قسم فاتورتك على 4 دفعات بدون رسوم</p>
+                    </div>
+                </div>
+
                 <!-- Bank Transfer -->
                 <div class="method-card" data-method="transfer">
                     <div class="method-icon">💸</div>
@@ -178,11 +189,28 @@
                 card.addEventListener('click', () => {
                     methods.forEach(m => m.classList.remove('selected'));
                     card.classList.add('selected');
+                    
+                    const method = card.getAttribute('data-method');
+                    if (method === 'bnpl') {
+                        confirmBtn.textContent = 'إتمام الطلب (Shahad)';
+                        confirmBtn.classList.add('bnpl');
+                    } else {
+                        confirmBtn.textContent = 'إتمام الطلب';
+                        confirmBtn.classList.remove('bnpl');
+                    }
                 });
             });
 
             confirmBtn.addEventListener('click', async () => {
-                alert('هذه الوسيلة للعرض فقط في هذا المتجر التجريبي.');
+                const selectedMethod = document.querySelector('.method-card.selected').getAttribute('data-method');
+                if (selectedMethod === 'bnpl') {
+                    // Call the BNPL logic from script.js
+                    if (window.handleBnplBuy) {
+                        await window.handleBnplBuy(product.id, product.name, product.price);
+                    }
+                } else {
+                    alert('هذه الوسيلة للعرض فقط في هذا المتجر التجريبي. جرب "Shahad" لرؤية التكامل.');
+                }
             });
         });
     </script>
