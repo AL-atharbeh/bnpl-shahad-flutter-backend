@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم التاجر - شهد BNPL</title>
+    <title>لوحة تواصل التاجر - شهد BNPL</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -15,42 +15,24 @@
             border-radius: 24px;
             box-shadow: var(--shadow);
         }
+        .register-form {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .register-form input, .register-form textarea {
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: inherit;
+        }
         .credentials-card {
             background: #f8fafc;
             border: 2px solid #e2e8f0;
             border-radius: 16px;
             padding: 25px;
             margin-top: 30px;
-        }
-        .credential-group {
-            margin-bottom: 20px;
-        }
-        .credential-group label {
-            display: block;
-            font-weight: 700;
-            margin-bottom: 8px;
-            color: var(--text);
-        }
-        .credential-value {
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            padding: 12px 15px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .copy-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 5px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            font-size: 12px;
+            display: none; /* Shown after approval */
         }
         .status-badge {
             display: inline-block;
@@ -58,25 +40,9 @@
             border-radius: 20px;
             font-size: 12px;
             font-weight: 700;
-            background: #dcfce7;
-            color: #166534;
         }
-        .tab-box {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .tab {
-            padding: 10px 20px;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-        }
-        .tab.active {
-            border-bottom-color: var(--primary);
-            color: var(--primary);
-            font-weight: 700;
-        }
+        .pending { background: #fef3c7; color: #92400e; }
+        .approved { background: #dcfce7; color: #166534; }
     </style>
 </head>
 <body>
@@ -88,78 +54,120 @@
 
     <main class="container">
         <div class="dashboard-container">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2>إعدادات المتجر: <span id="storeName">متجر مودرن</span></h2>
-                <span class="status-badge">حالة الربط: نشط</span>
-            </div>
-
-            <div class="tab-box">
-                <div class="tab active">بيانات الربط (API Keys)</div>
-                <div class="tab" onclick="window.location.href='index.html'">معاينة المتجر 👁️</div>
-            </div>
-
-            <p>استخدم هذه المفاتيح لربط نظامك مع بوابة شهد BNPL. يرجى الحفاظ على سرية المفتاح السري.</p>
-
-            <div class="credentials-card">
-                <div class="credential-group">
-                    <label>معرف المتجر (Store ID)</label>
-                    <div class="credential-value">
-                        <span id="storeId">1</span>
-                        <button class="copy-btn" onclick="copy('storeId')">نسخ</button>
-                    </div>
-                </div>
-
-                <div class="credential-group">
-                    <label>المفتاح العام (Public API Key)</label>
-                    <div class="credential-value">
-                        <span id="apiKey">sh_pk_modernstore_test_88234</span>
-                        <button class="copy-btn" onclick="copy('apiKey')">نسخ</button>
-                    </div>
-                </div>
-
-                <div class="credential-group">
-                    <label>المفتاح السري (Secret Key)</label>
-                    <div class="credential-value">
-                        <span id="apiSecret">sh_sk_••••••••••••••••••••••••••••</span>
-                        <button class="copy-btn" onclick="toggleSecret()">إظهار</button>
-                    </div>
+            <div id="registrationSection">
+                <h2>تقديم طلب انضمام كمتجر جديد 🆕</h2>
+                <p>املأ البيانات أدناه ليتم مراجعة طلبك من قبل إدارة شهد BNPL.</p>
+                
+                <div class="register-form">
+                    <input type="text" id="regStoreName" placeholder="اسم المتجر (مثال: متجر الملابس الأنيقة)">
+                    <input type="text" id="regStoreNameAr" placeholder="الاسم بالعربية">
+                    <textarea id="regDescription" placeholder="وصف المتجر والمنتجات"></textarea>
+                    <input type="url" id="regWebsite" placeholder="رابط موقع المتجر (اختياري)">
+                    <button class="buy-btn" onclick="registerStore()">إرسال الطلب 📤</button>
                 </div>
             </div>
 
-            <div style="margin-top:30px; padding: 20px; background: #fffbeb; border-radius: 12px; display: flex; gap: 15px; align-items: flex-start;">
-                <span style="font-size: 24px;">💡</span>
-                <div>
-                    <h4 style="color: #92400e;">نصيحة للمطورين</h4>
-                    <p style="font-size: 14px; color: #92400e;">تأكد من إرسال `x-api-key` في ترويسات الطلب (Headers) عند إنشاء أي جلسة دفع جديدة.</p>
+            <div id="statusSection" style="display:none; text-align:center;">
+                <h2 id="displayStoreName"></h2>
+                <div id="statusBadge" class="status-badge"></div>
+                <p id="statusMessage" style="margin-top:15px;"></p>
+                
+                <div class="credentials-card" id="credsCard">
+                    <h3 style="margin-bottom:15px;">بيانات الربط البرمجي (API Keys)</h3>
+                    <div style="text-align:right;">
+                        <p><strong>Store ID:</strong> <span id="storeId"></span></p>
+                        <p><strong>API Key:</strong> <span id="apiKey" style="font-family:monospace;"></span></p>
+                        <p style="font-size:12px; color:red;">* لا تشارك المفتاح السري مع أحد.</p>
+                    </div>
+                    <button class="buy-btn" style="margin-top:15px;" onclick="useKeysAndTest()">استخدم هذه المفاتيح وجرب المتجر 🚀</button>
                 </div>
+
+                <button class="confirm-btn" style="background:#64748b; margin-top:20px;" onclick="resetDemo()">ابدأ من جديد (محو المحاكاة)</button>
+            </div>
+            
+            <div style="margin-top:40px; border-top: 1px solid #eee; padding-top: 20px;">
+                <p style="color:#64748b; font-size:14px;">أنت الآن في دور "التاجر". للانتقال لدور "صاحب التطبيق" للموافقة على الطلب:</p>
+                <a href="admin-simulation.html" style="color:var(--primary); font-weight:700;">انتقل لوحة الإدارة (صاحب التطبيق) ➔</a>
             </div>
         </div>
     </main>
 
+    <script src="script.js"></script>
     <script>
-        function copy(id) {
-            const text = document.getElementById(id).innerText;
-            navigator.clipboard.writeText(text);
-            alert('تم النسخ: ' + text);
-        }
+        document.addEventListener('DOMContentLoaded', checkExistingSession);
 
-        let secretVisible = false;
-        function toggleSecret() {
-            const secret = document.getElementById('apiSecret');
-            const btn = event.target;
-            if (!secretVisible) {
-                secret.innerText = 'sh_sk_7723984102938471029384bcdef';
-                btn.innerText = 'إخفاء';
-            } else {
-                secret.innerText = 'sh_sk_••••••••••••••••••••••••••••';
-                btn.innerText = 'إظهار';
+        function checkExistingSession() {
+            const storeId = localStorage.getItem('demo_store_id');
+            if (storeId) {
+                fetchStoreStatus(storeId);
             }
-            secretVisible = !secretVisible;
         }
 
-        // Logic to try and fetch real keys from local storage or server if available
-        // For this demo, we'll suggest using these mock keys
-        localStorage.setItem('merchant_api_key', 'sh_pk_modernstore_test_88234');
+        async function registerStore() {
+            const name = document.getElementById('regStoreName').value;
+            const nameAr = document.getElementById('regStoreNameAr').value;
+            const description = document.getElementById('regDescription').value;
+
+            if (!name) { alert('يرجى إدخال اسم المتجر'); return; }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/stores`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, nameAr, description, categoryId: 1 })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    const storeId = result.data.id;
+                    localStorage.setItem('demo_store_id', storeId);
+                    alert('تم إرسال طلبك بنجاح! يرجى الانتظار لموافقة الإدارة.');
+                    fetchStoreStatus(storeId);
+                }
+            } catch (err) {
+                alert('فشل في إرسال الطلب');
+            }
+        }
+
+        async function fetchStoreStatus(id) {
+            try {
+                // We use the admin endpoint to see keys if approved
+                const response = await fetch(`${API_BASE_URL}/stores/${id}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('registrationSection').style.display = 'none';
+                    document.getElementById('statusSection').style.display = 'block';
+                    document.getElementById('displayStoreName').innerText = result.data.nameAr || result.data.name;
+                    
+                    const badge = document.getElementById('statusBadge');
+                    badge.innerText = result.data.status === 'pending' ? '⏳ معلق' : '✅ معتمد';
+                    badge.className = 'status-badge ' + result.data.status;
+
+                    if (result.data.status === 'approved') {
+                        document.getElementById('statusMessage').innerText = 'تهانينا! تم اعتماد متجرك. يمكنك الآن البدء بالربط.';
+                        document.getElementById('credsCard').style.display = 'block';
+                        document.getElementById('storeId').innerText = result.data.id;
+                        document.getElementById('apiKey').innerText = result.data.apiKey;
+                        localStorage.setItem('merchant_api_key', result.data.apiKey);
+                        localStorage.setItem('merchant_store_id', result.data.id);
+                    } else {
+                        document.getElementById('statusMessage').innerText = 'طلبك حالياً قيد المراجعة. انتقل للوحة الإدارة للموافقة عليه.';
+                    }
+                }
+            } catch (err) {}
+        }
+
+        function useKeysAndTest() {
+            window.location.href = 'index.html';
+        }
+
+        function resetDemo() {
+            localStorage.removeItem('demo_store_id');
+            localStorage.removeItem('merchant_api_key');
+            localStorage.removeItem('merchant_store_id');
+            window.location.reload();
+        }
     </script>
 </body>
 </html>

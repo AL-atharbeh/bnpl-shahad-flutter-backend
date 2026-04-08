@@ -12,9 +12,11 @@ window.handleBnplBuy = async function(id, name, price) {
     const loader = document.getElementById('loader');
     if (loader) loader.classList.add('active');
 
+    const storeId = parseInt(localStorage.getItem('merchant_store_id')) || 1;
+
     try {
         const sessionData = {
-            store_id: 1, 
+            store_id: storeId, 
             store_order_id: 'ORDER_' + Date.now(),
             total_amount: price,
             currency: 'JOD',
