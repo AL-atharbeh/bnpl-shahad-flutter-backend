@@ -187,6 +187,12 @@ const translations: Record<Language, Record<string, string>> = {
 
         finishSetup: "إكمال الإعداد والبدء",
         setupSuccess: "تم حفظ الإعدادات بنجاح",
+        apiCredentials: "بيانات الربط البرمجي (API)",
+        apiKeyLabel: "المفتاح العام (Public API Key)",
+        apiSecretLabel: "المفتاح السري (Secret API Key)",
+        copy: "نسخ",
+        show: "إظهار",
+        hide: "إخفاء",
     },
     en: {
         // Sidebar & Navigation
@@ -362,6 +368,12 @@ const translations: Record<Language, Record<string, string>> = {
         category: "Category",
         finishSetup: "Finish Setup & Start",
         setupSuccess: "Settings saved successfully",
+        apiCredentials: "API Credentials",
+        apiKeyLabel: "Public API Key",
+        apiSecretLabel: "Secret API Key",
+        copy: "Copy",
+        show: "Show",
+        hide: "Hide",
     },
 };
 

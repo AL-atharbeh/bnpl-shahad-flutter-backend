@@ -716,6 +716,27 @@ export default function StoresPage() {
 
             {/* Content */}
             <div className="p-6 space-y-6">
+              {/* API Credentials */}
+              <section className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+                <h3 className="text-sm font-semibold text-emerald-400 mb-3 flex items-center gap-2">
+                  <span>🔑</span> إعدادات الربط البرمجي (API)
+                </h3>
+                <div className="grid gap-4 md:grid-cols-2 text-sm">
+                  <div>
+                    <p className="text-xs text-slate-400">Public API Key</p>
+                    <p className="mt-1 font-mono text-slate-50 bg-slate-900/50 p-2 rounded border border-slate-700 select-all">
+                      {selectedStore.apiKey || "لم يتم توليد مفتاح بعد"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">API Secret Key</p>
+                    <p className="mt-1 font-mono text-slate-50 bg-slate-900/50 p-2 rounded border border-slate-700">
+                      {selectedStore.apiSecret ? "••••••••••••••••••••••••••••" : "لم يتم توليد مفتاح بعد"}
+                    </p>
+                  </div>
+                </div>
+              </section>
+
               {/* Store Info */}
               <section className="rounded-xl border border-slate-800 bg-[#031824] p-4">
                 <h3 className="text-sm font-semibold text-slate-50 mb-3">

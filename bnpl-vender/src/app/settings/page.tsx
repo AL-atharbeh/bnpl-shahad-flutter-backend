@@ -326,6 +326,57 @@ export default function SettingsPage() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* API Credentials Section */}
+                        <div className="glass rounded-2xl p-8 space-y-6 border-emerald-900/20 shadow-2xl shadow-emerald-900/10">
+                            <h3 className="text-lg font-bold text-white border-b border-emerald-900/30 pb-4 tracking-tight flex items-center gap-2">
+                                <span className="text-emerald-500">🔑</span> {t("apiCredentials")}
+                            </h3>
+
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-500">Store ID</label>
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex-1 rounded-xl border border-emerald-900/30 bg-[#011f18] py-3 px-4 text-sm text-slate-200 font-mono">
+                                            {store?.id}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className={`text-xs font-bold text-slate-500 ${language === "ar" ? "pr-1" : "pl-1"}`}>{t("apiKeyLabel")}</label>
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex-1 rounded-xl border border-emerald-900/30 bg-[#011f18] py-3 px-4 text-sm text-slate-200 font-mono break-all">
+                                            {store?.apiKey || "Pending approval..."}
+                                        </div>
+                                        {store?.apiKey && (
+                                            <button 
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(store.apiKey);
+                                                    alert(t("copy") + " ✅");
+                                                }}
+                                                className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition-colors"
+                                                title={t("copy")}
+                                            >
+                                                <Save className="h-4 w-4" /> {/* Fallback icon or add Copy icon */}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className={`text-xs font-bold text-slate-500 ${language === "ar" ? "pr-1" : "pl-1"}`}>{t("apiSecretLabel")}</label>
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex-1 rounded-xl border border-emerald-900/30 bg-[#011f18] py-3 px-4 text-sm text-slate-200 font-mono">
+                                            {store?.apiSecret ? "••••••••••••••••••••••••••••" : "Pending approval..."}
+                                        </div>
+                                    </div>
+                                    <p className="text-[10px] text-amber-500/70 italic px-1">
+                                        {language === "ar" ? "* لا تشارك المفتاح السري أبداً مع أي شخص خارجي." : "* Never share your Secret Key with anyone."}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

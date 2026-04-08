@@ -38,6 +38,8 @@ export interface Store {
     complianceScore?: number;
     delayedOrders?: number;
     payoutCycle?: string;
+    apiKey?: string;
+    apiSecret?: string;
     topProducts?: string[];
 }
 
