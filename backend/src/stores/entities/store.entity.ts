@@ -59,6 +59,12 @@ export class Store {
   @Column({ name: 'commission_rate', type: 'decimal', precision: 5, scale: 2, default: 2.5 })
   commissionRate: number;
 
+  @Column({ name: 'bank_commission_rate', type: 'decimal', precision: 5, scale: 2, default: 1.5 })
+  bankCommissionRate: number;
+
+  @Column({ name: 'platform_commission_rate', type: 'decimal', precision: 5, scale: 2, default: 1.0 })
+  platformCommissionRate: number;
+
   @Column({ name: 'min_order_amount', type: 'decimal', precision: 10, scale: 2, default: 50 })
   minOrderAmount: number;
 

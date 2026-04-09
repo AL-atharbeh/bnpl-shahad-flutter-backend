@@ -38,6 +38,18 @@ export class CreateStoreDto {
 
     @IsNumber()
     @Min(0)
+    @Max(100)
+    @IsOptional()
+    bankCommissionRate?: number;
+
+    @IsNumber()
+    @Min(0)
+    @Max(100)
+    @IsOptional()
+    platformCommissionRate?: number;
+
+    @IsNumber()
+    @Min(0)
     @IsOptional()
     minOrderAmount?: number;
 

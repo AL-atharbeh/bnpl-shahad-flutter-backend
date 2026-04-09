@@ -252,9 +252,11 @@ export class PaymentsService {
     const installmentAmount = totalAmount / installmentsCount;
     const installments: Payment[] = [];
 
-    // Fetch store to get commission rate
+    // Fetch store to get commission rates
     const store = await this.storeRepository.findOne({ where: { id: storeId } });
-    const commissionRate = store?.commissionRate || 2.5; // Default to 2.5% if not found
+    const commissionRate = store?.commissionRate || 2.5; 
+    const bankCommissionRate = store?.bankCommissionRate || 1.5;
+    const platformCommissionRate = store?.platformCommissionRate || 1.0;
 
     // Check if installments already exist to avoid duplicates
     const existing = await this.paymentRepository.find({
@@ -286,6 +288,8 @@ export class PaymentsService {
             status: 'pending',
             commission,
             storeAmount,
+            bankCommissionRate,
+            platformCommissionRate,
             dueDate,
             paidAt: null,
         });

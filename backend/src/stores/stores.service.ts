@@ -213,7 +213,9 @@ export class StoresService {
       status: 'pending', // New stores are pending until approved
       topStore: createStoreDto.topStore ?? false,
       rating: createStoreDto.rating ?? 0,
-      commissionRate: createStoreDto.commissionRate ?? 2.5,
+      bankCommissionRate: createStoreDto.bankCommissionRate ?? 1.5,
+      platformCommissionRate: createStoreDto.platformCommissionRate ?? 1.0,
+      commissionRate: (createStoreDto.bankCommissionRate ?? 1.5) + (createStoreDto.platformCommissionRate ?? 1.0),
       minOrderAmount: createStoreDto.minOrderAmount ?? 50,
       maxOrderAmount: createStoreDto.maxOrderAmount ?? 5000,
       productsCount: 0,
@@ -251,8 +253,18 @@ export class StoresService {
     if (!store) {
       throw new NotFoundException('المتجر غير موجود');
     }
-    const updatedStore = Object.assign(store, updateStoreDto);
-    return this.storeRepository.save(updatedStore);
+
+    // Update fields
+    Object.assign(store, updateStoreDto);
+
+    // Recalculate total commission rate if ratios changed
+    if (updateStoreDto.bankCommissionRate !== undefined || updateStoreDto.platformCommissionRate !== undefined) {
+      const bankRate = updateStoreDto.bankCommissionRate !== undefined ? updateStoreDto.bankCommissionRate : Number(store.bankCommissionRate);
+      const platformRate = updateStoreDto.platformCommissionRate !== undefined ? updateStoreDto.platformCommissionRate : Number(store.platformCommissionRate);
+      store.commissionRate = Number(bankRate) + Number(platformRate);
+    }
+
+    return this.storeRepository.save(store);
   }
 
   /**

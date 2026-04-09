@@ -8,6 +8,8 @@ import {
   updateCommissionSettings,
   getAllSettlements,
   getAllPayments,
+  getAdminStores,
+  updateStore,
 } from "@/services/api";
 import {
   Bar,
@@ -35,6 +37,8 @@ export default function ProfitsPage() {
   const [settlements, setSettlements] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
   const [editMode, setEditMode] = useState(false);
+  const [allStores, setAllStores] = useState<any[]>([]);
+  const [selectedStoreId, setSelectedStoreId] = useState<string>("global");
   const [bankRate, setBankRate] = useState("");
   const [platformRate, setPlatformRate] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -47,32 +51,37 @@ export default function ProfitsPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [statsRes, chartRes, settingsRes, settlementsRes, paymentsRes] = await Promise.all([
+      const [statsRes, chartRes, settingsRes, settlementsRes, paymentsRes, storesRes] = await Promise.all([
         getProfitDistributionStats().catch(() => ({ data: { data: null } })),
         getProfitDistributionChart(7).catch(() => ({ data: { data: [] } })),
         getCurrentCommissionSettings().catch(() => ({ data: { data: { bankCommission: 0.03, platformCommission: 0.02 } } })),
         getAllSettlements({ page: 1, limit: 10 }).catch(() => ({ data: { data: { settlements: [] } } })),
         getAllPayments({ page: 1, limit: 100 }),
+        getAdminStores().catch(() => ({ data: [] })),
       ]);
 
       setStats(statsRes.data.data);
       setChartData(chartRes.data.data);
       setSettings(settingsRes.data.data);
       setSettlements(settlementsRes.data.data.settlements || []);
+      setAllStores(storesRes.data || []);
 
       // Process payments to show one row per order
       const uniqueOrders = new Map();
       (paymentsRes.data.data || []).forEach((p: any) => {
         if (!uniqueOrders.has(p.orderId)) {
           const productValue = Number(p.amount) * p.installmentsCount;
-          const bRate = settingsRes.data.data.bankCommission || 0.03;
-          const pRate = settingsRes.data.data.platformCommission || 0.02;
+          // Use captured rates from payment record, fallback to global settings
+          const bRate = p.bankCommissionRate ? Number(p.bankCommissionRate) / 100 : settingsRes.data.data.bankCommission || 0.03;
+          const pRate = p.platformCommissionRate ? Number(p.platformCommissionRate) / 100 : settingsRes.data.data.platformCommission || 0.02;
 
           uniqueOrders.set(p.orderId, {
             id: p.orderId,
             customer: p.user?.name || "عميل غير معروف",
             store: p.store?.name || "متجر غير معروف",
             productValue: productValue,
+            bankRate: bRate * 100,
+            platformRate: pRate * 100,
             bankShare: productValue * bRate,
             platformShare: productValue * pRate,
             netToMerchant: productValue * (1 - bRate - pRate),
@@ -94,17 +103,40 @@ export default function ProfitsPage() {
 
   const handleSaveSettings = async () => {
     try {
-      await updateCommissionSettings({
-        bankCommission: parseFloat(bankRate) / 100,
-        platformCommission: parseFloat(platformRate) / 100,
-        storeDiscount: settings?.storeDiscount || 0.05,
-        createdBy: "Admin",
-      });
-      alert("تم حفظ التغييرات!");
+      if (selectedStoreId === "global") {
+        await updateCommissionSettings({
+          bankCommission: parseFloat(bankRate) / 100,
+          platformCommission: parseFloat(platformRate) / 100,
+          storeDiscount: settings?.storeDiscount || 0.05,
+          createdBy: "Admin",
+        });
+      } else {
+        // Update specific store ratios
+        const storeId = parseInt(selectedStoreId);
+        await updateStore(storeId, {
+          bankCommissionRate: parseFloat(bankRate),
+          platformCommissionRate: parseFloat(platformRate),
+        });
+      }
+      alert("تم حفظ التغييرات نجاح!");
       setEditMode(false);
       fetchData();
     } catch (error) {
       alert("فشل الحفظ!");
+    }
+  };
+
+  const onStoreSelect = (value: string) => {
+    setSelectedStoreId(value);
+    if (value === "global") {
+      setBankRate((settings?.bankCommission * 100 || 3).toString());
+      setPlatformRate((settings?.platformCommission * 100 || 2).toString());
+    } else {
+      const store = allStores.find(s => s.id.toString() === value);
+      if (store) {
+        setBankRate(store.bankCommissionRate?.toString() || "1.5");
+        setPlatformRate(store.platformCommissionRate?.toString() || "1.0");
+      }
     }
   };
 
@@ -242,7 +274,24 @@ export default function ProfitsPage() {
 
           {/* Edit Ratios */}
           <div className="rounded-lg border border-slate-800 bg-[#031824] p-4 text-xs text-slate-200 space-y-3">
-            <p className="text-slate-200 font-medium">تعديل النسب</p>
+            <p className="text-slate-200 font-medium">تخصيص النسب</p>
+            
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] text-slate-400">اختر المتجر لتعديل نسبته:</label>
+              <select 
+                value={selectedStoreId}
+                onChange={(e) => onStoreSelect(e.target.value)}
+                className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-slate-50 focus:border-emerald-500/60 focus:outline-none"
+              >
+                <option value="global">الإعدادات العامة (الكل)</option>
+                {allStores.map(store => (
+                  <option key={store.id} value={store.id.toString()}>
+                    {store.nameAr || store.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="flex items-center gap-3">
               <label className="flex flex-col text-[11px] text-slate-400">
                 نسبة البنك
@@ -263,6 +312,13 @@ export default function ProfitsPage() {
                 />
               </label>
             </div>
+
+            {selectedStoreId !== "global" && (
+               <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-2 text-[11px] text-emerald-200">
+                  إجمالي عمولة المتجر ستصبح: <span className="font-bold">{(parseFloat(bankRate || "0") + parseFloat(platformRate || "0")).toFixed(1)}%</span>
+               </div>
+            )}
+
             <button
               onClick={handleSaveSettings}
               className="w-full rounded-lg bg-emerald-500 px-4 py-2 text-xs font-medium text-slate-950 hover:bg-emerald-400 transition-colors"
@@ -320,6 +376,8 @@ export default function ProfitsPage() {
                 <th className="px-4 py-3 text-right">العميل</th>
                 <th className="px-4 py-3 text-right">المتجر</th>
                 <th className="px-4 py-3 text-right">قيمة المنتج</th>
+                <th className="px-4 py-3 text-right">نسبة البنك</th>
+                <th className="px-4 py-3 text-right">نسبة المنصة</th>
                 <th className="px-4 py-3 text-right">حصة البنك</th>
                 <th className="px-4 py-3 text-right">حصة المنصة</th>
                 <th className="px-4 py-3 text-right">صافي المتجر</th>
@@ -341,6 +399,8 @@ export default function ProfitsPage() {
                     <td className="px-4 py-3">{entry.customer}</td>
                     <td className="px-4 py-3 text-slate-300">{entry.store}</td>
                     <td className="px-4 py-3 text-slate-200">{entry.productValue.toFixed(2)} دينار</td>
+                    <td className="px-4 py-3 text-sky-300/80">{entry.bankRate}%</td>
+                    <td className="px-4 py-3 text-emerald-300/80">{entry.platformRate}%</td>
                     <td className="px-4 py-3 text-sky-200">{entry.bankShare.toFixed(2)} دينار</td>
                     <td className="px-4 py-3 text-emerald-200">{entry.platformShare.toFixed(2)} دينار</td>
                     <td className="px-4 py-3 text-slate-100">{entry.netToMerchant.toFixed(2)} دينار</td>
