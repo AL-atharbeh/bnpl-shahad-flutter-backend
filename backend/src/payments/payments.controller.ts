@@ -978,7 +978,7 @@ export class PaymentsController {
 
     const session = await this.stripeService.createCheckoutSession({
       amount: Number(payment.amount),
-      currency: 'JOD',
+      currency: 'USD', // Temporarily using USD for testing as JOD is not supported on this account
       customerName: user.name || 'Customer',
       customerEmail: (user.phone || 'customer') + '@app.com', 
       customerReference: `payment_${id}`,
