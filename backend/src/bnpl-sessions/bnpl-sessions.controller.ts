@@ -32,6 +32,15 @@ export class BnplSessionsController {
         return this.sessionsService.createSession(createSessionDto, apiKey);
     }
 
+    @Post(':sessionId/send-otp')
+    @HttpCode(HttpStatus.OK)
+    async sendOtp(
+        @Param('sessionId') sessionId: string,
+        @Body('phone') phone: string,
+    ) {
+        return this.sessionsService.sendOtp(sessionId, phone);
+    }
+
     @Get('store/:storeId/recent')
     async getRecentStoreSessions(@Param('storeId') storeId: string) {
         return this.sessionsService.getRecentSessionsByStoreId(parseInt(storeId));

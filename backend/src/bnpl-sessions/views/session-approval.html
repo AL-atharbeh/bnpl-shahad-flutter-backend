@@ -482,17 +482,33 @@
             }
         }
 
+        // Phone Normalization Helper
+        function normalizePhone(phone) {
+            let p = phone.trim().replace(/\+/g, '').replace(/\s/g, '');
+            if (p.startsWith('0')) {
+                // Convert 07XXXXXXXX to 9627XXXXXXXX
+                p = '962' + p.substring(1);
+            } else if (p.length === 9 && (p.startsWith('77') || p.startsWith('78') || p.startsWith('79'))) {
+                // Convert 7XXXXXXXX to 9627XXXXXXXX
+                p = '962' + p;
+            }
+            return p;
+        }
+
         // Auth Logic
         async function sendOtp() {
-            const phone = document.getElementById('phoneInput').value;
+            let phone = document.getElementById('phoneInput').value;
             if (!phone) return alert('الرجاء إدخال رقم الجوال');
+
+            // Normalize before sending
+            phone = normalizePhone(phone);
 
             showLoader(true);
             try {
-                const res = await fetch(`${apiBaseUrl}/sessions/send-otp`, {
+                const res = await fetch(`${apiBaseUrl}/sessions/${sessionId}/send-otp`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionId, phone })
+                    body: JSON.stringify({ phone })
                 });
                 const result = await res.json();
                 if (result.success) {
@@ -514,10 +530,10 @@
 
             showLoader(true);
             try {
-                const res = await fetch(`${apiBaseUrl}/sessions/verify-otp`, {
+                const res = await fetch(`${apiBaseUrl}/sessions/${sessionId}/verify-otp`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionId, otp })
+                    body: JSON.stringify({ otp })
                 });
                 const result = await res.json();
                 if (result.success && result.payment_url) {

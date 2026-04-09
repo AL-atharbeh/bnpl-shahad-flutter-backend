@@ -177,6 +177,62 @@ export class BnplSessionsService {
         };
     }
 
+    async sendOtp(sessionId: string, phone: string): Promise<any> {
+        const session = await this.sessionRepository.findOne({
+            where: { sessionId },
+            relations: ['store'],
+        });
+
+        if (!session) {
+            throw new NotFoundException('الجلسة غير موجودة');
+        }
+
+        // Normalize phone number (Jordanian format)
+        let normalizedPhone = phone.trim().replace(/\+/g, '').replace(/\s/g, '');
+        if (normalizedPhone.startsWith('0')) {
+            // Convert 07XXXXXXXX to 9627XXXXXXXX
+            normalizedPhone = '962' + normalizedPhone.substring(1);
+        } else if (normalizedPhone.length === 9 && (normalizedPhone.startsWith('77') || normalizedPhone.startsWith('78') || normalizedPhone.startsWith('79'))) {
+            // Convert 7XXXXXXXX to 9627XXXXXXXX
+            normalizedPhone = '962' + normalizedPhone;
+        }
+
+        session.customerPhone = normalizedPhone;
+        session.otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+        session.otpExpiresAt = dayjs().add(15, 'minutes').toDate();
+
+        await this.sessionRepository.save(session);
+
+        // Notify user with OTP if user exists in system
+        try {
+            const user = await this.usersService.findByPhone(normalizedPhone);
+            if (user) {
+                const storeName = session.store.nameAr || session.store.name;
+                await this.notificationsService.sendToUser(
+                    user.id,
+                    'رمز التحقق - Verification Code',
+                    `رمز التحقق الخاص بك لعملية الشراء من ${storeName} هو: ${session.otp}`,
+                    {
+                        type: 'otp',
+                        otp: session.otp,
+                        sessionId: sessionId,
+                    },
+                    'urgent'
+                );
+                console.log(`✅ OTP sent to user ${user.id} for session ${sessionId}: ${session.otp}`);
+            } else {
+                console.log(`ℹ️ OTP generated but user with phone ${normalizedPhone} not found in system.`);
+            }
+        } catch (error) {
+            console.error('⚠️ Failed to send OTP notification:', error.message);
+        }
+
+        return {
+            success: true,
+            message: 'تم إرسال رمز التحقق بنجاح إلى رقم هاتفك',
+        };
+    }
+
     async verifyOtp(sessionId: string, otp: string): Promise<any> {
         const session = await this.sessionRepository.findOne({
             where: { sessionId },
