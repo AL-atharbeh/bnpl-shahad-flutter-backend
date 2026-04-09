@@ -317,10 +317,16 @@
                 const data = await response.json();
                 
                 if (data) {
-                    document.getElementById('storeName').textContent = data.store?.nameAr || data.store?.name || 'متجر غير معروف';
-                    document.getElementById('totalAmount').textContent = `${parseFloat(data.totalAmount).toFixed(2)} ${data.currency}`;
+                    // Support both camelCase and snake_case for flexibility
+                    const totalAmount = data.totalAmount || data.total_amount;
+                    const installmentsCount = data.installmentsCount || data.installments_count || 4;
+                    const currency = data.currency || 'JOD';
+                    const storeName = data.store?.nameAr || data.store?.name || 'متجر غير معروف';
+
+                    document.getElementById('storeName').textContent = storeName;
+                    document.getElementById('totalAmount').textContent = `${parseFloat(totalAmount).toFixed(2)} ${currency}`;
                     
-                    const installmentAmount = (data.totalAmount / data.installmentsCount).toFixed(2);
+                    const installmentAmount = (parseFloat(totalAmount) / installmentsCount).toFixed(2);
                     const list = document.getElementById('installmentsList');
                     list.innerHTML = '';
                     
