@@ -430,7 +430,7 @@ export class BnplSessionsService {
             // Generate payment URL for first installment via STRIPE
             console.log('💳 Generating Stripe payment session for testing...');
 
-            const baseUrl = this.configService.get('APP_URL') || 'https://yourapp.com';
+            const baseUrl = 'https://enthusiastic-stillness-production-5dce.up.railway.app';
             
             const paymentResponse = await this.stripeService.createCheckoutSession({
                 amount: installmentAmount,
@@ -438,8 +438,8 @@ export class BnplSessionsService {
                 customerName: session.customerName || 'Customer',
                 customerEmail: session.customerEmail || 'customer@example.com',
                 customerReference: sessionId,
-                successUrl: `${baseUrl}/api/v1/payments/stripe/success?session_id={CHECKOUT_SESSION_ID}&client_reference_id=${sessionId}`,
-                cancelUrl: `${baseUrl}/api/v1/payments/stripe/cancel?session_id={CHECKOUT_SESSION_ID}`,
+                successUrl: `${baseUrl}/api/v1/payments/stripe/callback/success?sessionId=${sessionId}&stripeSessionId={CHECKOUT_SESSION_ID}`,
+                cancelUrl: `${baseUrl}/api/v1/payments/stripe/callback/error?sessionId=${sessionId}`,
             });
 
             console.log('✅ Stripe Payment URL generated:', paymentResponse.url);
