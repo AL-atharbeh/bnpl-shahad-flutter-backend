@@ -434,7 +434,7 @@ export class BnplSessionsService {
             
             const paymentResponse = await this.stripeService.createCheckoutSession({
                 amount: installmentAmount,
-                currency: session.currency || 'JOD',
+                currency: 'USD', // Changed temporarily to USD to bypass account currency restrictions
                 customerName: session.customerName || 'Customer',
                 customerEmail: session.customerEmail || 'customer@example.com',
                 customerReference: sessionId,

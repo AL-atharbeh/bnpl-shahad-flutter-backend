@@ -1306,6 +1306,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     final languageService = Provider.of<LanguageService>(context);
     final isRTL = languageService.isArabic;
     
+    // Hide section if no pending payments and not loading
+    if (!_isLoadingPendingPayments && _pendingPayments.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
     return Container(
       margin: const EdgeInsets.only(top: 20),
       child: Column(
