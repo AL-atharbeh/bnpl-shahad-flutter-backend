@@ -259,40 +259,30 @@ export class BnplSessionsService {
         // Clear OTP fields
         session.otp = null;
         session.otpExpiresAt = null;
-        await this.sessionRepository.save(session);
-
-        // Now find the user again to send the FINAL payment link (pos_session)
+        
+        // Link user to session before completing
         if (session.customerPhone) {
             try {
                 const user = await this.usersService.findByPhone(session.customerPhone);
                 if (user) {
-                    // Pre-fill user data in session for later approval
                     session.userId = user.id;
                     session.customerName = user.name;
                     session.customerEmail = user.email;
-                    await this.sessionRepository.save(session);
-
-                    const storeName = session.store.nameAr || session.store.name;
-                    await this.notificationsService.sendToUser(
-                        user.id,
-                        'طلب دفع جديد - Payment Request',
-                        `لديك طلب دفع جاري من ${storeName}. اضغط هنا لإتمام الدفع.`,
-                        {
-                            type: 'pos_session',
-                            sessionId: sessionId,
-                        },
-                        'urgent'
-                    );
-                    console.log(`✅ POS Final Payment Notification sent to user ${user.id} for session ${sessionId}`);
                 }
             } catch (error) {
-                console.error('⚠️ Failed to send final POS notification:', error.message);
+                console.error('⚠️ Failed to link user during OTP verification:', error.message);
             }
         }
+        
+        await this.sessionRepository.save(session);
+
+        // 🎯 CRITICAL: Automatically trigger completeSession to get Stripe URL
+        const paymentResult = await this.completeSession(sessionId);
 
         return {
             success: true,
-            message: 'تم التحقق من الرمز بنجاح. تم إرسال رابط الدفع للعميل.',
+            message: 'تم التحقق بنجاح، جاري تحويلك للدفع...',
+            payment_url: paymentResult.payment_url,
         };
     }
 
