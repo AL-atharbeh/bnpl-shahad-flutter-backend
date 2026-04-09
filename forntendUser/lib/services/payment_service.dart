@@ -91,6 +91,11 @@ class PaymentService {
     return await _apiService.post(ApiEndpoints.payPayment(paymentId), {});
   }
 
+  // Get Stripe session URL for installment payment
+  Future<Map<String, dynamic>> getStripeInstallmentUrl(int paymentId) async {
+    return await _apiService.get(ApiEndpoints.payPaymentStripe(paymentId));
+  }
+
   // Extend due date for a payment
   Future<Map<String, dynamic>> extendDueDate({
     required int paymentId,

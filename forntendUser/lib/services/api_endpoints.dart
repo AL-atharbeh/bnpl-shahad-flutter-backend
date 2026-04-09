@@ -19,6 +19,7 @@ class ApiEndpoints {
   static String getPaymentById(int id) => '/payments/$id';
   static String getPaymentsByOrderId(String orderId) => '/payments/order/$orderId';
   static String payPayment(int id) => '/payments/$id/pay';
+  static String payPaymentStripe(int id) => '/payments/$id/stripe-session';
   static String extendPayment(int id) => '/payments/$id/extend';
   static String postponePayment(int id) => '/payments/$id/postpone';
 

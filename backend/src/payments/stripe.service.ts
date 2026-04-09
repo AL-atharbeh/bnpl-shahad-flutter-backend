@@ -27,11 +27,13 @@ export class StripeService {
     currency: string;
     customerName: string;
     customerEmail: string;
-    customerReference: string; // This is the sessionId
+    customerReference: string; // This is the sessionId or paymentId
     successUrl: string;
     cancelUrl: string;
+    productName?: string;
+    metadata?: Record<string, string>;
   }) {
-    const { amount, currency, customerEmail, customerReference, successUrl, cancelUrl } = params;
+    const { amount, currency, customerEmail, customerReference, successUrl, cancelUrl, productName, metadata } = params;
 
     // Convert amount to cents/fils (Stripe expects integers)
     // JOD has 3 decimal places (fils). Stripe JOD is a 3-decimal currency.
@@ -45,7 +47,7 @@ export class StripeService {
           price_data: {
             currency: currency.toLowerCase(),
             product_data: {
-              name: 'First Installment - BNPL',
+              name: productName || 'Payment - BNPL',
             },
             unit_amount: unitAmount,
           },
@@ -57,6 +59,7 @@ export class StripeService {
       client_reference_id: customerReference,
       success_url: successUrl,
       cancel_url: cancelUrl,
+      metadata: metadata || {},
     });
 
     return {
@@ -68,5 +71,9 @@ export class StripeService {
   async verifySession(sessionId: string) {
     const session = await this.stripe.checkout.sessions.retrieve(sessionId);
     return session.payment_status === 'paid';
+  }
+
+  async retrieveSession(sessionId: string) {
+    return this.stripe.checkout.sessions.retrieve(sessionId);
   }
 }

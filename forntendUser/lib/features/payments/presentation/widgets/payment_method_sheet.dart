@@ -95,7 +95,7 @@ class _PaymentMethodSheetState extends State<PaymentMethodSheet> {
                 _MethodTile(
                   isSelected: _selected == PaymentMethod.card,
                   onTap: () => setState(() => _selected = PaymentMethod.card),
-                  title: 'Pay via MyFatoorah',
+                  title: languageService.isArabic ? 'البطاقة البنكية / Stripe' : 'Bank Card / Stripe',
                   trailing: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
@@ -109,7 +109,7 @@ class _PaymentMethodSheetState extends State<PaymentMethodSheet> {
                         Icon(Icons.credit_card, size: 18, color: Color(0xFF111827)),
                         SizedBox(width: 4),
                         Text(
-                          'Pay',
+                          'Visa/Master',
                           style: TextStyle(
                             fontWeight: FontWeight.w900,
                             color: Color(0xFF111827),
@@ -134,10 +134,10 @@ class _PaymentMethodSheetState extends State<PaymentMethodSheet> {
                 if (_selected == PaymentMethod.applePay) {
                   widget.onApplePay();
                 } else {
-                  // Pay via MyFatoorah (card)
+                  // Signal that Stripe/Card was selected
                   widget.onCardAdded?.call(AddedCard(
-                    last4: '0000',
-                    holder: 'MyFatoorah',
+                    last4: 'STRIPE',
+                    holder: 'STRIPE',
                     exp: '00/00',
                   ));
                 }

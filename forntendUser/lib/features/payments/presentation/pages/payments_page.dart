@@ -86,7 +86,7 @@ class _PaymentsPageState extends State<PaymentsPage> {
     }
     
     try {
-      final response = await _paymentService.getPendingPayments(nextOnly: false);
+      final response = await _paymentService.getPendingPayments(nextOnly: true);
       
       if (EnvDev.enableLogging) {
         print('📥 API Response: success=${response['success']}');
@@ -380,6 +380,368 @@ class _PaymentsPageState extends State<PaymentsPage> {
     });
   }
 
+  void _showPaymentMethod(BuildContext context, double amount, int? paymentId) {
+    if (paymentId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('خطأ في رقم الدفعة')),
+      );
+      return;
+    }
+
+    PaymentMethodSheet.show(
+      context,
+      amountLabel: 'JD ${amount.toStringAsFixed(3)}',
+      onApplePay: () => _initiatePaymentFlow(context, amount, paymentId, isApplePay: true),
+      onCardAdded: (card) {
+        // Signal that Stripe/Card was selected
+        _initiatePaymentFlow(context, amount, paymentId, isApplePay: false);
+      },
+    );
+  }
+
+  Future<void> _initiatePaymentFlow(BuildContext context, double amount, int paymentId, {bool isApplePay = false}) async {
+    try {
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+
+      String? paymentUrl;
+      
+      if (isApplePay) {
+        // Fallback or specific Apple Pay logic if needed
+        final response = await _paymentService.getStripeInstallmentUrl(paymentId);
+        if (response['success'] == true && response['data'] != null && response['data']['url'] != null) {
+          paymentUrl = response['data']['url'];
+        } else if (response['url'] != null) {
+          paymentUrl = response['url'];
+        }
+      } else {
+        // Real Stripe flow
+        final response = await _paymentService.getStripeInstallmentUrl(paymentId);
+        
+        var data = response;
+        if (response['success'] == true && response['data'] != null) {
+          data = response['data'];
+        }
+
+        if (data['success'] == true && data['url'] != null) {
+          paymentUrl = data['url'];
+        } else if (data['url'] != null) {
+          paymentUrl = data['url'];
+        }
+      }
+
+      // Hide loading
+      if (context.mounted) Navigator.pop(context);
+
+      if (paymentUrl == null) {
+        throw 'فشل الحصول على رابط الدفع';
+      }
+
+      if (context.mounted) {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PaymentWebViewPage(
+              paymentUrl: paymentUrl!,
+              sessionId: 'payment_$paymentId',
+            ),
+          ),
+        );
+
+        // Check result from WebView
+        if (result == true) {
+          if (context.mounted) {
+            await _handleSuccessfulPayment(context, amount);
+            _loadPayments(); // Refresh list
+          }
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        try {
+          Navigator.pop(context);
+        } catch (_) {}
+      }
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('حدث خطأ: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+  
+  Future<void> _handleSuccessfulPayment(BuildContext context, double amount) async {
+    final l10n = AppLocalizations.of(context)!;
+    final pointsService = Provider.of<PointsService>(context, listen: false);
+    
+    try {
+      final pointsEarned = await pointsService.addPointsFromPayment(
+        paymentAmount: amount,
+        description: 'دفع مستحق JD ${amount.toStringAsFixed(3)}',
+      );
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.white),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.paymentSuccessfulApplePay,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
+                if (pointsEarned > 0) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.stars_rounded, color: Colors.amber, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.earnedPointsMessage(pointsEarned),
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+            backgroundColor: const Color(0xFF16A34A),
+            duration: const Duration(seconds: 4),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ Error handling payment: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.paymentSuccessfulApplePay),
+            backgroundColor: const Color(0xFF16A34A),
+          ),
+        );
+      }
+    }
+  }
+
+  void _showExtendDueDate(BuildContext context, String merchantName, double amount, String dueDate, int? paymentId) {
+    final options = [
+      ExtendOption(
+        days: 7,
+        feeLabel: 'JD 0.500',
+        targetDateLabel: 'مُمدّد إلى $dueDate',
+      ),
+      ExtendOption(
+        days: 14,
+        feeLabel: 'JD 0.950',
+        targetDateLabel: 'مُمدّد إلى $dueDate',
+        popular: true,
+      ),
+      ExtendOption(
+        days: 30,
+        feeLabel: 'JD 1.500',
+        targetDateLabel: 'مُمدّد إلى $dueDate',
+      ),
+    ];
+
+    ExtendDueDateSheet.show(
+      context,
+      merchantName: merchantName,
+      originalAmountLabel: 'JD ${amount.toStringAsFixed(3)}',
+      originalDueLabel: dueDate,
+      options: options,
+      onConfirm: (option) => _handleExtendConfirm(context, paymentId, option),
+    );
+  }
+
+  Future<void> _handleExtendConfirm(BuildContext context, int? paymentId, ExtendOption option) async {
+    if (paymentId == null) return;
+    try {
+      showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+      final response = await _paymentService.extendDueDate(paymentId: paymentId, extensionDays: option.days);
+      if (context.mounted) Navigator.pop(context);
+      
+      if (response['success'] == true) {
+        _loadPayments();
+      } else {
+        throw response['error'] ?? 'خطأ غير متوقع';
+      }
+    } catch (e) {
+      if (context.mounted) {
+        try {
+          Navigator.pop(context);
+        } catch (_) {}
+      }
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e')));
+    }
+  }
+
+  void _showFreePostpone(BuildContext context, Map<String, dynamic> payment, String storeName, double amount, VoidCallback onRefresh) async {
+    final l10n = AppLocalizations.of(context)!;
+    final postponeService = Provider.of<PostponeService>(context, listen: false);
+    
+    final paymentId = payment['id'] as int?;
+    
+    // حساب التواريخ
+    final dueDateStr = payment['dueDate']?.toString();
+    DateTime currentDue;
+    if (dueDateStr != null) {
+      try {
+        currentDue = DateTime.parse(dueDateStr);
+      } catch (e) {
+        currentDue = DateTime.now().add(const Duration(days: 7));
+      }
+    } else {
+      currentDue = DateTime.now().add(const Duration(days: 7));
+    }
+    final newDue = currentDue.add(const Duration(days: 30)); // Free postponement: 30 days
+    
+    final months = [
+      'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+    ];
+    
+    final currentDueStr = '${currentDue.day} ${months[currentDue.month - 1]} ${currentDue.year}';
+    final newDueStr = '${newDue.day} ${months[newDue.month - 1]} ${newDue.year}';
+    
+    FreePostponeSheet.show(
+      context,
+      merchantName: storeName,
+      amount: amount,
+      currentDueDate: currentDueStr,
+      newDueDate: newDueStr,
+      onConfirm: () async {
+        if (paymentId != null) {
+          try {
+            showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+            final response = await _paymentService.postponePayment(
+              paymentId: paymentId,
+              daysToPostpone: 30,
+            );
+            if (context.mounted) Navigator.pop(context);
+            
+            if (response['success'] == true && context.mounted) {
+              onRefresh();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      const Icon(Icons.check_circle_rounded, color: Colors.white),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text(l10n.postponeSuccess)),
+                    ],
+                  ),
+                  backgroundColor: const Color(0xFF16A34A),
+                  duration: const Duration(seconds: 3),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            } else {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(response['error']?.toString() ?? 'فشل التأجيل'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
+          } catch (e) {
+            if (context.mounted) {
+               try { Navigator.pop(context); } catch (_) {}
+            }
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('حدث خطأ: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        }
+      },
+    );
+  }
+
+  Widget _buildPaymentCard(
+    BuildContext context,
+    Map<String, dynamic> payment,
+    PostponeService postponeService,
+    AppLocalizations l10n,
+    bool isRTL,
+  ) {
+    final storeName = isRTL 
+        ? (payment['storeNameAr']?.toString() ?? payment['merchantName']?.toString() ?? payment['storeName']?.toString() ?? payment['store']?['nameAr']?.toString() ?? payment['store']?['name']?.toString() ?? 'متجر')
+        : (payment['storeName']?.toString() ?? payment['merchantName']?.toString() ?? payment['store']?['name']?.toString() ?? 'Store');
+    final amountValue = payment['amount'];
+    final amount = amountValue is num 
+        ? amountValue.toDouble() 
+        : (double.tryParse(amountValue.toString()) ?? 0.0);
+    final installmentNumber = payment['installmentNumber'] as int? ?? 1;
+    final installmentsCount = payment['installmentsCount'] as int? ?? 1;
+    final paymentId = payment['id'] as int?;
+    
+    final isPostponed = payment['isPostponed'] == true;
+    final dueDateStr = isPostponed && payment['postponedDueDate'] != null
+        ? payment['postponedDueDate'].toString()
+        : payment['dueDate']?.toString();
+    
+    int dueDays = 0;
+    String dueTextKey = 'dueInDays';
+    if (dueDateStr != null) {
+      try {
+        final dueDate = DateTime.parse(dueDateStr);
+        dueDays = dueDate.difference(DateTime.now()).inDays;
+        if (dueDays < 0) {
+          dueTextKey = 'overdueDays';
+          dueDays = dueDays.abs();
+        } else if (dueDays == 0) {
+          dueTextKey = 'dueToday';
+        } else {
+          dueTextKey = 'dueInDays';
+        }
+      } catch (e) { }
+    }
+    
+    final canPostpone = !isPostponed && !_userFreePostponeUsed;
+    
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: _BillCard(
+        merchant: storeName,
+        amount: amount,
+        dueTextKey: dueTextKey,
+        cycleTextKey: 'installmentOf',
+        icon: Icons.store_rounded,
+        onPay: () => _showPaymentMethod(context, amount, paymentId),
+        onExtend: () => _showExtendDueDate(context, storeName, amount, dueDateStr ?? '', paymentId),
+        onFreePostpone: canPostpone ? () => _showFreePostpone(context, payment, storeName, amount, _loadPayments) : null,
+        freePostponeAvailable: canPostpone,
+        l10n: l10n,
+        isRTL: isRTL,
+        dueDays: dueDays,
+        currentInstallment: installmentNumber,
+        totalInstallments: installmentsCount,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -398,6 +760,7 @@ class _PaymentsPageState extends State<PaymentsPage> {
         dueIn7: _calculateDueIn7Days(),
         dueIn30: _calculateDueIn30Days(),
         onRefresh: _loadPayments,
+        itemBuilder: (context, payment, postponeService) => _buildPaymentCard(context, payment, postponeService, l10n, isRTL),
       ),
     );
   }
@@ -413,6 +776,7 @@ class _Content extends StatelessWidget {
   final double dueIn7;
   final double dueIn30;
   final VoidCallback onRefresh;
+  final Widget Function(BuildContext, Map<String, dynamic>, PostponeService) itemBuilder;
   
   const _Content({
     required this.l10n,
@@ -424,6 +788,7 @@ class _Content extends StatelessWidget {
     required this.dueIn7,
     required this.dueIn30,
     required this.onRefresh,
+    required this.itemBuilder,
   });
 
   @override
@@ -568,12 +933,12 @@ class _Content extends StatelessWidget {
                  ),
                )
              : SliverList.builder(
-                 itemCount: payments.isNotEmpty ? 1 : 0,
+                 itemCount: payments.length,
                  itemBuilder: (context, i) {
                    final payment = payments[i];
                    return Consumer<PostponeService>(
                      builder: (context, postponeService, _) {
-                       return _buildPaymentCard(context, payment, postponeService, l10n, isRTL);
+                       return itemBuilder(context, payment, postponeService);
                      },
                    );
                  },
@@ -585,417 +950,6 @@ class _Content extends StatelessWidget {
     ));
   }
 
-  Widget _buildPaymentCard(
-    BuildContext context,
-    Map<String, dynamic> payment,
-    PostponeService postponeService,
-    AppLocalizations l10n,
-    bool isRTL,
-  ) {
-    // Backend returns merchantName, storeName, or storeNameAr
-    final storeName = isRTL 
-        ? (payment['storeNameAr']?.toString() ?? payment['merchantName']?.toString() ?? payment['storeName']?.toString() ?? payment['store']?['nameAr']?.toString() ?? payment['store']?['name']?.toString() ?? 'متجر')
-        : (payment['storeName']?.toString() ?? payment['merchantName']?.toString() ?? payment['store']?['name']?.toString() ?? 'Store');
-    final amountValue = payment['amount'];
-    final amount = amountValue is num 
-        ? amountValue.toDouble() 
-        : (double.tryParse(amountValue.toString()) ?? 0.0);
-    final installmentNumber = payment['installmentNumber'] as int? ?? 1;
-    final installmentsCount = payment['installmentsCount'] as int? ?? 1;
-    final paymentId = payment['id'] as int?;
-    
-    // Use postponedDueDate if payment is postponed, otherwise use dueDate
-    final isPostponed = payment['isPostponed'] == true;
-    final dueDateStr = isPostponed && payment['postponedDueDate'] != null
-        ? payment['postponedDueDate'].toString()
-        : payment['dueDate']?.toString();
-    
-    // Calculate due days
-    int dueDays = 0;
-    String dueTextKey = 'dueInDays';
-    if (dueDateStr != null) {
-      try {
-        final dueDate = DateTime.parse(dueDateStr);
-        dueDays = dueDate.difference(DateTime.now()).inDays;
-        if (dueDays < 0) {
-          dueTextKey = 'overdueDays';
-          dueDays = dueDays.abs();
-        } else if (dueDays == 0) {
-          dueTextKey = 'dueToday';
-        } else {
-          dueTextKey = 'dueInDays';
-        }
-      } catch (e) {
-        // Invalid date
-      }
-    }
-    
-    
-    final installmentId = '${paymentId}_${installmentNumber}';
-    
-    // User can postpone for free if:
-    // 1. This payment is NOT already postponed, AND
-    // 2. User has NOT used their one-time free postponement
-    final canPostpone = !isPostponed && !userFreePostponeUsed;
-    
-    // Debug logging
-    print('🔍 [canPostpone Check]');
-    print('   Payment ID: $paymentId');
-    print('   isPostponed: $isPostponed');
-    print('   userFreePostponeUsed: $userFreePostponeUsed');
-    print('   canPostpone: $canPostpone');
-    
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      child: _BillCard(
-        merchant: storeName,
-        amount: amount,
-        dueTextKey: dueTextKey,
-        cycleTextKey: 'installmentOf',
-        icon: Icons.store_rounded,
-        onPay: () => _showPaymentMethod(context, amount, paymentId),
-        onExtend: () => _showExtendDueDate(context, storeName, amount, dueDateStr ?? '', paymentId),
-        onFreePostpone: canPostpone ? () => _showFreePostpone(context, payment, storeName, amount, onRefresh) : null,
-        freePostponeAvailable: canPostpone,
-        l10n: l10n,
-        isRTL: isRTL,
-        dueDays: dueDays,
-        currentInstallment: installmentNumber,
-        totalInstallments: installmentsCount,
-      ),
-    );
-  }
-  void _showPaymentMethod(BuildContext context, double amount, int? paymentId) {
-    PaymentMethodSheet.show(
-      context,
-      amountLabel: 'JD ${amount.toStringAsFixed(3)}',
-      onApplePay: () => _initiatePaymentFlow(context, amount),
-      onCardAdded: (card) {
-        // For now, treating "Add Card" as "Pay with Card"
-        // In a real app, we would tokenize the card first
-        print('تمت إضافة بطاقة جديدة: ${card.last4}');
-        Navigator.pop(context); // Close sheet if open
-        _initiatePaymentFlow(context, amount);
-      },
-    );
-  }
-
-  Future<void> _initiatePaymentFlow(BuildContext context, double amount) async {
-    try {
-      // Show loading
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
-      );
-
-      // Use mock payment URL (same as session confirmation)
-      final ngrokUrl = 'http://localhost:3000'; // Replace with your ngrok URL if needed
-      final url = '$ngrokUrl/api/v1/payments/mock-payment?amount=$amount';
-      
-      // Hide loading
-      if (context.mounted) Navigator.pop(context);
-
-      if (context.mounted) {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => PaymentWebViewPage(
-              paymentUrl: url,
-              sessionId: 'payment_${DateTime.now().millisecondsSinceEpoch}',
-            ),
-          ),
-        );
-
-        // For mock payments, always assume success
-        if (context.mounted) {
-          await _handleSuccessfulPayment(context, amount);
-          onRefresh();
-        }
-      }
-    } catch (e) {
-      // Hide loading if showing
-      if (context.mounted) {
-        try {
-          Navigator.pop(context);
-        } catch (_) {}
-      }
-      // We can't easily check if dialog is showing, but usually it's popped above
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('حدث خطأ: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-  
-  /// معالجة عملية دفع ناجحة وإضافة النقاط
-  Future<void> _handleSuccessfulPayment(BuildContext context, double amount) async {
-    final l10n = AppLocalizations.of(context)!;
-    final pointsService = Provider.of<PointsService>(context, listen: false);
-    
-    try {
-      // إضافة النقاط من عملية الدفع
-      final pointsEarned = await pointsService.addPointsFromPayment(
-        paymentAmount: amount,
-        description: 'دفع مستحق JD ${amount.toStringAsFixed(3)}',
-      );
-      
-      // عرض رسالة نجاح مع النقاط المكتسبة
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.check_circle, color: Colors.white),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.paymentSuccessfulApplePay,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                  ],
-                ),
-                if (pointsEarned > 0) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.stars_rounded, color: Colors.amber, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.earnedPointsMessage(pointsEarned),
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-            backgroundColor: const Color(0xFF16A34A),
-            duration: const Duration(seconds: 4),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (e) {
-      debugPrint('❌ Error handling payment: $e');
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.paymentSuccessfulApplePay),
-            backgroundColor: const Color(0xFF16A34A),
-          ),
-        );
-      }
-    }
-  }
-
-  void _showExtendDueDate(BuildContext context, String merchantName, double amount, String dueDate, int? paymentId) {
-    // Sample extend options - you can customize these based on your business logic
-    final options = [
-      ExtendOption(
-        days: 7,
-        feeLabel: 'JD 0.500',
-        targetDateLabel: 'مُمدّد إلى ${dueDate}',
-      ),
-      ExtendOption(
-        days: 14,
-        feeLabel: 'JD 0.950',
-        targetDateLabel: 'مُمدّد إلى ${dueDate}',
-        popular: true,
-      ),
-      ExtendOption(
-        days: 30,
-        feeLabel: 'JD 1.500',
-        targetDateLabel: 'مُمدّد إلى ${dueDate}',
-      ),
-    ];
-
-    ExtendDueDateSheet.show(
-      context,
-      merchantName: merchantName,
-      originalAmountLabel: 'JD ${amount.toStringAsFixed(3)}',
-      originalDueLabel: dueDate,
-      options: options,
-      onConfirm: (selectedOption) async {
-        if (paymentId != null) {
-          try {
-            final paymentService = PaymentService();
-            final response = await paymentService.extendDueDate(
-              paymentId: paymentId,
-              extensionDays: selectedOption.days,
-            );
-            if (response['success'] == true) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('تم تمديد تاريخ الاستحقاق بنجاح'),
-                    backgroundColor: const Color(0xFF16A34A),
-                  ),
-                );
-                // Refresh payments list
-                onRefresh();
-              }
-            } else {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(response['error']?.toString() ?? 'فشل تمديد التاريخ'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            }
-          } catch (e) {
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('حدث خطأ: $e'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-          }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('تم تمديد تاريخ الاستحقاق بنجاح'),
-              backgroundColor: const Color(0xFF16A34A),
-            ),
-          );
-        }
-      },
-    );
-  }
-
-  void _showFreePostpone(BuildContext context, Map<String, dynamic> payment, String storeName, double amount, VoidCallback onRefresh) async {
-    final l10n = AppLocalizations.of(context)!;
-    final postponeService = Provider.of<PostponeService>(context, listen: false);
-    
-    final paymentId = payment['id'] as int?;
-    final installmentNumber = payment['installmentNumber'] as int? ?? 1;
-    final installmentId = '${paymentId}_${installmentNumber}';
-    
-    // حساب التواريخ
-    final dueDateStr = payment['dueDate']?.toString();
-    DateTime currentDue;
-    if (dueDateStr != null) {
-      try {
-        currentDue = DateTime.parse(dueDateStr);
-      } catch (e) {
-        currentDue = DateTime.now().add(const Duration(days: 7));
-      }
-    } else {
-      currentDue = DateTime.now().add(const Duration(days: 7));
-    }
-    final newDue = currentDue.add(const Duration(days: 30)); // Free postponement: 30 days
-    
-    final months = [
-      'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
-    ];
-    
-    final currentDueStr = '${currentDue.day} ${months[currentDue.month - 1]} ${currentDue.year}';
-    final newDueStr = '${newDue.day} ${months[newDue.month - 1]} ${newDue.year}';
-    
-    FreePostponeSheet.show(
-      context,
-      merchantName: storeName,
-      amount: amount,
-      currentDueDate: currentDueStr,
-      newDueDate: newDueStr,
-      onConfirm: () async {
-        if (paymentId != null) {
-          try {
-            final paymentService = PaymentService();
-            final response = await paymentService.postponePayment(
-              paymentId: paymentId,
-              daysToPostpone: 30,
-            );
-            
-            if (response['success'] == true && context.mounted) {
-              // Refresh payments to get updated data from backend
-              print('🔄 [Before onRefresh]');
-              print('   response success: ${response['success']}');
-              print('   context.mounted: ${context.mounted}');
-              
-              onRefresh();
-              
-              print('✅ [After onRefresh called]');
-              
-              ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Row(
-                      children: [
-                        const Icon(Icons.check_circle_rounded, color: Colors.white),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(l10n.postponeSuccess),
-                        ),
-                      ],
-                    ),
-                    backgroundColor: const Color(0xFF16A34A),
-                    duration: const Duration(seconds: 3),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-            } else {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(response['error']?.toString() ?? 'فشل التأجيل'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            }
-          } catch (e) {
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('حدث خطأ: $e'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-          }
-        } else {
-          // Fallback if paymentId is null
-          final success = await postponeService.postponeForFree(
-            installmentId,
-            merchantName: storeName,
-            amount: amount,
-            originalDueDate: currentDueStr,
-            newDueDate: newDueStr,
-          );
-          if (success && context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    const Icon(Icons.check_circle_rounded, color: Colors.white),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(l10n.postponeSuccess),
-                    ),
-                  ],
-                ),
-                backgroundColor: const Color(0xFF16A34A),
-                duration: const Duration(seconds: 3),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          }
-        }
-      },
-    );
-  }
 }
 
 /// بطاقة ملخص زجاجية بنعومة

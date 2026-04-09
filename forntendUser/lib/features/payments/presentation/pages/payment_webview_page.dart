@@ -52,8 +52,8 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
             final url = request.url;
             print('🔗 Navigation request: $url');
 
-            // Check for success callback
-            if (url.contains('/callback/success')) {
+            // Check for success callback or success view
+            if (url.contains('/callback/success') || url.contains('/view-success')) {
               print('✅ Payment successful!');
               _handlePaymentSuccess();
               return NavigationDecision.prevent;

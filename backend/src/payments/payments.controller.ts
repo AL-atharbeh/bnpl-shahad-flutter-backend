@@ -955,22 +955,86 @@ export class PaymentsController {
     });
   }
 
-  @Get('admin/upcoming')
-  @ApiOperation({ summary: 'Get upcoming payments timeline' })
-  async getUpcomingPayments() {
-    return this.paymentsService.getUpcomingPayments();
+  @Get(':id/stripe-session')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Create Stripe session for installment pay' })
+  async createStripeInstallmentSession(
+    @Param('id') id: number,
+    @Request() req,
+  ) {
+    const payment = await this.paymentsService.getPaymentById(id);
+    if (!payment) {
+      throw new HttpException('Payment not found', HttpStatus.NOT_FOUND);
+    }
+
+    if (payment.status === 'completed') {
+      throw new HttpException('Payment already completed', HttpStatus.BAD_REQUEST);
+    }
+
+    const user = await this.usersService.findById(req.user.id);
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+    console.log(`💳 Creating Stripe installment session for payment: ${id}`);
+
+    const session = await this.stripeService.createCheckoutSession({
+      amount: Number(payment.amount),
+      currency: 'JOD',
+      customerName: user.name || 'Customer',
+      customerEmail: (user.phone || 'customer') + '@app.com', 
+      customerReference: `payment_${id}`,
+      successUrl: `${baseUrl}/api/v1/payments/stripe-callback/success-installment?paymentId=${id}&stripeSessionId={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${baseUrl}/api/v1/payments/view-error`,
+      productName: `BNPL Installment - ${payment.installmentNumber} of ${payment.installmentsCount}`,
+      metadata: {
+        paymentId: id.toString(),
+        type: 'installment',
+      },
+    });
+
+    return {
+      success: true,
+      url: session.url,
+    };
   }
 
-  @Post('admin/:id/collect')
-  @ApiOperation({ summary: 'Manually mark payment as collected for bank' })
-  async manualCollect(@Param('id') id: number) {
-    return this.paymentsService.manualCollect(id);
-  }
+  @Get('stripe-callback/success-installment')
+  @ApiOperation({ summary: 'Handle Stripe success for individual installment' })
+  async handleStripeInstallmentSuccess(
+    @Query('paymentId') paymentId: string,
+    @Query('stripeSessionId') stripeSessionId: string,
+    @Res() res,
+    @Request() req,
+  ) {
+    console.log(`✅ Stripe installment success callback received: ${paymentId}`);
 
-  @Post('admin/:id/send-reminder')
-  @ApiOperation({ summary: 'Send payment reminder to customer' })
-  async sendReminder(@Param('id') id: number) {
-    return this.paymentsService.sendReminder(id);
+    try {
+      const isPaid = await this.stripeService.verifySession(stripeSessionId);
+
+      if (isPaid) {
+        // Mark payment as completed
+        await this.paymentsService.processPayment(parseInt(paymentId));
+        console.log(`✅ Payment ${paymentId} marked as completed after Stripe payment`);
+
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        return res.send(`
+          <html>
+            <head>
+              <script>
+                window.location.href = "${baseUrl}/api/v1/payments/view-success";
+              </script>
+            </head>
+            <body>Redirecting...</body>
+          </html>
+        `);
+      } else {
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        return res.redirect(`${baseUrl}/api/v1/payments/view-error`);
+      }
+    } catch (error) {
+      console.error('❌ Error in Stripe installment success callback:', error);
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      return res.redirect(`${baseUrl}/api/v1/payments/view-error`);
+    }
   }
 }
 
