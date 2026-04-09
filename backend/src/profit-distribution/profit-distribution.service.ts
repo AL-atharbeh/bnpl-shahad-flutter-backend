@@ -33,13 +33,12 @@ export class ProfitDistributionService {
         const completedPayments = allPayments.filter(p => p.status === 'completed');
         const totalCollected = completedPayments.reduce((sum, p) => sum + Number(p.amount), 0);
 
-        // Calculate shares
-        const bankTotalShare = totalCollected * BANK_COMMISSION;
-        const platformTotalShare = totalCollected * PLATFORM_COMMISSION;
+        // Calculate shares from TOTAL FINANCED volume (all purchases) as requested by user
+        const bankTotalShare = totalFinanced * BANK_COMMISSION;
+        const platformTotalShare = totalFinanced * PLATFORM_COMMISSION;
 
-        // Pending profits (completed but not settled)
-        const pendingPayments = completedPayments; // In real scenario, filter out settled ones
-        const pendingProfits = pendingPayments.reduce((sum, p) => sum + Number(p.amount), 0) * PLATFORM_COMMISSION;
+        // Pending profits represent the full platform share of all volume
+        const pendingProfits = platformTotalShare;
 
         return {
             success: true,
