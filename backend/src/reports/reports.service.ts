@@ -244,9 +244,10 @@ export class ReportsService {
         console.log(`[ReportsService] getSalesDetailed called for storeId: ${storeId}`);
 
         // 1. Fetch all approved/completed sessions for this store to get "pieces sold"
+        // CRITICAL: Added 'sessionItems' relation to get names and quantities
         const sessions = await this.paymentRepository.manager.getRepository('BnplSession').find({
             where: { storeId, status: In(['approved', 'completed', 'payment_pending']) },
-            relations: ['user'],
+            relations: ['user', 'sessionItems'],
             order: { createdAt: 'DESC' }
         }) as any[];
 
@@ -260,29 +261,52 @@ export class ReportsService {
             const orderPayments = payments.filter(p => p.orderId === orderId);
 
             const totalAmount = Number(session.totalAmount);
-            const collectedAmount = orderPayments
+            
+            // Gross amount received so far
+            const grossCollected = orderPayments
                 .filter(p => p.status === 'completed')
                 .reduce((sum, p) => sum + Number(p.amount), 0);
+            
+            // Net amount received so far (Paid minus Commission)
+            const collectedAmount = orderPayments
+                .filter(p => p.status === 'completed')
+                .reduce((sum, p) => sum + Number(p.storeAmount), 0);
 
-            // Sum up quantities from items
-            const piecesSold = (session.items || []).reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+            // Total commission for the whole order (from all payments)
+            const totalCommission = orderPayments.reduce((sum, p) => sum + Number(p.commission), 0);
+            
+            // Final net amount the vendor will get when all installments are paid
+            const netAmount = totalAmount - totalCommission;
+
+            // Sum up quantities from sessionItems (which we now have via relations)
+            const piecesSold = (session.sessionItems || []).reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
 
             return {
                 id: session.id,
                 orderId: session.storeOrderId || session.sessionId,
                 customerName: session.customerName || (session.user ? session.user.name : 'Unknown'),
                 customerPhone: session.customerPhone || (session.user ? session.user.phone : ''),
-                totalAmount,
-                collectedAmount,
+                totalAmount,           // Gross total
+                netAmount,             // Target net total
+                collectedAmount,        // Net collected so far (the one Vender UI uses for collections)
+                grossCollected,        // Gross collected so far
+                totalCommission,        // Total deducted commission
                 piecesSold,
                 status: session.status,
                 createdAt: session.createdAt,
-                items: session.items || []
+                // Map sessionItems to items for the frontend
+                items: (session.sessionItems || []).map(item => ({
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.price
+                }))
             };
         });
 
         const totalPiecesSold = sales.reduce((sum, s) => sum + s.piecesSold, 0);
         const totalVolume = sales.reduce((sum, s) => sum + s.totalAmount, 0);
+        
+        // metrics.totalCollected should represent the NET amount the vendor actually received
         const totalCollected = sales.reduce((sum, s) => sum + s.collectedAmount, 0);
 
         return {

@@ -285,9 +285,17 @@ export default function SalesPage() {
                                                                         <span className="text-slate-500">{language === 'ar' ? 'رقم الهاتف' : 'Phone Number'}</span>
                                                                         <span className="text-slate-200 font-mono text-emerald-400">{sale.customerPhone}</span>
                                                                     </div>
+                                                                    <div className="pt-3 border-t border-emerald-900/10 flex justify-between text-xs transition-all hover:bg-white/5 p-1 rounded">
+                                                                        <span className="text-slate-500">{language === 'ar' ? 'المبلغ الإجمالي' : 'Gross Amount'}</span>
+                                                                        <span className="text-slate-200">{sale.totalAmount.toLocaleString()} {t("currency")}</span>
+                                                                    </div>
+                                                                    <div className="flex justify-between text-xs transition-all hover:bg-white/5 p-1 rounded">
+                                                                        <span className="text-red-400/80">{language === 'ar' ? 'العمولة المقطوعة (-)' : 'Deducted Commission (-)'}</span>
+                                                                        <span className="text-red-400">-{sale.totalCommission?.toLocaleString() || 0} {t("currency")}</span>
+                                                                    </div>
                                                                     <div className="pt-3 border-t border-emerald-900/30 flex justify-between font-bold">
-                                                                        <span className="text-slate-300">{language === 'ar' ? 'الإجمالي النهائي' : 'Final Total'}</span>
-                                                                        <span className="text-white text-lg">{sale.totalAmount.toLocaleString()} {t("currency")}</span>
+                                                                        <span className="text-slate-300">{language === 'ar' ? 'صافي التحصيل النهائي' : 'Final Net Collection'}</span>
+                                                                        <span className="text-white text-lg">{sale.netAmount.toLocaleString()} {t("currency")}</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
