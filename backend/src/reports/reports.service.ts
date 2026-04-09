@@ -247,7 +247,7 @@ export class ReportsService {
         // CRITICAL: Added 'sessionItems' relation to get names and quantities
         const sessions = await this.paymentRepository.manager.getRepository('BnplSession').find({
             where: { storeId, status: In(['approved', 'completed', 'payment_pending']) },
-            relations: ['user', 'sessionItems'],
+            relations: ['user', 'sessionItems', 'store'],
             order: { createdAt: 'DESC' }
         }) as any[];
 
@@ -261,6 +261,7 @@ export class ReportsService {
             const orderPayments = payments.filter(p => p.orderId === orderId);
 
             const totalAmount = Number(session.totalAmount || 0);
+            const commissionRate = Number(session.store?.commissionRate || 2.5);
             
             // Gross amount received so far
             const grossCollected = orderPayments
@@ -270,13 +271,28 @@ export class ReportsService {
             // Net amount received so far (Paid minus Commission)
             const collectedAmount = orderPayments
                 .filter(p => p.status === 'completed')
-                .reduce((sum, p) => sum + Number(p.storeAmount || 0), 0);
+                .reduce((sum, p) => {
+                    const amount = Number(p.amount || 0);
+                    // If storeAmount is 0 (old data), calculate it on the fly for the report
+                    const storeAmount = Number(p.storeAmount) > 0 
+                        ? Number(p.storeAmount) 
+                        : (amount - (amount * (commissionRate / 100)));
+                    return sum + storeAmount;
+                }, 0);
 
             // Total commission for the whole order (from all payments)
-            const totalCommission = orderPayments.reduce((sum, p) => sum + Number(p.commission || 0), 0);
+            const totalCommission = orderPayments.reduce((sum, p) => {
+                const amount = Number(p.amount || 0);
+                // If commission is 0 (old data), calculate it on the fly for the report
+                const comm = Number(p.commission) > 0
+                    ? Number(p.commission)
+                    : (amount * (commissionRate / 100));
+                return sum + comm;
+            }, 0);
             
             // Final net amount the vendor will get when all installments are paid
-            const netAmount = totalAmount - totalCommission;
+            // Corrected: calculate net from totalAmount using commissionRate if stored commission is 0
+            const netAmount = (totalAmount - (totalAmount * (commissionRate / 100)));
 
             // Sum up quantities from sessionItems (which we now have via relations)
             const piecesSold = (session.sessionItems || []).reduce((sum, item) => sum + (Number(item.quantity || 1)), 0);
