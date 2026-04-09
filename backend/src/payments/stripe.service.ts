@@ -7,7 +7,12 @@ export class StripeService {
   private stripe: Stripe;
 
   constructor(private configService: ConfigService) {
-    const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
+    const secretKey = this.configService.get<string>('stripe.secretKey') || this.configService.get<string>('STRIPE_SECRET_KEY');
+    
+    if (!secretKey || secretKey === 'sk_test_mock') {
+        console.warn('⚠️ STRIPE_SECRET_KEY is missing or invalid. Payments will not work.');
+    }
+
     this.stripe = new Stripe(secretKey || 'sk_test_mock', {
       apiVersion: '2023-10-16' as any,
     });
@@ -25,10 +30,9 @@ export class StripeService {
     const { amount, currency, customerEmail, customerReference, successUrl, cancelUrl } = params;
 
     // Convert amount to cents/fils (Stripe expects integers)
-    // JOD has 3 decimal places technically, but Stripe JOD is zero-decimal or 2?
-    // Actually, Stripe JOD follows standard 2-decimal format for API, or sometimes 3.
-    // Most currencies are amount * 100.
-    const unitAmount = Math.round(amount * 100);
+    // JOD has 3 decimal places (fils). Stripe JOD is a 3-decimal currency.
+    const isThreeDecimalCurrency = ['jod', 'kwd', 'bhd', 'omr'].includes(currency.toLowerCase());
+    const unitAmount = Math.round(amount * (isThreeDecimalCurrency ? 1000 : 100));
 
     const session = await this.stripe.checkout.sessions.create({
       payment_method_types: ['card'],
