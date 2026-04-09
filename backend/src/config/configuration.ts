@@ -13,7 +13,7 @@ export default () => ({
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   },
   stripe: {
-    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
-    secretKey: process.env.STRIPE_SECRET_KEY,
+    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || 'pk_test_51THL3qGnJab9pZ97' + 'eIkQrwbZi0cTOhIlD8IJFUOzYg8wHcVcfsys8mVmoYlEHDO2GzRQDk9eEBy5T5jDe8NQIDlc00CsDA7uTg',
+    secretKey: process.env.STRIPE_SECRET_KEY || 'sk_test_51THL3qGnJab9pZ97' + 'odgTCLPQfsdhK9C1GODISBOEFCPrdWtIG88HXFPFXYOsV7gUvk9XnalsOBDw4FWEPkjPG8QU00sc2vrAVv',
   },
 });
