@@ -145,7 +145,7 @@ export class BnplSessionsService {
             success: true,
             session_id: sessionId,
             redirect_url: `bnpl://session?id=${sessionId}`,
-            web_redirect_url: `${process.env.APP_URL || 'https://yourapp.com'}/api/v1/sessions/view/${sessionId}`,
+            web_redirect_url: `${process.env.APP_URL || 'https://enthusiastic-stillness-production-5dce.up.railway.app'}/api/v1/sessions/view/${sessionId}`,
             expires_at: expiresAt,
         };
     }
