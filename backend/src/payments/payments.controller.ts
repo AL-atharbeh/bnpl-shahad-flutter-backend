@@ -633,25 +633,70 @@ export class PaymentsController {
   @Get('view-success')
   @ApiOperation({ summary: 'Display payment success page' })
   displaySuccessPage() {
-    return `<html><body style="font-family:sans-serif; text-align:center; padding-top:100px;">
-      <div style="max-width:400px; margin:0 auto; padding:40px; border-radius:20px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-        <h1 style="color:#10b981;">تم الدفع بنجاح!</h1>
-        <p style="color:#6b7280;">شكراً لك، تم استلام الدفعة الأولى وتفعيل طلبك.</p>
-        <a href="bnpl://success" style="display:inline-block; margin-top:20px; padding:12px 24px; background:#10b981; color:white; text-decoration:none; border-radius:10px; font-weight:bold;">العودة للتطبيق</a>
-      </div>
-    </body></html>`;
+    return `
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تم الدفع بنجاح</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Cairo', sans-serif; background: #f8f9fb; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .container { background: white; border-radius: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); max-width: 400px; width: 100%; padding: 40px 32px; text-align: center; }
+    .icon { width: 80px; height: 80px; background: #ecfdf5; color: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+    h1 { color: #111827; font-size: 24px; margin-bottom: 8px; }
+    p { color: #6b7280; font-size: 14px; margin-bottom: 32px; }
+    .btn { display: block; width: 100%; padding: 16px; background: #10b981; color: white; text-decoration: none; border-radius: 14px; font-weight: 700; transition: all 0.3s; }
+    .btn:hover { background: #059669; transform: translateY(-2px); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">
+      <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+    </div>
+    <h1>تم الدفع بنجاح!</h1>
+    <p>تم استلام الدفعة الأولى بنجاح وتفعيل طلبك. يمكنك الآن العودة للتطبيق لمتابعة أقساطك.</p>
+    <a href="bnpl://success" class="btn">العودة للتطبيق</a>
+  </div>
+</body>
+</html>`;
   }
 
   @Get('view-error')
   @ApiOperation({ summary: 'Display payment error page' })
   displayErrorPage() {
-    return `<html><body style="font-family:sans-serif; text-align:center; padding-top:100px;">
-      <div style="max-width:400px; margin:0 auto; padding:40px; border-radius:20px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-        <h1 style="color:#ef4444;">عذراً، فشلت العملية</h1>
-        <p style="color:#6b7280;">لم نتمكن من إتمام الدفع. يرجى المحاولة مرة أخرى.</p>
-        <a href="bnpl://error" style="display:inline-block; margin-top:20px; padding:12px 24px; background:#ef4444; color:white; text-decoration:none; border-radius:10px; font-weight:bold;">العودة للتطبيق</a>
-      </div>
-    </body></html>`;
+    return `
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>فشل الدفع</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Cairo', sans-serif; background: #f8f9fb; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .container { background: white; border-radius: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); max-width: 400px; width: 100%; padding: 40px 32px; text-align: center; }
+    .icon { width: 80px; height: 80px; background: #fef2f2; color: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+    h1 { color: #111827; font-size: 24px; margin-bottom: 8px; }
+    p { color: #6b7280; font-size: 14px; margin-bottom: 32px; }
+    .btn { display: block; width: 100%; padding: 16px; background: #ef4444; color: white; text-decoration: none; border-radius: 14px; font-weight: 700; transition: all 0.3s; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">
+      <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </div>
+    <h1>عذراً، فشلت العملية</h1>
+    <p>لم نتمكن من إتمام عملية الدفع. يرجى المحاولة مرة أخرى أو استخدام وسيلة دفع أخرى.</p>
+    <a href="bnpl://error" class="btn">العودة للتطبيق</a>
+  </div>
+</body>
+</html>`;
   }
 
   @Get(':id')
