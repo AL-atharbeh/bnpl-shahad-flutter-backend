@@ -260,26 +260,26 @@ export class ReportsService {
             const orderId = `order_${session.sessionId}`;
             const orderPayments = payments.filter(p => p.orderId === orderId);
 
-            const totalAmount = Number(session.totalAmount);
+            const totalAmount = Number(session.totalAmount || 0);
             
             // Gross amount received so far
             const grossCollected = orderPayments
                 .filter(p => p.status === 'completed')
-                .reduce((sum, p) => sum + Number(p.amount), 0);
+                .reduce((sum, p) => sum + Number(p.amount || 0), 0);
             
             // Net amount received so far (Paid minus Commission)
             const collectedAmount = orderPayments
                 .filter(p => p.status === 'completed')
-                .reduce((sum, p) => sum + Number(p.storeAmount), 0);
+                .reduce((sum, p) => sum + Number(p.storeAmount || 0), 0);
 
             // Total commission for the whole order (from all payments)
-            const totalCommission = orderPayments.reduce((sum, p) => sum + Number(p.commission), 0);
+            const totalCommission = orderPayments.reduce((sum, p) => sum + Number(p.commission || 0), 0);
             
             // Final net amount the vendor will get when all installments are paid
             const netAmount = totalAmount - totalCommission;
 
             // Sum up quantities from sessionItems (which we now have via relations)
-            const piecesSold = (session.sessionItems || []).reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+            const piecesSold = (session.sessionItems || []).reduce((sum, item) => sum + (Number(item.quantity || 1)), 0);
 
             return {
                 id: session.id,
