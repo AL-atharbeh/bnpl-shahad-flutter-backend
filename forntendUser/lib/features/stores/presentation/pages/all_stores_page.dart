@@ -247,7 +247,8 @@ class _AllStoresPageState extends State<AllStoresPage> {
     
     // Filter stores locally (for instant UI update)
     final data = _stores.where((s) {
-      final f = _filter == filters.first || s.category == _filter;
+      // Use ID for filtering instead of string comparison for robustness
+      final f = _selectedCategoryId == null || s.categoryId == _selectedCategoryId;
       final q = _q.trim().isEmpty || 
                 s.name.toLowerCase().contains(_q.toLowerCase()) ||
                 s.nameAr.toLowerCase().contains(_q.toLowerCase());
