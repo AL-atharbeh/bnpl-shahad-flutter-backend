@@ -632,14 +632,26 @@ export class PaymentsController {
 
   @Get('view-success')
   @ApiOperation({ summary: 'Display payment success page' })
-  async displaySuccessPage(@Res() res) {
-    res.send('<html><body style="font-family:sans-serif; text-align:center; padding-top:100px;"><h1>تم الدفع بنجاح!</h1><p>شكراً لك، تم استلام الدفعة.</p><a href="bnpl://success" style="padding:10px 20px; background:green; color:white; text-decoration:none; border-radius:5px;">العودة للتطبيق</a></body></html>');
+  displaySuccessPage() {
+    return `<html><body style="font-family:sans-serif; text-align:center; padding-top:100px;">
+      <div style="max-width:400px; margin:0 auto; padding:40px; border-radius:20px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+        <h1 style="color:#10b981;">تم الدفع بنجاح!</h1>
+        <p style="color:#6b7280;">شكراً لك، تم استلام الدفعة الأولى وتفعيل طلبك.</p>
+        <a href="bnpl://success" style="display:inline-block; margin-top:20px; padding:12px 24px; background:#10b981; color:white; text-decoration:none; border-radius:10px; font-weight:bold;">العودة للتطبيق</a>
+      </div>
+    </body></html>`;
   }
 
   @Get('view-error')
   @ApiOperation({ summary: 'Display payment error page' })
-  async displayErrorPage(@Res() res) {
-    res.send('<html><body style="font-family:sans-serif; text-align:center; padding-top:100px;"><h1>عذراً، حدث خطأ في الدفع</h1><a href="bnpl://error" style="padding:10px 20px; background:red; color:white; text-decoration:none; border-radius:5px;">العودة للتطبيق</a></body></html>');
+  displayErrorPage() {
+    return `<html><body style="font-family:sans-serif; text-align:center; padding-top:100px;">
+      <div style="max-width:400px; margin:0 auto; padding:40px; border-radius:20px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+        <h1 style="color:#ef4444;">عذراً، فشلت العملية</h1>
+        <p style="color:#6b7280;">لم نتمكن من إتمام الدفع. يرجى المحاولة مرة أخرى.</p>
+        <a href="bnpl://error" style="display:inline-block; margin-top:20px; padding:12px 24px; background:#ef4444; color:white; text-decoration:none; border-radius:10px; font-weight:bold;">العودة للتطبيق</a>
+      </div>
+    </body></html>`;
   }
 
   @Get(':id')
