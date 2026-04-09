@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { Payment } from './entities/payment.entity';
+import { Store } from '../stores/entities/store.entity';
 import { RewardsService } from '../rewards/rewards.service';
 import dayjs from 'dayjs';
 
@@ -10,6 +11,8 @@ export class PaymentsService {
   constructor(
     @InjectRepository(Payment)
     private paymentRepository: Repository<Payment>,
+    @InjectRepository(Store)
+    private storeRepository: Repository<Store>,
     private rewardsService: RewardsService,
   ) { }
 
@@ -249,6 +252,10 @@ export class PaymentsService {
     const installmentAmount = totalAmount / installmentsCount;
     const installments: Payment[] = [];
 
+    // Fetch store to get commission rate
+    const store = await this.storeRepository.findOne({ where: { id: storeId } });
+    const commissionRate = store?.commissionRate || 2.5; // Default to 2.5% if not found
+
     // Check if installments already exist to avoid duplicates
     const existing = await this.paymentRepository.find({
       where: { orderId, userId }
@@ -260,25 +267,32 @@ export class PaymentsService {
     }
 
     for (let i = 1; i <= installmentsCount; i++) {
-      const dueDate = dayjs().add(i - 1, 'month').toDate();
-      const payment = this.paymentRepository.create({
-        userId,
-        storeId,
-        orderId,
-        amount: installmentAmount,
-        currency,
-        installmentsCount,
-        installmentNumber: i,
-        totalAmount,
-        paymentMethod: 'bnpl',
-        status: 'pending',
-        dueDate,
-        paidAt: null,
-      });
-      installments.push(await this.paymentRepository.save(payment));
+        const dueDate = dayjs().add(i - 1, 'month').toDate();
+        
+        // Calculate commission and store amount
+        const commission = installmentAmount * (Number(commissionRate) / 100);
+        const storeAmount = installmentAmount - commission;
+
+        const payment = this.paymentRepository.create({
+            userId,
+            storeId,
+            orderId,
+            amount: installmentAmount,
+            currency,
+            installmentsCount,
+            installmentNumber: i,
+            totalAmount,
+            paymentMethod: 'bnpl',
+            status: 'pending',
+            commission,
+            storeAmount,
+            dueDate,
+            paidAt: null,
+        });
+        installments.push(await this.paymentRepository.save(payment));
     }
 
-    console.log(`[PaymentsService] Created ${installments.length} installments for session ${sessionId}`);
+    console.log(`[PaymentsService] Created ${installments.length} installments for session ${sessionId} with ${commissionRate}% commission`);
     return installments;
   }
 

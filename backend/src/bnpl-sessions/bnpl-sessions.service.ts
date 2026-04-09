@@ -54,6 +54,23 @@ export class BnplSessionsService {
             throw new UnauthorizedException('Invalid API Key for this store');
         }
 
+        // Validate min/max order amount
+        const totalAmount = Number(createSessionDto.total_amount);
+        const minAmount = Number(store.minOrderAmount) || 0;
+        const maxAmount = Number(store.maxOrderAmount) || 1000000;
+
+        if (totalAmount < minAmount) {
+            throw new BadRequestException(
+                `مبلغ الطلب (${totalAmount}) أقل من الحد الأدنى المسموح به لهذا المتجر (${minAmount})`
+            );
+        }
+
+        if (totalAmount > maxAmount) {
+            throw new BadRequestException(
+                `مبلغ الطلب (${totalAmount}) يتجاوز الحد الأقصى المسموح به لهذا المتجر (${maxAmount})`
+            );
+        }
+
         const sessionId = `sess_${uuidv4().replace(/-/g, '')}`;
         const expiresAt = new Date();
         expiresAt.setMinutes(expiresAt.getMinutes() + 30); // 30 minutes expiry
