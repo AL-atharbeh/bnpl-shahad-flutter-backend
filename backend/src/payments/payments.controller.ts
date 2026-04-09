@@ -737,6 +737,7 @@ export class PaymentsController {
   async handleSuccessCallback(
     @Query('paymentId') paymentId: string,
     @Query('Id') id: string,
+    @Res() res,
   ) {
     const actualPaymentId = paymentId || id;
     console.log(`✅ Payment success callback received: ${actualPaymentId}`);
@@ -764,25 +765,17 @@ export class PaymentsController {
           console.error(`❌ Failed to approve session ${sessionId} after payment:`, error.message);
         }
 
-        return {
-          success: true,
-          message: 'Payment verified and status updated successfully',
-          paymentId: actualPaymentId,
-          customerReference: sessionId,
-        };
+        const baseUrl = `${res.req.protocol}://${res.req.get('host')}`;
+        return res.redirect(`${baseUrl}/api/v1/payments/success?sessionId=${sessionId}`);
       } else {
         console.warn(`⚠️ Payment verification failed: ${actualPaymentId}`);
-        return {
-          success: false,
-          message: 'Payment verification failed',
-        };
+        const baseUrl = `${res.req.protocol}://${res.req.get('host')}`;
+        return res.redirect(`${baseUrl}/api/v1/payments/error`);
       }
     } catch (error) {
       console.error('❌ Error in success callback:', error);
-      return {
-        success: false,
-        message: error.message,
-      };
+      const baseUrl = `${res.req.protocol}://${res.req.get('host')}`;
+      return res.redirect(`${baseUrl}/api/v1/payments/error`);
     }
   }
 
@@ -842,17 +835,17 @@ export class PaymentsController {
           console.error(`❌ Failed to approve session ${sessionId} after Stripe payment:`, error.message);
         }
 
-        // Redirect to success page (absolute URL)
+        // Redirect to new success page
         const baseUrl = `${res.req.protocol}://${res.req.get('host')}`;
-        return res.redirect(`${baseUrl}/api/v1/payments/callback/success?sessionId=${sessionId}`);
+        return res.redirect(`${baseUrl}/api/v1/payments/success?sessionId=${sessionId}`);
       } else {
         const baseUrl = `${res.req.protocol}://${res.req.get('host')}`;
-        return res.redirect(`${baseUrl}/api/v1/payments/callback/error?sessionId=${sessionId}`);
+        return res.redirect(`${baseUrl}/api/v1/payments/error?sessionId=${sessionId}`);
       }
     } catch (error) {
       console.error('❌ Error in Stripe success callback:', error);
       const baseUrl = `${res.req.protocol}://${res.req.get('host')}`;
-      return res.redirect(`${baseUrl}/api/v1/payments/callback/error?sessionId=${sessionId}`);
+      return res.redirect(`${baseUrl}/api/v1/payments/error?sessionId=${sessionId}`);
     }
   }
 
@@ -864,7 +857,78 @@ export class PaymentsController {
   ) {
     console.log(`❌ Stripe error callback received for session: ${sessionId}`);
     const baseUrl = `${res.req.protocol}://${res.req.get('host')}`;
-    return res.redirect(`${baseUrl}/api/v1/payments/callback/error?sessionId=${sessionId}`);
+    return res.redirect(`${baseUrl}/api/v1/payments/error?sessionId=${sessionId}`);
+  }
+
+  @Get('success')
+  @ApiOperation({ summary: 'Display payment success page' })
+  async displaySuccessPage(@Query('sessionId') sessionId: string, @Res() res) {
+    const html = `
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تم الدفع بنجاح</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Cairo', sans-serif; background: #f8f9fb; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .container { background: white; border-radius: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); max-width: 400px; width: 100%; padding: 40px 32px; text-align: center; }
+    .icon { width: 80px; height: 80px; background: #ecfdf5; color: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+    h1 { color: #111827; font-size: 24px; margin-bottom: 8px; }
+    p { color: #6b7280; font-size: 14px; margin-bottom: 32px; }
+    .btn { display: block; width: 100%; padding: 16px; background: #10b981; color: white; text-decoration: none; border-radius: 14px; font-weight: 700; transition: all 0.3s; }
+    .btn:hover { background: #059669; transform: translateY(-2px); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">
+      <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+    </div>
+    <h1>تم الدفع بنجاح!</h1>
+    <p>تم استلام الدفعة الأولى بنجاح وتفعيل طلبك. يمكنك الآن العودة للتطبيق لمتابعة أقساطك.</p>
+    <a href="bnpl://success" class="btn">العودة للتطبيق</a>
+  </div>
+</body>
+</html>`;
+    res.type('text/html').send(html);
+  }
+
+  @Get('error')
+  @ApiOperation({ summary: 'Display payment error page' })
+  async displayErrorPage(@Query('sessionId') sessionId: string, @Res() res) {
+    const html = `
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>فشل الدفع</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Cairo', sans-serif; background: #f8f9fb; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .container { background: white; border-radius: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); max-width: 400px; width: 100%; padding: 40px 32px; text-align: center; }
+    .icon { width: 80px; height: 80px; background: #fef2f2; color: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+    h1 { color: #111827; font-size: 24px; margin-bottom: 8px; }
+    p { color: #6b7280; font-size: 14px; margin-bottom: 32px; }
+    .btn { display: block; width: 100%; padding: 16px; background: #ef4444; color: white; text-decoration: none; border-radius: 14px; font-weight: 700; transition: all 0.3s; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">
+      <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </div>
+    <h1>عذراً، فشلت العملية</h1>
+    <p>لم نتمكن من إتمام عملية الدفع. يرجى المحاولة مرة أخرى أو استخدام وسيلة دفع أخرى.</p>
+    <a href="bnpl://error" class="btn">العودة للتطبيق</a>
+  </div>
+</body>
+</html>`;
+    res.type('text/html').send(html);
   }
   
   // Admin endpoints
