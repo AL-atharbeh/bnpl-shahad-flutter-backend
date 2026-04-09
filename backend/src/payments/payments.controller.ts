@@ -738,6 +738,7 @@ export class PaymentsController {
     @Query('paymentId') paymentId: string,
     @Query('Id') id: string,
     @Res() res,
+    @Request() req,
   ) {
     const actualPaymentId = paymentId || id;
     console.log(`✅ Payment success callback received: ${actualPaymentId}`);
@@ -765,16 +766,16 @@ export class PaymentsController {
           console.error(`❌ Failed to approve session ${sessionId} after payment:`, error.message);
         }
 
-        const baseUrl = `${res.req.protocol}://${res.req.get('host')}`;
+        const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://enthusiastic-stillness-production-5dce.up.railway.app';
         return res.redirect(`${baseUrl}/api/v1/payments/success?sessionId=${sessionId}`);
       } else {
         console.warn(`⚠️ Payment verification failed: ${actualPaymentId}`);
-        const baseUrl = `${res.req.protocol}://${res.req.get('host')}`;
+        const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://enthusiastic-stillness-production-5dce.up.railway.app';
         return res.redirect(`${baseUrl}/api/v1/payments/error`);
       }
     } catch (error) {
       console.error('❌ Error in success callback:', error);
-      const baseUrl = `${res.req.protocol}://${res.req.get('host')}`;
+      const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://enthusiastic-stillness-production-5dce.up.railway.app';
       return res.redirect(`${baseUrl}/api/v1/payments/error`);
     }
   }
@@ -817,6 +818,7 @@ export class PaymentsController {
     @Query('sessionId') sessionId: string,
     @Query('stripeSessionId') stripeSessionId: string,
     @Res() res,
+    @Request() req,
   ) {
     console.log(`✅ Stripe success callback received for session: ${sessionId}`);
 
@@ -836,15 +838,15 @@ export class PaymentsController {
         }
 
         // Redirect to new success page
-        const baseUrl = `${res.req.protocol}://${res.req.get('host')}`;
+        const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://enthusiastic-stillness-production-5dce.up.railway.app';
         return res.redirect(`${baseUrl}/api/v1/payments/success?sessionId=${sessionId}`);
       } else {
-        const baseUrl = `${res.req.protocol}://${res.req.get('host')}`;
+        const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://enthusiastic-stillness-production-5dce.up.railway.app';
         return res.redirect(`${baseUrl}/api/v1/payments/error?sessionId=${sessionId}`);
       }
     } catch (error) {
       console.error('❌ Error in Stripe success callback:', error);
-      const baseUrl = `${res.req.protocol}://${res.req.get('host')}`;
+      const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://enthusiastic-stillness-production-5dce.up.railway.app';
       return res.redirect(`${baseUrl}/api/v1/payments/error?sessionId=${sessionId}`);
     }
   }
@@ -854,9 +856,10 @@ export class PaymentsController {
   async handleStripeError(
     @Query('sessionId') sessionId: string,
     @Res() res,
+    @Request() req,
   ) {
     console.log(`❌ Stripe error callback received for session: ${sessionId}`);
-    const baseUrl = `${res.req.protocol}://${res.req.get('host')}`;
+    const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://enthusiastic-stillness-production-5dce.up.railway.app';
     return res.redirect(`${baseUrl}/api/v1/payments/error?sessionId=${sessionId}`);
   }
 
