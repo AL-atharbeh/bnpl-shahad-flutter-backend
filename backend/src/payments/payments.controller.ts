@@ -955,6 +955,24 @@ export class PaymentsController {
     });
   }
 
+  @Get('admin/upcoming')
+  @ApiOperation({ summary: 'Get upcoming payments for admin dashboard' })
+  async getUpcomingPayments() {
+    return this.paymentsService.getUpcomingPayments();
+  }
+
+  @Post('admin/:id/collect')
+  @ApiOperation({ summary: 'Manually mark payment as collected' })
+  async manualCollectPayment(@Param('id') id: string) {
+    return this.paymentsService.manualCollect(parseInt(id));
+  }
+
+  @Post('admin/:id/send-reminder')
+  @ApiOperation({ summary: 'Send payment reminder to user' })
+  async sendPaymentReminder(@Param('id') id: string) {
+    return this.paymentsService.sendReminder(parseInt(id));
+  }
+
   @Get(':id/stripe-session')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Create Stripe session for installment pay' })

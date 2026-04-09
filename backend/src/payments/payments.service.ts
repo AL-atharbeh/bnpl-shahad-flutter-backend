@@ -448,80 +448,87 @@ export class PaymentsService {
     return parseFloat(result?.total || '0');
   }
 
-  // Admin methods
   async getAdminStats() {
-    const BANK_COMMISSION = 0.03; // 3%
-    const PLATFORM_COMMISSION = 0.02; // 2%
+    const BANK_COMMISSION_RATE = 0.03; // 3%
+    const PLATFORM_COMMISSION_RATE = 0.02; // 2%
 
-    // Get all payments
+    // Get all payments to calculate statistics
     const allPayments = await this.paymentRepository.find({
       relations: ['store', 'user'],
     });
 
-    // Total due (pending payments - including postponed ones that are still unpaid)
+    // 1. Total Due (All Pending)
     const pendingPayments = allPayments.filter(p => p.status === 'pending');
-    const totalDue = pendingPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+    const totalDue = pendingPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
-    // Collected (completed payments in last 48 hours)
+    // 2. Total Collected (Completed - recently and overall)
+    const completedPayments = allPayments.filter(p => p.status === 'completed');
+    
     const twoDaysAgo = dayjs().subtract(48, 'hours').toDate();
-    const recentCollected = allPayments.filter(p =>
-      p.status === 'completed' &&
-      p.paidAt &&
-      new Date(p.paidAt) >= twoDaysAgo
+    const recentCollected = completedPayments.filter(p => 
+      p.paidAt && new Date(p.paidAt) >= twoDaysAgo
     );
-    const totalCollected = recentCollected.reduce((sum, p) => sum + Number(p.amount), 0);
+    
+    // Global metrics based on net amounts
+    const totalCollected = completedPayments.reduce((sum, p) => {
+      // Use stored storeAmount (our platform net before bank share) 
+      // Actually for admin, "Collected" usually means what we got from users.
+      return sum + Number(p.amount || 0);
+    }, 0);
 
-    // Overdue payments
+    // 3. Overdue Payments
     const now = new Date();
-    const overduePayments = allPayments.filter(p => {
-      if (p.status !== 'pending') return false;
+    const overduePayments = pendingPayments.filter(p => {
       const dueDate = p.isPostponed && p.postponedDueDate ? p.postponedDueDate : p.dueDate;
       return dueDate && new Date(dueDate) < now;
     });
-    const totalOverdue = overduePayments.reduce((sum, p) => sum + Number(p.amount), 0);
+    const totalOverdue = overduePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
-    // Overdue payments over 7 days
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = dayjs().subtract(7, 'days').toDate();
     const overdueOver7Days = overduePayments.filter(p => {
       const dueDate = p.isPostponed && p.postponedDueDate ? p.postponedDueDate : p.dueDate;
       return dueDate && new Date(dueDate) < sevenDaysAgo;
     });
     const overdueOver7DaysCount = overdueOver7Days.length;
-    const overdueOver7DaysAmount = overdueOver7Days.reduce((sum, p) => sum + Number(p.amount), 0);
+    const overdueOver7DaysAmount = overdueOver7Days.reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
-    // Commission calculations based on RECENT collections (last 48 hours only)
-    const recentCollectedAmount = recentCollected.reduce((sum, p) => sum + Number(p.amount), 0);
+    // 4. Financial Distribution Calculation (The meat of the logic)
+    // We need to calculate how much goes to Bank, Platform, and Store (Store already paid by Bank)
+    
+    let bankTotalPaid = 0;      // Total Bank paid to stores (95% of gross)
+    let bankTotalCollected = 0; // Total Bank collected from users (95% + 3% = 98%)
+    let platformTotalCollected = 0; // Total platform commission (2%)
+    let totalOrdersValue = 0;   // Gross total
 
-    // Bank share: from recent collections only
-    const bankShare = recentCollectedAmount * (1 + BANK_COMMISSION);
+    // Map to keep track of orders to avoid double counting gross
+    const orderTotals = new Map<string, number>();
 
-    // Platform commission: from recent collections only
-    const platformCommission = recentCollectedAmount * PLATFORM_COMMISSION;
-
-    // Detailed financial statistics
-    // Calculate total order values (once per order, not per installment)
-    const uniqueOrders = new Map();
     allPayments.forEach(p => {
-      if (!uniqueOrders.has(p.orderId)) {
-        const orderTotal = Number(p.amount) * p.installmentsCount;
-        uniqueOrders.set(p.orderId, orderTotal);
+      const orderId = p.orderId;
+      const amount = Number(p.amount || 0);
+      const commissionRate = Number(p.store?.commissionRate || 2.5);
+      
+      // Calculate individual metrics per payment
+      if (p.status === 'completed') {
+        // Platform share (2% constant as per system design)
+        platformTotalCollected += amount * PLATFORM_COMMISSION_RATE;
+        // Bank share (rest of the commission + principal)
+        // Bank takes 98% of what is collected
+        bankTotalCollected += amount * (1 - PLATFORM_COMMISSION_RATE);
+      }
+
+      if (!orderTotals.has(orderId)) {
+        const orderFullAmount = amount * p.installmentsCount;
+        orderTotals.set(orderId, orderFullAmount);
+        totalOrdersValue += orderFullAmount;
+        // Bank pays 95% of gross to the store immediately? 
+        // Based on UI text: "للمتاجر (95%)"
+        bankTotalPaid += orderFullAmount * 0.95; 
       }
     });
 
-    const totalOrdersValue = Array.from(uniqueOrders.values()).reduce((sum, val) => sum + val, 0);
-
-    // Get all completed payments
-    const allCompletedPayments = allPayments.filter(p => p.status === 'completed');
-    const totalCompletedAmount = allCompletedPayments.reduce((sum, p) => sum + Number(p.amount), 0);
-
-    // Bank financials
-    const bankTotalPaid = totalOrdersValue * 0.95; // Bank paid 95% to stores (for ALL orders)
-    const bankTotalCollected = totalCompletedAmount; // Bank collected from users so far
-    const bankTotalRemaining = (totalOrdersValue - totalCompletedAmount) * 0.98; // Bank will collect 98% of remaining
-
-    // Platform financials
-    const platformTotalCollected = totalCompletedAmount * PLATFORM_COMMISSION; // 2% of completed
-    const platformTotalRemaining = (totalOrdersValue - totalCompletedAmount) * PLATFORM_COMMISSION; // 2% of remaining
+    const bankTotalRemaining = (totalOrdersValue * (1 - PLATFORM_COMMISSION_RATE)) - bankTotalCollected;
+    const platformTotalRemaining = (totalOrdersValue * PLATFORM_COMMISSION_RATE) - platformTotalCollected;
 
     return {
       success: true,
@@ -529,20 +536,18 @@ export class PaymentsService {
         totalDue,
         totalCollected,
         totalOverdue,
-        bankShare,
-        platformCommission,
         pendingCount: pendingPayments.length,
-        collectedCount: recentCollected.length,
+        collectedCount: recentCollected.length, // Shown as "Last 48 hours" in UI
         overdueCount: overduePayments.length,
-        // New: overdue over 7 days
         overdueOver7DaysCount,
         overdueOver7DaysAmount,
-        // New detailed statistics
+        // Detailed Financials
         bankTotalPaid,
         bankTotalCollected,
         bankTotalRemaining,
         platformTotalCollected,
         platformTotalRemaining,
+        totalOrdersValue
       },
     };
   }
