@@ -322,8 +322,8 @@ export class ReportsService {
         const totalPiecesSold = sales.reduce((sum, s) => sum + s.piecesSold, 0);
         const totalVolume = sales.reduce((sum, s) => sum + s.totalAmount, 0);
         
-        // metrics.totalCollected should represent the NET amount the vendor actually received
-        const totalCollected = sales.reduce((sum, s) => sum + s.collectedAmount, 0);
+        // metrics.totalCollected represents the total potential NET the vendor will receive for all sales
+        const totalCollected = sales.reduce((sum, s) => sum + s.netAmount, 0);
 
         return {
             success: true,
