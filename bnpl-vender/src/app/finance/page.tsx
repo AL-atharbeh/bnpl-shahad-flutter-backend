@@ -63,10 +63,10 @@ export default function FinancePage() {
 
       if (storeRes?.data) {
         setVendorRates({
-          bank: (storeRes.data.bankCommissionRate !== null && storeRes.data.bankCommissionRate !== undefined) 
-            ? n(storeRes.data.bankCommissionRate) : bRate,
-          platform: (storeRes.data.platformCommissionRate !== null && storeRes.data.platformCommissionRate !== undefined) 
-            ? n(storeRes.data.platformCommissionRate) : pRate
+          bank: (storeRes?.data?.data?.bankCommissionRate !== null && storeRes?.data?.data?.bankCommissionRate !== undefined) 
+            ? n(storeRes.data.data.bankCommissionRate) : bRate,
+          platform: (storeRes?.data?.data?.platformCommissionRate !== null && storeRes?.data?.data?.platformCommissionRate !== undefined) 
+            ? n(storeRes.data.data.platformCommissionRate) : pRate
         });
       }
 
@@ -84,14 +84,14 @@ export default function FinancePage() {
             const installments = Number(p.installmentsCount) || 1;
             const productValue = amount * installments;
 
-            const br = (storeRes?.data?.bankCommissionRate !== null && storeRes?.data?.bankCommissionRate !== undefined)
-              ? n(storeRes.data.bankCommissionRate)
+            const br = (storeRes?.data?.data?.bankCommissionRate !== null && storeRes?.data?.data?.bankCommissionRate !== undefined)
+              ? n(storeRes.data.data.bankCommissionRate)
               : ((p.bankCommissionRate !== null && p.bankCommissionRate !== undefined)
                 ? n(p.bankCommissionRate)
                 : bRate);
 
-            const pr = (storeRes?.data?.platformCommissionRate !== null && storeRes?.data?.platformCommissionRate !== undefined)
-              ? n(storeRes.data.platformCommissionRate)
+            const pr = (storeRes?.data?.data?.platformCommissionRate !== null && storeRes?.data?.data?.platformCommissionRate !== undefined)
+              ? n(storeRes.data.data.platformCommissionRate)
               : ((p.platformCommissionRate !== null && p.platformCommissionRate !== undefined)
                 ? n(p.platformCommissionRate)
                 : pRate);
