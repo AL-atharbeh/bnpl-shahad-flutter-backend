@@ -331,6 +331,32 @@ export default function StoreModal({ isOpen, onClose, onSuccess, editStore }: St
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
+                        {/* Min Order Amount */}
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">
+                                الحد الأدنى للطلب
+                            </label>
+                            <input
+                                type="number"
+                                value={formData.minOrderAmount}
+                                onChange={(e) => setFormData({ ...formData, minOrderAmount: e.target.value })}
+                                className={inputClass}
+                            />
+                        </div>
+
+                        {/* Max Order Amount */}
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">
+                                الحد الأقصى للطلب
+                            </label>
+                            <input
+                                type="number"
+                                value={formData.maxOrderAmount}
+                                onChange={(e) => setFormData({ ...formData, maxOrderAmount: e.target.value })}
+                                className={inputClass}
+                            />
+                        </div>
+                    </div>
 
                     {/* Buttons */}
                     <div className="flex items-center justify-end gap-3 pt-4">
