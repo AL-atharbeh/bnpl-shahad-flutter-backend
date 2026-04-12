@@ -1,485 +1,418 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import {
-  getProfitDistributionStats,
-  getProfitDistributionChart,
-  getCurrentCommissionSettings,
-  updateCommissionSettings,
-  getAllSettlements,
   getAllPayments,
+  getCurrentCommissionSettings,
   getAdminStores,
-  updateStore,
 } from "@/services/api";
 
-// Dynamically import Recharts to prevent hydration errors in Next.js
-const ResponsiveContainer = dynamic(() => import("recharts").then((mod) => mod.ResponsiveContainer), { ssr: false });
-const BarChart = dynamic(() => import("recharts").then((mod) => mod.BarChart), { ssr: false });
-const Bar = dynamic(() => import("recharts").then((mod) => mod.Bar), { ssr: false });
-const XAxis = dynamic(() => import("recharts").then((mod) => mod.XAxis), { ssr: false });
-const YAxis = dynamic(() => import("recharts").then((mod) => mod.YAxis), { ssr: false });
-const CartesianGrid = dynamic(() => import("recharts").then((mod) => mod.CartesianGrid), { ssr: false });
-const Tooltip = dynamic(() => import("recharts").then((mod) => mod.Tooltip), { ssr: false });
-const Legend = dynamic(() => import("recharts").then((mod) => mod.Legend), { ssr: false });
-
-const settlementStatusStyles = {
-  "تم التحويل":
-    "bg-emerald-500/15 text-emerald-200 border border-emerald-500/40",
-  "بنتظار":
-    "bg-amber-500/15 text-amber-200 border border-amber-500/40",
+// ─── Helper: safe number ────────────────────────────────────────────
+const n = (v: any): number => {
+  const x = Number(v);
+  return isNaN(x) ? 0 : x;
 };
+const fmt = (v: number) =>
+  v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-export default function ProfitsPage() {
+// ─── Types ──────────────────────────────────────────────────────────
+interface OrderRow {
+  orderId: string;
+  customer: string;
+  store: string;
+  storeId: number;
+  productValue: number;
+  installmentsCount: number;
+  bankRate: number;
+  platformRate: number;
+  bankShare: number;
+  platformShare: number;
+  vendorNet: number;
+  paidInstallments: number;
+  totalInstallments: number;
+  paidAmount: number;
+  status: string;
+  date: string;
+}
+
+export default function FinalProfitsPage() {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<any>(null);
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [settings, setSettings] = useState<any>(null);
-  const [settlements, setSettlements] = useState<any[]>([]);
-  const [payments, setPayments] = useState<any[]>([]);
-  const [editMode, setEditMode] = useState(false);
-  const [allStores, setAllStores] = useState<any[]>([]);
-  const [selectedStoreId, setSelectedStoreId] = useState<string>("global");
-  const [bankRate, setBankRate] = useState("");
-  const [platformRate, setPlatformRate] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("الكل");
+  const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [bankRate, setBankRate] = useState(3);
+  const [platformRate, setPlatformRate] = useState(2);
+  const [stores, setStores] = useState<any[]>([]);
+  const [filterStore, setFilterStore] = useState("الكل");
+  const [filterStatus, setFilterStatus] = useState("الكل");
 
   useEffect(() => {
     setMounted(true);
-    fetchData();
+    loadData();
   }, []);
 
-  const fetchData = async () => {
+  async function loadData() {
     try {
       setLoading(true);
-      
-      // Fetch core data first
-      const statsRes = await getProfitDistributionStats().catch(() => ({ data: { data: null } }));
-      const settingsRes = await getCurrentCommissionSettings().catch(() => ({ data: { data: { bankCommission: 0.03, platformCommission: 0.02 } } }));
-      
-      if (statsRes?.data?.data) setStats(statsRes.data.data);
-      if (settingsRes?.data?.data) {
-        setSettings(settingsRes.data.data);
-        setBankRate(((settingsRes.data.data.bankCommission || 0.03) * 100).toString());
-        setPlatformRate(((settingsRes.data.data.platformCommission || 0.02) * 100).toString());
-      }
 
-      // Fetch supplementary data
-      const [chartRes, settlementsRes, paymentsRes, storesRes] = await Promise.all([
-        getProfitDistributionChart(7).catch(() => ({ data: { data: [] } })),
-        getAllSettlements({ page: 1, limit: 10 }).catch(() => ({ data: { data: { settlements: [] } } })),
-        getAllPayments({ page: 1, limit: 100 }).catch(() => ({ data: { data: [] } })),
-        getAdminStores().catch(() => ({ data: [] })),
-      ]);
+      // 1) Commission settings (works ✅)
+      const settingsRes = await getCurrentCommissionSettings().catch(() => null);
+      const bRate = n(settingsRes?.data?.data?.bankCommission || 0.03) * 100;
+      const pRate = n(settingsRes?.data?.data?.platformCommission || 0.02) * 100;
+      setBankRate(bRate);
+      setPlatformRate(pRate);
 
-      if (chartRes?.data?.data) setChartData(chartRes.data.data);
-      if (settlementsRes?.data?.data?.settlements) setSettlements(settlementsRes.data.data.settlements);
-      if (storesRes?.data) setAllStores(storesRes.data);
+      // 2) All payments (works ✅)
+      const paymentsRes = await getAllPayments({ page: 1, limit: 500 }).catch(() => null);
+      const list: any[] = paymentsRes?.data?.data || paymentsRes?.data || [];
 
-      // Process payments
-      const uniqueOrders = new Map();
-      const paymentsList = paymentsRes?.data?.data || paymentsRes?.data || [];
-      
-      if (Array.isArray(paymentsList)) {
-        paymentsList.forEach((p: any) => {
-          if (p && p.orderId && !uniqueOrders.has(p.orderId)) {
-            const amount = Number(p.amount) || 0;
-            const installments = p.installmentsCount || 1;
-            const prodVal = amount * installments;
-            
-            const bR = p.bankCommissionRate ? Number(p.bankCommissionRate) / 100 : (settingsRes?.data?.data?.bankCommission || 0.03);
-            const pR = p.platformCommissionRate ? Number(p.platformCommissionRate) / 100 : (settingsRes?.data?.data?.platformCommission || 0.02);
+      // 3) Stores
+      const storesRes = await getAdminStores().catch(() => null);
+      setStores(storesRes?.data || []);
 
-            uniqueOrders.set(p.orderId, {
-              id: p.orderId,
-              customer: p.user?.name || "عميل غير معروف",
-              store: p.store?.name || "متجر غير معروف",
-              productValue: prodVal,
-              bankRate: (bR * 100).toFixed(1),
-              platformRate: (pR * 100).toFixed(1),
-              bankShare: prodVal * bR,
-              platformShare: prodVal * pR,
-              netToMerchant: prodVal * (1 - bR - pR),
-              settlementStatus: p.status === 'completed' ? 'تم التحويل' : 'بنتظار',
-              settlementDate: p.paidAt ? new Date(p.paidAt).toLocaleDateString("ar") : "-",
+      // Group payments by orderId
+      const ordersMap = new Map<string, any>();
+
+      if (Array.isArray(list)) {
+        list.forEach((p: any) => {
+          if (!p || !p.orderId) return;
+
+          if (!ordersMap.has(p.orderId)) {
+            const amount = n(p.amount);
+            const installments = n(p.installmentsCount) || 1;
+            const productValue = amount * installments;
+
+            // Per-store rate or global
+            const br = p.bankCommissionRate ? n(p.bankCommissionRate) : bRate;
+            const pr = p.platformCommissionRate ? n(p.platformCommissionRate) : pRate;
+
+            ordersMap.set(p.orderId, {
+              orderId: p.orderId,
+              customer: p.user?.name || "عميل",
+              store: p.store?.name || "متجر",
+              storeId: n(p.storeId),
+              productValue,
+              installmentsCount: installments,
+              bankRate: br,
+              platformRate: pr,
+              bankShare: productValue * (br / 100),
+              platformShare: productValue * (pr / 100),
+              vendorNet: productValue * (1 - (br + pr) / 100),
+              paidInstallments: p.status === "completed" ? 1 : 0,
+              totalInstallments: installments,
+              paidAmount: p.status === "completed" ? amount : 0,
+              status: p.status,
+              date: p.createdAt
+                ? new Date(p.createdAt).toLocaleDateString("ar-JO")
+                : "-",
             });
+          } else {
+            const existing = ordersMap.get(p.orderId)!;
+            if (p.status === "completed") {
+              existing.paidInstallments += 1;
+              existing.paidAmount += n(p.amount);
+            }
           }
         });
       }
-      setPayments(Array.from(uniqueOrders.values()));
 
-    } catch (error) {
-      console.error("Error fetching data:", error);
+      setOrders(Array.from(ordersMap.values()));
+    } catch (err) {
+      console.error("Error loading data:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   if (!mounted) return null;
 
-  const handleSaveSettings = async () => {
-    try {
-      if (selectedStoreId === "global") {
-        await updateCommissionSettings({
-          bankCommission: parseFloat(bankRate) / 100,
-          platformCommission: parseFloat(platformRate) / 100,
-          storeDiscount: settings?.storeDiscount || 0.05,
-          createdBy: "Admin",
-        });
-      } else {
-        // Update specific store ratios
-        const storeId = parseInt(selectedStoreId);
-        await updateStore(storeId, {
-          bankCommissionRate: parseFloat(bankRate),
-          platformCommissionRate: parseFloat(platformRate),
-        });
-      }
-      alert("تم حفظ التغييرات بنجاح!");
-      setEditMode(false);
-      fetchData();
-    } catch (error) {
-      alert("فشل الحفظ!");
-    }
-  };
-
-  const onStoreSelect = (value: string) => {
-    setSelectedStoreId(value);
-    if (value === "global") {
-      setBankRate((settings?.bankCommission * 100 || 3).toString());
-      setPlatformRate((settings?.platformCommission * 100 || 2).toString());
-    } else {
-      const store = allStores.find(s => s.id.toString() === value);
-      if (store) {
-        setBankRate(store.bankCommissionRate?.toString() || "1.5");
-        setPlatformRate(store.platformCommissionRate?.toString() || "1.0");
-      }
-    }
-  };
-
-  const filteredEntries = payments.filter((entry) => {
-    const matchesSearch =
-      entry.customer.includes(searchQuery) ||
-      entry.store.includes(searchQuery) ||
-      entry.id.includes(searchQuery);
-
-    const matchesStatus =
-      statusFilter === "الكل" || entry.settlementStatus === statusFilter;
-
-    return matchesSearch && matchesStatus;
+  // ─── Computed Statistics ──────────────────────────────────────────
+  const filtered = orders.filter((o) => {
+    const storeMatch = filterStore === "الكل" || o.store === filterStore;
+    const statusMatch =
+      filterStatus === "الكل" ||
+      (filterStatus === "مكتمل" && o.status === "completed") ||
+      (filterStatus === "معلق" && o.status === "pending");
+    return storeMatch && statusMatch;
   });
+
+  const totalProductValue = filtered.reduce((s, o) => s + o.productValue, 0);
+  const totalBankShare = filtered.reduce((s, o) => s + o.bankShare, 0);
+  const totalPlatformShare = filtered.reduce((s, o) => s + o.platformShare, 0);
+  const totalVendorNet = filtered.reduce((s, o) => s + o.vendorNet, 0);
+  const totalPaid = filtered.reduce((s, o) => s + o.paidAmount, 0);
+  const totalCommission = totalBankShare + totalPlatformShare;
+  const orderCount = filtered.length;
+
+  // Per-store breakdown
+  const storeMap = new Map<string, { name: string; value: number; bank: number; platform: number; vendor: number; orders: number }>();
+  filtered.forEach((o) => {
+    if (!storeMap.has(o.store)) {
+      storeMap.set(o.store, { name: o.store, value: 0, bank: 0, platform: 0, vendor: 0, orders: 0 });
+    }
+    const s = storeMap.get(o.store)!;
+    s.value += o.productValue;
+    s.bank += o.bankShare;
+    s.platform += o.platformShare;
+    s.vendor += o.vendorNet;
+    s.orders += 1;
+  });
+  const storeBreakdown = Array.from(storeMap.values()).sort((a, b) => b.value - a.value);
+
+  // Unique store names for filter
+  const storeNames = [...new Set(orders.map((o) => o.store))];
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="text-slate-400">جاري التحميل...</div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+          <p className="text-slate-400 text-sm">جاري تحميل البيانات المالية...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir="rtl">
+      {/* ─── Header ──────────────────────────────────────────── */}
       <div>
-        <h1 className="text-lg font-semibold text-slate-50">توزيع الأرباح</h1>
-        <p className="mt-1 text-[12px] text-slate-400">
-          العميل يسدد عبرنا، فنقتطع عمولتنا من الدفعات ثم نحوّل المتبقي للبنك كي يغطي تمويله للمتجر.
+        <h1 className="text-xl font-bold text-slate-50">الأرباح النهائية</h1>
+        <p className="mt-1 text-xs text-slate-400">
+          تقرير تفصيلي شامل لجميع الأرباح والعمولات — يُحسب مباشرة من سجل الدفعات الفعلي
         </p>
       </div>
 
-      {/* Statistics Cards */}
-      <section className="grid gap-4 md:grid-cols-4">
-        <div className="rounded-xl border border-slate-800 bg-[#021f2a] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.6)]">
-          <p className="text-xs text-slate-400 flex items-center gap-1">
-            <span>💼</span>
-            <span>حجم العمليات</span>
-          </p>
-          <p className="mt-2 text-2xl font-semibold text-slate-50">
-            {Number(stats?.totalFinanced || 0).toFixed(2)} دينار
-          </p>
-          <p className="mt-1 text-[11px] text-slate-300">تم تمويلها عبر البنك</p>
+      {/* ─── Top Stats Grid ──────────────────────────────────── */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
+        {/* إجمالي قيمة المنتجات */}
+        <div className="rounded-xl border border-slate-800 bg-[#021f2a] p-4 shadow-lg">
+          <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">إجمالي قيمة المنتجات</p>
+          <p className="text-lg font-bold text-white">{fmt(totalProductValue)}</p>
+          <p className="text-[10px] text-slate-500 mt-1">{orderCount} عملية</p>
         </div>
 
-        <div className="rounded-xl border border-slate-800 bg-[#021f2a] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.6)]">
-          <p className="text-xs text-slate-400 flex items-center gap-1">
-            <span>🏦</span>
-            <span>حصة البنك</span>
-          </p>
-          <p className="mt-2 text-2xl font-semibold text-slate-50">
-            {Number(stats?.bankTotalShare || 0).toFixed(2)} دينار
-          </p>
-          <p className="mt-1 text-[11px] text-slate-300">نقتطعها من كل دفعة عميل ونحوّلها للبنك</p>
+        {/* إجمالي العمولات */}
+        <div className="rounded-xl border border-slate-800 bg-[#021f2a] p-4 shadow-lg">
+          <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">إجمالي العمولات</p>
+          <p className="text-lg font-bold text-amber-400">{fmt(totalCommission)}</p>
+          <p className="text-[10px] text-slate-500 mt-1">{((totalCommission / (totalProductValue || 1)) * 100).toFixed(1)}% من القيمة</p>
         </div>
 
-        <div className="rounded-xl border border-slate-800 bg-[#021f2a] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.6)]">
-          <p className="text-xs text-slate-400 flex items-center gap-1">
-            <span>🧾</span>
-            <span>عمولة المنصة</span>
-          </p>
-          <p className="mt-2 text-2xl font-semibold text-slate-50">
-            {Number(stats?.platformTotalShare || 0).toFixed(2)} دينار
-          </p>
-          <p className="mt-1 text-[11px] text-slate-300">إجمالي أرباحك من العمليات</p>
+        {/* حصة البنك */}
+        <div className="rounded-xl border border-sky-900/40 bg-gradient-to-br from-[#021f2a] to-sky-950/30 p-4 shadow-lg">
+          <p className="text-[10px] text-sky-300 uppercase tracking-wider mb-1">🏦 حصة البنك</p>
+          <p className="text-lg font-bold text-sky-200">{fmt(totalBankShare)}</p>
+          <p className="text-[10px] text-sky-400/60 mt-1">نسبة {bankRate.toFixed(1)}%</p>
         </div>
 
-        <div className="rounded-xl border border-amber-500/60 bg-gradient-to-br from-amber-500 to-amber-400 p-4 text-amber-950 shadow-[0_18px_40px_rgba(245,158,11,0.5)]">
-          <p className="text-xs font-medium flex items-center gap-1">
-            <span>⏳</span>
-            <span>أرباح بانتظار التحويل</span>
-          </p>
-          <p className="mt-2 text-2xl font-semibold">
-            {Number(stats?.pendingProfits || 0).toFixed(2)} دينار
-          </p>
-          <p className="mt-1 text-[11px]">تُحوّل في التسوية الأسبوعية القادمة</p>
-        </div>
-      </section>
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        {/* Chart */}
-        <div className="rounded-xl border border-slate-800 bg-[#021f2a] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.65)]">
-          <h2 className="text-sm font-semibold text-slate-50 mb-1">تدفق التسويات</h2>
-          <p className="text-[11px] text-slate-400 mb-4">مقارنة بين ما يتم تحصيله من العملاء وما يوزّع بين البنك والمنصة.</p>
-          <div className="h-64 rounded-lg border border-slate-800 bg-[#031824] px-3 py-3">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <CartesianGrid stroke="#1f2937" strokeDasharray="3 3" />
-                <XAxis dataKey="day" stroke="#9ca3af" tick={{ fontSize: 11 }} />
-                <YAxis stroke="#9ca3af" tick={{ fontSize: 11 }} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: "#020617", borderColor: "#1f2937", borderRadius: 8, fontSize: 11 }}
-                />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="bankShare" name="حصة البنك" stackId="shares" fill="#38bdf8" />
-                <Bar dataKey="platformShare" name="حصة المنصة" stackId="shares" fill="#22c55e" />
-                <Bar dataKey="totalCollected" name="التحصيل الكلي" fill="#6366f1" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+        {/* حصة المنصة */}
+        <div className="rounded-xl border border-emerald-900/40 bg-gradient-to-br from-[#021f2a] to-emerald-950/30 p-4 shadow-lg">
+          <p className="text-[10px] text-emerald-300 uppercase tracking-wider mb-1">🧾 حصة المنصة</p>
+          <p className="text-lg font-bold text-emerald-200">{fmt(totalPlatformShare)}</p>
+          <p className="text-[10px] text-emerald-400/60 mt-1">نسبة {platformRate.toFixed(1)}%</p>
         </div>
 
-        {/* Commission Settings */}
-        <div className="rounded-xl border border-slate-800 bg-[#021f2a] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.65)] space-y-3">
-          <h2 className="text-sm font-semibold text-slate-50">نسب المشاركة في الأرباح</h2>
+        {/* صافي الفيندر */}
+        <div className="rounded-xl border border-purple-900/40 bg-gradient-to-br from-[#021f2a] to-purple-950/30 p-4 shadow-lg">
+          <p className="text-[10px] text-purple-300 uppercase tracking-wider mb-1">🏪 صافي المتاجر</p>
+          <p className="text-lg font-bold text-purple-200">{fmt(totalVendorNet)}</p>
+          <p className="text-[10px] text-purple-400/60 mt-1">{((totalVendorNet / (totalProductValue || 1)) * 100).toFixed(1)}% من القيمة</p>
+        </div>
 
-          <div className="rounded-lg border border-slate-800 bg-[#031824] p-4 text-xs text-slate-200">
-            <div className="flex items-center justify-between">
-              <span>نسبة البنك</span>
-              <span className="text-slate-50 text-sm font-semibold">{(settings?.bankCommission * 100 || 3).toFixed(1)}%</span>
-            </div>
-            <div className="mt-2 h-2 rounded-full bg-slate-800 overflow-hidden">
-              <div className="h-full bg-sky-400 transition-all duration-500" style={{ width: `${(settings?.bankCommission * 100) || 0}%` }} />
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-slate-800 bg-[#031824] p-4 text-xs text-slate-200">
-            <div className="flex items-center justify-between">
-              <span>نسبة المنصة</span>
-              <span className="text-slate-50 text-sm font-semibold">{(settings?.platformCommission * 100 || 2).toFixed(1)}%</span>
-            </div>
-            <div className="mt-2 h-2 rounded-full bg-slate-800 overflow-hidden">
-              <div className="h-full bg-emerald-400 transition-all duration-500" style={{ width: `${(settings?.platformCommission * 100) || 0}%` }} />
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-slate-800 bg-[#031824] p-4 text-xs text-slate-300">
-            <p className="text-slate-200 font-medium font-bold">طريقة تدفق الأموال</p>
-            <ul className="mt-2 space-y-1">
-              <li>• العميل يسدد أقساطه إلى المنصة.</li>
-              <li>• تُقتطع عمولتنا من الدفعة نفسها وتُسجَّل كأرباح.</li>
-              <li>• المبلغ المتبقي يُحوَّل للبنك بعد خصم حصته، ثم يرسل البنك صافي المتجر.</li>
-            </ul>
-          </div>
-
-          {/* Edit Ratios */}
-          <div className="rounded-lg border border-slate-800 bg-[#031824] p-4 text-xs text-slate-200 space-y-3">
-            <p className="text-slate-200 font-medium">تخصيص النسب</p>
-            
-            <div className="flex flex-col gap-2">
-              <label className="text-[11px] text-slate-400">اختر المتجر لتعديل نسبته:</label>
-              <select 
-                value={selectedStoreId}
-                onChange={(e) => onStoreSelect(e.target.value)}
-                className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-slate-50 focus:border-emerald-500/60 focus:outline-none"
-              >
-                <option value="global">الإعدادات العامة (الكل)</option>
-                {allStores.map(store => (
-                  <option key={store.id} value={store.id.toString()}>
-                    {store.nameAr || store.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <label className="flex flex-col text-[11px] text-slate-400">
-                نسبة البنك
-                <input
-                  type="number"
-                  value={bankRate}
-                  onChange={(e) => setBankRate(e.target.value)}
-                  className="mt-1 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-slate-50 focus:border-emerald-500/60 focus:outline-none"
-                />
-              </label>
-              <label className="flex flex-col text-[11px] text-slate-400">
-                نسبة المنصة
-                <input
-                  type="number"
-                  value={platformRate}
-                  onChange={(e) => setPlatformRate(e.target.value)}
-                  className="mt-1 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-slate-50 focus:border-emerald-500/60 focus:outline-none"
-                />
-              </label>
-            </div>
-
-            {selectedStoreId !== "global" && (
-               <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-2 text-[11px] text-emerald-200">
-                  إجمالي عمولة المتجر ستصبح: <span className="font-bold">{(parseFloat(bankRate || "0") + parseFloat(platformRate || "0")).toFixed(1)}%</span>
-               </div>
-            )}
-
-            <button
-              onClick={handleSaveSettings}
-              className="w-full rounded-lg bg-emerald-500 px-4 py-2 text-xs font-medium text-slate-950 hover:bg-emerald-400 transition-colors"
-            >
-              حفظ التغييرات
-            </button>
-          </div>
+        {/* المبالغ المحصّلة */}
+        <div className="rounded-xl border border-amber-600/40 bg-gradient-to-br from-amber-600 to-amber-500 p-4 shadow-lg text-amber-950">
+          <p className="text-[10px] font-semibold uppercase tracking-wider mb-1">💰 المحصّل فعلياً</p>
+          <p className="text-lg font-bold">{fmt(totalPaid)}</p>
+          <p className="text-[10px] mt-1">{((totalPaid / (totalProductValue || 1)) * 100).toFixed(1)}% تحصيل</p>
         </div>
       </div>
 
-      {/* Filter and Table */}
-      <div className="rounded-xl border border-slate-800 bg-[#021f2a] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.6)]">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="ابحث برقم العملية، العميل، أو المتجر..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus:border-emerald-500/60 focus:outline-none"
-              />
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
-            </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm text-slate-50 focus:border-emerald-500/60 focus:outline-none"
-            >
-              <option value="الكل">كل حالات التسوية</option>
-              <option value="تم التحويل">تم التحويل</option>
-              <option value="بنتظار">بانتظار التحويل</option>
-            </select>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm font-medium text-slate-300 hover:bg-slate-900 transition-colors">
-              📥 تصدير تقرير
-            </button>
-            <button className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-emerald-400 transition-colors">
-              + إضافة تسوية
-            </button>
-          </div>
-        </div>
-        <div className="mt-3 text-xs text-slate-400">
-          عرض {filteredEntries.length} من {payments.length} عملية تمويل
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-slate-800 bg-[#021f2a] shadow-[0_16px_40px_rgba(0,0,0,0.65)] overflow-hidden">
+      {/* ─── Breakdown by Store ──────────────────────────────── */}
+      <div className="rounded-xl border border-slate-800 bg-[#021f2a] p-5 shadow-lg">
+        <h2 className="text-sm font-bold text-slate-50 mb-4 flex items-center gap-2">
+          <span>📊</span> توزيع الأرباح حسب المتجر
+        </h2>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-800 text-xs">
-            <thead className="bg-[#041f2e] text-slate-300">
-              <tr>
-                <th className="px-4 py-3 text-right">رقم العملية</th>
-                <th className="px-4 py-3 text-right">العميل</th>
-                <th className="px-4 py-3 text-right">المتجر</th>
-                <th className="px-4 py-3 text-right">قيمة المنتج</th>
-                <th className="px-4 py-3 text-right">نسبة البنك</th>
-                <th className="px-4 py-3 text-right">نسبة المنصة</th>
-                <th className="px-4 py-3 text-right">حصة البنك</th>
-                <th className="px-4 py-3 text-right">حصة المنصة</th>
-                <th className="px-4 py-3 text-right">صافي المتجر</th>
-                <th className="px-4 py-3 text-right">حالة التسوية</th>
-                <th className="px-4 py-3 text-right">تاريخ التسوية</th>
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-slate-800 text-slate-400">
+                <th className="px-3 py-2.5 text-right font-medium">المتجر</th>
+                <th className="px-3 py-2.5 text-right font-medium">عدد العمليات</th>
+                <th className="px-3 py-2.5 text-right font-medium">قيمة المنتجات</th>
+                <th className="px-3 py-2.5 text-right font-medium">حصة البنك</th>
+                <th className="px-3 py-2.5 text-right font-medium">حصة المنصة</th>
+                <th className="px-3 py-2.5 text-right font-medium">صافي المتجر</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800 bg-[#031824] text-slate-200">
-              {filteredEntries.length === 0 ? (
+            <tbody className="divide-y divide-slate-800/60">
+              {storeBreakdown.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="px-4 py-8 text-center text-slate-400">
-                    لا توجد عمليات مطابقة للاستعلام الحالي.
-                  </td>
+                  <td colSpan={6} className="py-8 text-center text-slate-500">لا توجد بيانات</td>
                 </tr>
               ) : (
-                filteredEntries.map((entry: any) => (
-                  <tr key={entry.id} className="hover:bg-slate-900/40 transition-colors">
-                    <td className="px-4 py-3 font-semibold text-slate-50">{entry.id}</td>
-                    <td className="px-4 py-3">{entry.customer}</td>
-                    <td className="px-4 py-3 text-slate-300">{entry.store}</td>
-                    <td className="px-4 py-3 text-slate-200">{Number(entry.productValue || 0).toFixed(2)} دينار</td>
-                    <td className="px-4 py-3 text-sky-300/80">{Number(entry.bankRate || 0).toFixed(1)}%</td>
-                    <td className="px-4 py-3 text-emerald-300/80">{Number(entry.platformRate || 0).toFixed(1)}%</td>
-                    <td className="px-4 py-3 text-sky-200">{Number(entry.bankShare || 0).toFixed(2)} دينار</td>
-                    <td className="px-4 py-3 text-emerald-200">{Number(entry.platformShare || 0).toFixed(2)} دينار</td>
-                    <td className="px-4 py-3 text-slate-100">{Number(entry.netToMerchant || 0).toFixed(2)} دينار</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex rounded-full px-3 py-1 text-[10px] font-medium ${settlementStatusStyles[entry.settlementStatus as keyof typeof settlementStatusStyles] || ""
-                        }`}>
-                        {entry.settlementStatus}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-400">{entry.settlementDate}</td>
+                storeBreakdown.map((s) => (
+                  <tr key={s.name} className="hover:bg-slate-900/40 transition-colors">
+                    <td className="px-3 py-2.5 font-semibold text-slate-100">{s.name}</td>
+                    <td className="px-3 py-2.5 text-slate-300">{s.orders}</td>
+                    <td className="px-3 py-2.5 text-slate-200">{fmt(s.value)} د.أ</td>
+                    <td className="px-3 py-2.5 text-sky-300">{fmt(s.bank)} د.أ</td>
+                    <td className="px-3 py-2.5 text-emerald-300">{fmt(s.platform)} د.أ</td>
+                    <td className="px-3 py-2.5 text-purple-300 font-semibold">{fmt(s.vendor)} د.أ</td>
                   </tr>
                 ))
               )}
             </tbody>
+            {storeBreakdown.length > 0 && (
+              <tfoot>
+                <tr className="border-t-2 border-slate-700 bg-slate-900/30 font-bold text-slate-100">
+                  <td className="px-3 py-2.5">الإجمالي</td>
+                  <td className="px-3 py-2.5">{orderCount}</td>
+                  <td className="px-3 py-2.5">{fmt(totalProductValue)} د.أ</td>
+                  <td className="px-3 py-2.5 text-sky-200">{fmt(totalBankShare)} د.أ</td>
+                  <td className="px-3 py-2.5 text-emerald-200">{fmt(totalPlatformShare)} د.أ</td>
+                  <td className="px-3 py-2.5 text-purple-200">{fmt(totalVendorNet)} د.أ</td>
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
+      </div>
 
-        {/* Settlements Summary */}
-        <div className="mt-8 rounded-xl border border-slate-800 bg-[#02121b] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.7)]">
-          <h3 className="mb-6 text-lg font-bold text-slate-50 flex items-center gap-2">
-            <span>📅</span>
-            أحدث التسويات المالية
-          </h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-right text-sm">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-400">
-                  <th className="px-4 py-3 font-medium">رقم العملية</th>
-                  <th className="px-4 py-3 font-medium">التاريخ</th>
-                  <th className="px-4 py-3 font-medium">إجمالي المبلغ</th>
-                  <th className="px-4 py-3 font-medium">حصة البنك</th>
-                  <th className="px-4 py-3 font-medium">حصة المنصة</th>
-                  <th className="px-4 py-3 font-medium">الحالة</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800 text-slate-200">
-                {settlements.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
-                      لا توجد تسويات مالية مسجلة حالياً.
-                    </td>
-                  </tr>
-                ) : (
-                  settlements.map((s) => (
-                    <tr key={s.id} className="hover:bg-slate-900/40 transition-colors">
-                      <td className="px-4 py-3 font-semibold text-slate-50">{s.id}</td>
-                      <td className="px-4 py-3">{s.createdAt ? new Date(s.createdAt).toLocaleDateString("ar") : "-"}</td>
-                      <td className="px-4 py-3">{Number(s.totalAmount || 0).toFixed(2)} د.أ</td>
-                      <td className="px-4 py-3 text-emerald-300/80">{Number(s.bankShare || 0).toFixed(2)} د.أ</td>
-                      <td className="px-4 py-3 text-emerald-100">{Number(s.platformShare || 0).toFixed(2)} د.أ</td>
-                      <td className="px-4 py-3">
-                        <span className="inline-flex rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-medium text-emerald-400 border border-emerald-500/20">
-                          {s.status === 'completed' ? 'تمت التسوية' : 'بانتظار التحويل'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+      {/* ─── Filters + Detailed Table ────────────────────────── */}
+      <div className="rounded-xl border border-slate-800 bg-[#021f2a] p-5 shadow-lg">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
+          <h2 className="text-sm font-bold text-slate-50 flex items-center gap-2">
+            <span>📋</span> الدفعات المفصّلة
+          </h2>
+          <div className="flex gap-2 flex-wrap">
+            <select
+              value={filterStore}
+              onChange={(e) => setFilterStore(e.target.value)}
+              className="rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs text-slate-50 focus:border-emerald-500/60 focus:outline-none"
+            >
+              <option value="الكل">كل المتاجر</option>
+              {storeNames.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs text-slate-50 focus:border-emerald-500/60 focus:outline-none"
+            >
+              <option value="الكل">كل الحالات</option>
+              <option value="مكتمل">مكتمل</option>
+              <option value="معلق">معلق</option>
+            </select>
           </div>
+        </div>
+
+        <p className="text-[11px] text-slate-500 mb-3">
+          عرض {filtered.length} من {orders.length} عملية
+        </p>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-slate-800 text-slate-400">
+                <th className="px-3 py-2.5 text-right font-medium">رقم العملية</th>
+                <th className="px-3 py-2.5 text-right font-medium">العميل</th>
+                <th className="px-3 py-2.5 text-right font-medium">المتجر</th>
+                <th className="px-3 py-2.5 text-right font-medium">قيمة المنتج</th>
+                <th className="px-3 py-2.5 text-right font-medium">الأقساط</th>
+                <th className="px-3 py-2.5 text-right font-medium">نسبة البنك</th>
+                <th className="px-3 py-2.5 text-right font-medium">نسبة المنصة</th>
+                <th className="px-3 py-2.5 text-right font-medium">حصة البنك</th>
+                <th className="px-3 py-2.5 text-right font-medium">حصة المنصة</th>
+                <th className="px-3 py-2.5 text-right font-medium">صافي المتجر</th>
+                <th className="px-3 py-2.5 text-right font-medium">المحصّل</th>
+                <th className="px-3 py-2.5 text-right font-medium">التاريخ</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/60">
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={12} className="py-10 text-center text-slate-500">
+                    لا توجد عمليات مطابقة
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((o) => (
+                  <tr key={o.orderId} className="hover:bg-slate-900/40 transition-colors">
+                    <td className="px-3 py-2.5 font-mono text-[10px] text-slate-300 max-w-[120px] truncate" title={o.orderId}>
+                      {o.orderId.length > 20 ? "..." + o.orderId.slice(-16) : o.orderId}
+                    </td>
+                    <td className="px-3 py-2.5 text-slate-200">{o.customer}</td>
+                    <td className="px-3 py-2.5 text-slate-300">{o.store}</td>
+                    <td className="px-3 py-2.5 text-white font-semibold">{fmt(o.productValue)} د.أ</td>
+                    <td className="px-3 py-2.5">
+                      <span className="inline-flex items-center rounded-full bg-slate-800 px-2 py-0.5 text-[10px] text-slate-300">
+                        {o.paidInstallments}/{o.totalInstallments}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 text-sky-400/80">{n(o.bankRate).toFixed(1)}%</td>
+                    <td className="px-3 py-2.5 text-emerald-400/80">{n(o.platformRate).toFixed(1)}%</td>
+                    <td className="px-3 py-2.5 text-sky-200">{fmt(o.bankShare)} د.أ</td>
+                    <td className="px-3 py-2.5 text-emerald-200">{fmt(o.platformShare)} د.أ</td>
+                    <td className="px-3 py-2.5 text-purple-200 font-semibold">{fmt(o.vendorNet)} د.أ</td>
+                    <td className="px-3 py-2.5">
+                      <span className={`font-semibold ${o.paidAmount > 0 ? "text-amber-400" : "text-slate-500"}`}>
+                        {fmt(o.paidAmount)} د.أ
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 text-slate-400">{o.date}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+            {filtered.length > 0 && (
+              <tfoot>
+                <tr className="border-t-2 border-slate-700 bg-slate-900/30 font-bold text-xs">
+                  <td className="px-3 py-2.5 text-slate-100" colSpan={3}>الإجمالي</td>
+                  <td className="px-3 py-2.5 text-white">{fmt(totalProductValue)} د.أ</td>
+                  <td className="px-3 py-2.5" />
+                  <td className="px-3 py-2.5" />
+                  <td className="px-3 py-2.5" />
+                  <td className="px-3 py-2.5 text-sky-200">{fmt(totalBankShare)} د.أ</td>
+                  <td className="px-3 py-2.5 text-emerald-200">{fmt(totalPlatformShare)} د.أ</td>
+                  <td className="px-3 py-2.5 text-purple-200">{fmt(totalVendorNet)} د.أ</td>
+                  <td className="px-3 py-2.5 text-amber-300">{fmt(totalPaid)} د.أ</td>
+                  <td className="px-3 py-2.5" />
+                </tr>
+              </tfoot>
+            )}
+          </table>
+        </div>
+      </div>
+
+      {/* ─── Commission Info Card ────────────────────────────── */}
+      <div className="rounded-xl border border-slate-800 bg-[#021f2a] p-5 shadow-lg">
+        <h2 className="text-sm font-bold text-slate-50 mb-3 flex items-center gap-2">
+          <span>⚙️</span> نسب العمولات المُطبّقة
+        </h2>
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-lg bg-sky-950/30 border border-sky-900/30 p-4">
+            <p className="text-[10px] text-sky-400 uppercase tracking-wider">نسبة البنك</p>
+            <p className="text-2xl font-black text-sky-200 mt-1">{bankRate.toFixed(1)}%</p>
+            <p className="text-[10px] text-sky-500 mt-1">تُقتطع لصالح البنك الممول</p>
+          </div>
+          <div className="rounded-lg bg-emerald-950/30 border border-emerald-900/30 p-4">
+            <p className="text-[10px] text-emerald-400 uppercase tracking-wider">نسبة المنصة</p>
+            <p className="text-2xl font-black text-emerald-200 mt-1">{platformRate.toFixed(1)}%</p>
+            <p className="text-[10px] text-emerald-500 mt-1">أرباح منصة BNPL</p>
+          </div>
+          <div className="rounded-lg bg-purple-950/30 border border-purple-900/30 p-4">
+            <p className="text-[10px] text-purple-400 uppercase tracking-wider">صافي المتجر</p>
+            <p className="text-2xl font-black text-purple-200 mt-1">{(100 - bankRate - platformRate).toFixed(1)}%</p>
+            <p className="text-[10px] text-purple-500 mt-1">ما يحصل عليه الفيندر من كل عملية</p>
+          </div>
+        </div>
+        <div className="mt-4 rounded-lg bg-slate-900/40 border border-slate-800 p-3">
+          <p className="text-[11px] text-slate-300 leading-relaxed">
+            <strong className="text-slate-100">آلية التدفق:</strong> العميل يسدد أقساطه إلى المنصة ←
+            تُقتطع عمولة البنك ({bankRate.toFixed(1)}%) + عمولة المنصة ({platformRate.toFixed(1)}%) ←
+            المتبقي ({(100 - bankRate - platformRate).toFixed(1)}%) يُحوّل لحساب المتجر.
+          </p>
         </div>
       </div>
     </div>
