@@ -145,13 +145,15 @@ export default function FinalProfitsPage() {
     return storeMatch && statusMatch;
   });
 
-  const totalProductValue = filtered.reduce((s, o) => s + o.productValue, 0);
-  const totalBankShare = filtered.reduce((s, o) => s + o.bankShare, 0);
-  const totalPlatformShare = filtered.reduce((s, o) => s + o.platformShare, 0);
-  const totalVendorNet = filtered.reduce((s, o) => s + o.vendorNet, 0);
-  const totalPaid = filtered.reduce((s, o) => s + o.paidAmount, 0);
-  const totalCommission = totalBankShare + totalPlatformShare;
   const orderCount = filtered.length;
+
+  // Calculate effective rates for display (Dynamic based on filter)
+  const effectiveBankRate = orderCount > 0 
+    ? (totalBankShare / (totalProductValue || 1)) * 100 
+    : bankRate;
+  const effectivePlatformRate = orderCount > 0 
+    ? (totalPlatformShare / (totalProductValue || 1)) * 100 
+    : platformRate;
 
   // Per-store breakdown
   const storeMap = new Map<string, { name: string; value: number; bank: number; platform: number; vendor: number; orders: number }>();
@@ -212,14 +214,14 @@ export default function FinalProfitsPage() {
         <div className="rounded-xl border border-sky-900/40 bg-gradient-to-br from-[#021f2a] to-sky-950/30 p-4 shadow-lg">
           <p className="text-[10px] text-sky-300 uppercase tracking-wider mb-1">🏦 حصة البنك</p>
           <p className="text-lg font-bold text-sky-200">{fmt(totalBankShare)}</p>
-          <p className="text-[10px] text-sky-400/60 mt-1">نسبة {bankRate.toFixed(1)}%</p>
+          <p className="text-[10px] text-sky-400/60 mt-1">نسبة {effectiveBankRate.toFixed(1)}%</p>
         </div>
 
         {/* حصة المنصة */}
         <div className="rounded-xl border border-emerald-900/40 bg-gradient-to-br from-[#021f2a] to-emerald-950/30 p-4 shadow-lg">
           <p className="text-[10px] text-emerald-300 uppercase tracking-wider mb-1">🧾 حصة المنصة</p>
           <p className="text-lg font-bold text-emerald-200">{fmt(totalPlatformShare)}</p>
-          <p className="text-[10px] text-emerald-400/60 mt-1">نسبة {platformRate.toFixed(1)}%</p>
+          <p className="text-[10px] text-emerald-400/60 mt-1">نسبة {effectivePlatformRate.toFixed(1)}%</p>
         </div>
 
         {/* صافي الفيندر */}
@@ -403,25 +405,25 @@ export default function FinalProfitsPage() {
         <div className="grid gap-4 md:grid-cols-3">
           <div className="rounded-lg bg-sky-950/30 border border-sky-900/30 p-4">
             <p className="text-[10px] text-sky-400 uppercase tracking-wider">نسبة البنك</p>
-            <p className="text-2xl font-black text-sky-200 mt-1">{bankRate.toFixed(1)}%</p>
+            <p className="text-2xl font-black text-sky-200 mt-1">{effectiveBankRate.toFixed(1)}%</p>
             <p className="text-[10px] text-sky-500 mt-1">تُقتطع لصالح البنك الممول</p>
           </div>
           <div className="rounded-lg bg-emerald-950/30 border border-emerald-900/30 p-4">
             <p className="text-[10px] text-emerald-400 uppercase tracking-wider">نسبة المنصة</p>
-            <p className="text-2xl font-black text-emerald-200 mt-1">{platformRate.toFixed(1)}%</p>
+            <p className="text-2xl font-black text-emerald-200 mt-1">{effectivePlatformRate.toFixed(1)}%</p>
             <p className="text-[10px] text-emerald-500 mt-1">أرباح منصة BNPL</p>
           </div>
           <div className="rounded-lg bg-purple-950/30 border border-purple-900/30 p-4">
             <p className="text-[10px] text-purple-400 uppercase tracking-wider">صافي المتجر</p>
-            <p className="text-2xl font-black text-purple-200 mt-1">{(100 - bankRate - platformRate).toFixed(1)}%</p>
+            <p className="text-2xl font-black text-purple-200 mt-1">{(100 - effectiveBankRate - effectivePlatformRate).toFixed(1)}%</p>
             <p className="text-[10px] text-purple-500 mt-1">ما يحصل عليه الفيندر من كل عملية</p>
           </div>
         </div>
         <div className="mt-4 rounded-lg bg-slate-900/40 border border-slate-800 p-3">
           <p className="text-[11px] text-slate-300 leading-relaxed">
             <strong className="text-slate-100">آلية التدفق:</strong> العميل يسدد أقساطه إلى المنصة ←
-            تُقتطع عمولة البنك ({bankRate.toFixed(1)}%) + عمولة المنصة ({platformRate.toFixed(1)}%) ←
-            المتبقي ({(100 - bankRate - platformRate).toFixed(1)}%) يُحوّل لحساب المتجر.
+            تُقتطع عمولة البنك ({effectiveBankRate.toFixed(1)}%) + عمولة المنصة ({effectivePlatformRate.toFixed(1)}%) ←
+            المتبقي ({(100 - effectiveBankRate - effectivePlatformRate).toFixed(1)}%) يُحوّل لحساب المتجر.
           </p>
         </div>
       </div>

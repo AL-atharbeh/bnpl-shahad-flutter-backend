@@ -540,12 +540,21 @@ export class PaymentsService {
         }
       }
 
-      // 3. Bank Payout logic (95% to store - usually gross based on system design)
+      // 3. Bank Payout logic (Dynamic based on total commission)
       if (orderId && !acc.orderProcessed.has(orderId)) {
         acc.orderProcessed.add(orderId);
         const orderFullAmount = amount * (p.installmentsCount || 1);
         acc.totalOrdersValue += orderFullAmount;
-        acc.bankTotalPaidToStores += orderFullAmount * 0.95;
+        
+        // Use the same priority logic for the entire order
+        const orderStoreNetRate = 1 - (bRate + pRate);
+        acc.bankTotalPaidToStores += orderFullAmount * orderStoreNetRate;
+        acc.bankTotalToCollectFromUsers += orderFullAmount * (1 - pRate);
+      }
+
+      // Track collected bank share (collected amount minus platform share of that portion)
+      if (isPaid) {
+        acc.bankTotalCollectedFromUsers += amount * (1 - pRate);
       }
 
       return acc;
@@ -567,12 +576,13 @@ export class PaymentsService {
       overdueOver7DaysCount: 0,
       totalOrdersValue: 0,
       bankTotalPaidToStores: 0,
+      bankTotalToCollectFromUsers: 0,
+      bankTotalCollectedFromUsers: 0,
       orderProcessed: new Set<string>()
     });
 
-    const bankTotalCollectedFromUsers = stats.totalCollected * (1 - PLATFORM_COMMISSION_RATE);
-    const bankTotalRemaining = (stats.totalOrdersValue * (1 - PLATFORM_COMMISSION_RATE)) - bankTotalCollectedFromUsers;
-    const platformTotalRemaining = (stats.totalOrdersValue * PLATFORM_COMMISSION_RATE) - stats.collectedPlatformProfits;
+    const bankTotalRemaining = stats.bankTotalToCollectFromUsers - stats.bankTotalCollectedFromUsers;
+    const platformTotalRemaining = (stats.totalOrdersValue * (stats.platformProfits / (stats.totalSales || 1))) - stats.collectedPlatformProfits;
 
     return {
       success: true,
@@ -588,7 +598,7 @@ export class PaymentsService {
         recentCollected: stats.recentCollected,
         // Detailed Financials (Linked to pages)
         bankTotalPaid: stats.bankTotalPaidToStores,
-        bankTotalCollected: bankTotalCollectedFromUsers,
+        bankTotalCollected: stats.bankTotalCollectedFromUsers,
         bankTotalRemaining,
         platformTotalCollected: stats.collectedPlatformProfits,
         platformTotalRemaining,
