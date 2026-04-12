@@ -261,16 +261,19 @@ export class PaymentsService {
     ]);
 
     const settings = globalSettings?.data;
-    const defaultBankRate = settings?.bankCommission ? Number(settings.bankCommission) * 100 : 3.0;
-    const defaultPlatformRate = settings?.platformCommission ? Number(settings.platformCommission) * 100 : 2.0;
+    const normalizeRate = (val: any, fallback: number) => {
+      if (val === null || val === undefined) return fallback;
+      const num = Number(val);
+      // If >= 1, it's a percentage (e.g. 3.0), convert to percentage value.
+      // If < 1, it's a decimal (e.g. 0.03), convert to percentage value (e.g. 3).
+      return num < 1 && num > 0 ? num * 100 : num;
+    };
 
-    const bankCommissionRate = (store?.bankCommissionRate !== null && store?.bankCommissionRate !== undefined)
-      ? Number(store.bankCommissionRate)
-      : defaultBankRate;
+    const defaultBankRate = normalizeRate(settings?.bankCommission, 3.0);
+    const defaultPlatformRate = normalizeRate(settings?.platformCommission, 2.0);
 
-    const platformCommissionRate = (store?.platformCommissionRate !== null && store?.platformCommissionRate !== undefined)
-      ? Number(store.platformCommissionRate)
-      : defaultPlatformRate;
+    const bankCommissionRate = normalizeRate(store?.bankCommissionRate, defaultBankRate);
+    const platformCommissionRate = normalizeRate(store?.platformCommissionRate, defaultPlatformRate);
 
     const commissionRate = bankCommissionRate + platformCommissionRate;
 

@@ -4,6 +4,7 @@ import { Repository, Between, LessThan, In } from 'typeorm';
 import { Payment } from '../payments/entities/payment.entity';
 import { Store } from '../stores/entities/store.entity';
 import { User } from '../users/entities/user.entity';
+import { CommissionSettingsService } from '../commission-settings/commission-settings.service';
 import dayjs from 'dayjs';
 import quarterOfYear from 'dayjs/plugin/quarterOfYear';
 
@@ -18,7 +19,15 @@ export class ReportsService {
         private storeRepository: Repository<Store>,
         @InjectRepository(User)
         private userRepository: Repository<User>,
+        private commissionSettingsService: CommissionSettingsService,
     ) { }
+
+    private normalizeRate(val: any, fallback: number) {
+        if (val === null || val === undefined) return fallback;
+        const num = Number(val);
+        // If >= 1 (e.g. 3.0), it's a percentage. If <= 1 (e.g. 0.03), it's a decimal.
+        return num >= 1 ? num / 100 : num;
+    }
 
     async getDashboardStats(storeId?: number) {
         console.log(`[ReportsService] getDashboardStats called with storeId: ${storeId} (type: ${typeof storeId})`);
@@ -84,11 +93,27 @@ export class ReportsService {
         const commissionWhere: any = { status: 'completed' };
         if (storeId) commissionWhere.storeId = storeId;
 
-        const platformCommission = await this.paymentRepository.find({
+        const platformPayments = await this.paymentRepository.find({
             where: commissionWhere,
-            select: ['commission'],
+            relations: ['store'],
+            select: ['amount', 'commission', 'bankCommissionRate', 'platformCommissionRate', 'storeId'],
         });
-        const totalCommission = platformCommission.reduce((sum, p) => sum + Number(p.commission), 0);
+
+        const settingsRes = await this.commissionSettingsService.getCurrentSettings();
+        const settings = settingsRes?.data;
+        const globalBankRate = settings?.bankCommission ? Number(settings.bankCommission) : 0.03;
+        const globalPlatformRate = settings?.platformCommission ? Number(settings.platformCommission) : 0.02;
+
+        const totalCommission = platformPayments.reduce((sum, p) => {
+            const amount = Number(p.amount || 0);
+            
+            // Priority: Store Override > Payment Record > Global Default
+            const pRate = this.normalizeRate(p.store?.platformCommissionRate ?? p.platformCommissionRate, globalPlatformRate);
+            const bRate = this.normalizeRate(p.store?.bankCommissionRate ?? p.bankCommissionRate, globalBankRate);
+            
+            const pShare = amount * pRate;
+            return sum + pShare;
+        }, 0);
 
         return {
             success: true,
@@ -251,48 +276,51 @@ export class ReportsService {
             order: { createdAt: 'DESC' }
         }) as any[];
 
-        // 2. Fetch all payments for this store to calculate collected vs total
         const payments = await this.paymentRepository.find({
-            where: { storeId }
+            where: { storeId },
+            relations: ['store']
         });
+
+        const settingsRes = await this.commissionSettingsService.getCurrentSettings();
 
         const sales = sessions.map(session => {
             const orderId = `order_${session.sessionId}`;
             const orderPayments = payments.filter(p => p.orderId === orderId);
 
             const totalAmount = Number(session.totalAmount || 0);
-            const commissionRate = Number(session.store?.commissionRate || 2.5);
             
+            // Total commission for the whole order (from all payments)
+            const settingsResSync = settingsRes; // Use outer scope fetch
+            const settings = settingsResSync?.data;
+            const globalBankRate = settings?.bankCommission ? Number(settings.bankCommission) : 0.03;
+            const globalPlatformRate = settings?.platformCommission ? Number(settings.platformCommission) : 0.02;
+
             // Gross amount received so far
             const grossCollected = orderPayments
                 .filter(p => p.status === 'completed')
                 .reduce((sum, p) => sum + Number(p.amount || 0), 0);
-            
+
             // Net amount received so far (Paid minus Commission)
             const collectedAmount = orderPayments
                 .filter(p => p.status === 'completed')
                 .reduce((sum, p) => {
                     const amount = Number(p.amount || 0);
-                    // If storeAmount is 0 (old data), calculate it on the fly for the report
-                    const storeAmount = Number(p.storeAmount) > 0 
-                        ? Number(p.storeAmount) 
-                        : (amount - (amount * (commissionRate / 100)));
+                    const bRate = this.normalizeRate(p.store?.bankCommissionRate ?? p.bankCommissionRate, globalBankRate);
+                    const pRate = this.normalizeRate(p.store?.platformCommissionRate ?? p.platformCommissionRate, globalPlatformRate);
+                    const storeAmount = amount * (1 - (bRate + pRate));
                     return sum + storeAmount;
                 }, 0);
 
-            // Total commission for the whole order (from all payments)
             const totalCommission = orderPayments.reduce((sum, p) => {
                 const amount = Number(p.amount || 0);
-                // If commission is 0 (old data), calculate it on the fly for the report
-                const comm = Number(p.commission) > 0
-                    ? Number(p.commission)
-                    : (amount * (commissionRate / 100));
+                const bRate = this.normalizeRate(p.store?.bankCommissionRate ?? p.bankCommissionRate, globalBankRate);
+                const pRate = this.normalizeRate(p.store?.platformCommissionRate ?? p.platformCommissionRate, globalPlatformRate);
+                const comm = amount * (bRate + pRate);
                 return sum + comm;
             }, 0);
             
             // Final net amount the vendor will get when all installments are paid
-            // Corrected: calculate net from totalAmount using commissionRate if stored commission is 0
-            const netAmount = (totalAmount - (totalAmount * (commissionRate / 100)));
+            const netAmount = totalAmount - totalCommission;
 
             // Sum up quantities from sessionItems (which we now have via relations)
             const piecesSold = (session.sessionItems || []).reduce((sum, item) => sum + (Number(item.quantity || 1)), 0);

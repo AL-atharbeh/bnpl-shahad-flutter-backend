@@ -5,9 +5,13 @@ import { ReportsController } from './reports.controller';
 import { Payment } from '../payments/entities/payment.entity';
 import { Store } from '../stores/entities/store.entity';
 import { User } from '../users/entities/user.entity';
+import { CommissionSettingsModule } from '../commission-settings/commission-settings.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Payment, Store, User])],
+  imports: [
+    TypeOrmModule.forFeature([Payment, Store, User]),
+    CommissionSettingsModule,
+  ],
     controllers: [ReportsController],
     providers: [ReportsService],
     exports: [ReportsService],
