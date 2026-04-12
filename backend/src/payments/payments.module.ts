@@ -12,6 +12,7 @@ import { RewardsModule } from '../rewards/rewards.module';
 import { PostponementsModule } from '../postponements/postponements.module';
 import { UsersModule } from '../users/users.module';
 import { BnplSessionsModule } from '../bnpl-sessions/bnpl-sessions.module';
+import { CommissionSettingsModule } from '../commission-settings/commission-settings.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { BnplSessionsModule } from '../bnpl-sessions/bnpl-sessions.module';
     forwardRef(() => PostponementsModule), // Use forwardRef to avoid circular dependency
     UsersModule,
     forwardRef(() => BnplSessionsModule),
+    CommissionSettingsModule,
   ],
   controllers: [PaymentsController],
   providers: [PaymentsService, MyFatoorahService, StripeService, MockPaymentService],

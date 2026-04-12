@@ -4,6 +4,7 @@ import { Repository, Between } from 'typeorm';
 import { Payment } from './entities/payment.entity';
 import { Store } from '../stores/entities/store.entity';
 import { RewardsService } from '../rewards/rewards.service';
+import { CommissionSettingsService } from '../commission-settings/commission-settings.service';
 import dayjs from 'dayjs';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class PaymentsService {
     @InjectRepository(Store)
     private storeRepository: Repository<Store>,
     private rewardsService: RewardsService,
+    private commissionSettingsService: CommissionSettingsService,
   ) { }
 
   /**
@@ -252,11 +254,25 @@ export class PaymentsService {
     const installmentAmount = totalAmount / installmentsCount;
     const installments: Payment[] = [];
 
-    // Fetch store to get commission rates
-    const store = await this.storeRepository.findOne({ where: { id: storeId } });
-    const commissionRate = store?.commissionRate || 2.5; 
-    const bankCommissionRate = store?.bankCommissionRate || 1.5;
-    const platformCommissionRate = store?.platformCommissionRate || 1.0;
+    // Fetch store and global commission settings
+    const [store, globalSettings] = await Promise.all([
+      this.storeRepository.findOne({ where: { id: storeId } }),
+      this.commissionSettingsService.getCurrentSettings()
+    ]);
+
+    const settings = globalSettings?.data;
+    const defaultBankRate = settings?.bankCommission ? Number(settings.bankCommission) * 100 : 3.0;
+    const defaultPlatformRate = settings?.platformCommission ? Number(settings.platformCommission) * 100 : 2.0;
+
+    const bankCommissionRate = store?.bankCommissionRate && Number(store.bankCommissionRate) !== 1.5 
+      ? Number(store.bankCommissionRate) 
+      : defaultBankRate;
+
+    const platformCommissionRate = store?.platformCommissionRate && Number(store.platformCommissionRate) !== 1.0
+      ? Number(store.platformCommissionRate) 
+      : defaultPlatformRate;
+
+    const commissionRate = bankCommissionRate + platformCommissionRate;
 
     // Check if installments already exist to avoid duplicates
     const existing = await this.paymentRepository.find({
@@ -453,8 +469,11 @@ export class PaymentsService {
   }
 
   async getAdminStats() {
-    const BANK_COMMISSION_RATE = 0.03; // 3%
-    const PLATFORM_COMMISSION_RATE = 0.02; // 2%
+    const settingsRes = await this.commissionSettingsService.getCurrentSettings();
+    const settings = settingsRes?.data;
+    
+    const BANK_COMMISSION_RATE = settings?.bankCommission ? Number(settings.bankCommission) : 0.03; // Default 3%
+    const PLATFORM_COMMISSION_RATE = settings?.platformCommission ? Number(settings.platformCommission) : 0.02; // Default 2%
 
     // Get all payments to calculate statistics
     const allPayments = await this.paymentRepository.find({

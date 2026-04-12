@@ -54,10 +54,10 @@ export class Payment {
   @Column({ name: 'store_amount', type: 'decimal', precision: 10, scale: 2, default: 0 })
   storeAmount: number;
 
-  @Column({ name: 'bank_commission_rate', type: 'decimal', precision: 5, scale: 2, default: 1.5 })
+  @Column({ name: 'bank_commission_rate', type: 'decimal', precision: 5, scale: 2, default: 3.0 })
   bankCommissionRate: number;
 
-  @Column({ name: 'platform_commission_rate', type: 'decimal', precision: 5, scale: 2, default: 1.0 })
+  @Column({ name: 'platform_commission_rate', type: 'decimal', precision: 5, scale: 2, default: 2.0 })
   platformCommissionRate: number;
 
   @Column({ name: 'transaction_id', length: 255, nullable: true, unique: true })
