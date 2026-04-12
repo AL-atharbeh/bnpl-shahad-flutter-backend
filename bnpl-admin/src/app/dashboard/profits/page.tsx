@@ -145,6 +145,12 @@ export default function FinalProfitsPage() {
     return storeMatch && statusMatch;
   });
 
+  const totalProductValue = filtered.reduce((s, o) => s + o.productValue, 0);
+  const totalBankShare = filtered.reduce((s, o) => s + o.bankShare, 0);
+  const totalPlatformShare = filtered.reduce((s, o) => s + o.platformShare, 0);
+  const totalVendorNet = filtered.reduce((s, o) => s + o.vendorNet, 0);
+  const totalPaid = filtered.reduce((s, o) => s + o.paidAmount, 0);
+  const totalCommission = totalBankShare + totalPlatformShare;
   const orderCount = filtered.length;
 
   // Calculate effective rates for display (Dynamic based on filter)
