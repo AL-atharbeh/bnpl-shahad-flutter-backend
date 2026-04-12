@@ -11,9 +11,9 @@ export interface Store {
     isActive: boolean;
     topStore: boolean;
     rating: number;
-    commissionRate: number;
-    bankCommissionRate?: number;
-    platformCommissionRate?: number;
+    commissionRate: number | null;
+    bankCommissionRate?: number | null;
+    platformCommissionRate?: number | null;
     minOrderAmount: number;
     maxOrderAmount: number;
     websiteUrl?: string;
