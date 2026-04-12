@@ -806,12 +806,15 @@ export default function StoresPage() {
                         <input
                           type="number"
                           step="0.1"
-                          value={formData.commissionRate}
-                          onChange={(e) => setFormData({ ...formData, commissionRate: e.target.value })}
+                          value={selectedStore.commissionRate !== null && selectedStore.commissionRate !== undefined ? selectedStore.commissionRate : ""}
+                          onChange={(e) => {
+                            const val = e.target.value === "" ? null : parseFloat(e.target.value);
+                            setSelectedStore({ ...selectedStore, commissionRate: val });
+                          }}
                           className="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-slate-50 text-sm focus:border-emerald-500 outline-none transition-all font-mono"
                           placeholder="إعدادات عامة"
                         />
-                        {formData.commissionRate === "" && (
+                        {(selectedStore.commissionRate === "" || selectedStore.commissionRate === null || selectedStore.commissionRate === undefined) && (
                           <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-amber-500 font-bold bg-amber-500/10 px-1 rounded">GLOBAL</span>
                         )}
                       </div>
@@ -824,12 +827,15 @@ export default function StoresPage() {
                         <input
                           type="number"
                           step="0.1"
-                          value={formData.bankCommissionRate}
-                          onChange={(e) => setFormData({ ...formData, bankCommissionRate: e.target.value })}
+                          value={selectedStore.bankCommissionRate !== null && selectedStore.bankCommissionRate !== undefined ? selectedStore.bankCommissionRate : ""}
+                          onChange={(e) => {
+                            const val = e.target.value === "" ? null : parseFloat(e.target.value);
+                            setSelectedStore({ ...selectedStore, bankCommissionRate: val });
+                          }}
                           className="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-slate-50 text-sm focus:border-emerald-500 outline-none transition-all font-mono"
                           placeholder="إعدادات عامة"
                         />
-                        {formData.bankCommissionRate === "" && (
+                        {(selectedStore.bankCommissionRate === "" || selectedStore.bankCommissionRate === null || selectedStore.bankCommissionRate === undefined) && (
                           <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-sky-400 font-bold bg-sky-400/10 px-1 rounded">GLOBAL</span>
                         )}
                       </div>
@@ -842,12 +848,15 @@ export default function StoresPage() {
                         <input
                           type="number"
                           step="0.1"
-                          value={formData.platformCommissionRate}
-                          onChange={(e) => setFormData({ ...formData, platformCommissionRate: e.target.value })}
+                          value={selectedStore.platformCommissionRate !== null && selectedStore.platformCommissionRate !== undefined ? selectedStore.platformCommissionRate : ""}
+                          onChange={(e) => {
+                            const val = e.target.value === "" ? null : parseFloat(e.target.value);
+                            setSelectedStore({ ...selectedStore, platformCommissionRate: val });
+                          }}
                           className="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-slate-50 text-sm focus:border-emerald-500 outline-none transition-all font-mono"
                           placeholder="إعدادات عامة"
                         />
-                        {formData.platformCommissionRate === "" && (
+                        {(selectedStore.platformCommissionRate === "" || selectedStore.platformCommissionRate === null || selectedStore.platformCommissionRate === undefined) && (
                           <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-emerald-400 font-bold bg-emerald-400/10 px-1 rounded">GLOBAL</span>
                         )}
                       </div>
@@ -873,26 +882,10 @@ export default function StoresPage() {
                     <button
                       onClick={async () => {
                         try {
-                          const initialFormData = {
-                            name: "",
-                            nameAr: "",
-                            description: "",
-                            descriptionAr: "",
-                            categoryId: "",
-                            logoUrl: "",
-                            websiteUrl: "",
-                            storeUrl: "",
-                            commissionRate: "",
-                            bankCommissionRate: "",
-                            platformCommissionRate: "",
-                            minOrderAmount: "50",
-                            maxOrderAmount: "5000",
-                            vendorId: "",
-                          };
                           await storesService.updateStore(selectedStore.id, {
-                            commissionRate: formData.commissionRate === "" ? null : parseFloat(formData.commissionRate),
-                            bankCommissionRate: formData.bankCommissionRate === "" ? null : parseFloat(formData.bankCommissionRate),
-                            platformCommissionRate: formData.platformCommissionRate === "" ? null : parseFloat(formData.platformCommissionRate),
+                            commissionRate: selectedStore.commissionRate,
+                            bankCommissionRate: selectedStore.bankCommissionRate,
+                            platformCommissionRate: selectedStore.platformCommissionRate,
                             payoutCycle: selectedStore.payoutCycle
                           });
                           alert("تم حفظ الإعدادات المالية بنجاح ✅");
