@@ -407,12 +407,12 @@ export default function ProfitsPage() {
                     <td className="px-4 py-3 font-semibold text-slate-50">{entry.id}</td>
                     <td className="px-4 py-3">{entry.customer}</td>
                     <td className="px-4 py-3 text-slate-300">{entry.store}</td>
-                    <td className="px-4 py-3 text-slate-200">{entry.productValue.toFixed(2)} دينار</td>
-                    <td className="px-4 py-3 text-sky-300/80">{entry.bankRate}%</td>
-                    <td className="px-4 py-3 text-emerald-300/80">{entry.platformRate}%</td>
-                    <td className="px-4 py-3 text-sky-200">{entry.bankShare.toFixed(2)} دينار</td>
-                    <td className="px-4 py-3 text-emerald-200">{entry.platformShare.toFixed(2)} دينار</td>
-                    <td className="px-4 py-3 text-slate-100">{entry.netToMerchant.toFixed(2)} دينار</td>
+                    <td className="px-4 py-3 text-slate-200">{(entry.productValue || 0).toFixed(2)} دينار</td>
+                    <td className="px-4 py-3 text-sky-300/80">{(entry.bankRate || 0).toFixed(1)}%</td>
+                    <td className="px-4 py-3 text-emerald-300/80">{(entry.platformRate || 0).toFixed(1)}%</td>
+                    <td className="px-4 py-3 text-sky-200">{(entry.bankShare || 0).toFixed(2)} دينار</td>
+                    <td className="px-4 py-3 text-emerald-200">{(entry.platformShare || 0).toFixed(2)} دينار</td>
+                    <td className="px-4 py-3 text-slate-100">{(entry.netToMerchant || 0).toFixed(2)} دينار</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex rounded-full px-3 py-1 text-[10px] font-medium ${settlementStatusStyles[entry.settlementStatus as keyof typeof settlementStatusStyles] || ""
                         }`}>
@@ -425,6 +425,52 @@ export default function ProfitsPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Settlements Summary */}
+        <div className="mt-8 rounded-xl border border-slate-800 bg-[#02121b] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.7)]">
+          <h3 className="mb-6 text-lg font-bold text-slate-50 flex items-center gap-2">
+            <span>📅</span>
+            أحدث التسويات المالية
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-right text-sm">
+              <thead>
+                <tr className="border-b border-slate-800 text-slate-400">
+                  <th className="px-4 py-3 font-medium">رقم العملية</th>
+                  <th className="px-4 py-3 font-medium">التاريخ</th>
+                  <th className="px-4 py-3 font-medium">إجمالي المبلغ</th>
+                  <th className="px-4 py-3 font-medium">حصة البنك</th>
+                  <th className="px-4 py-3 font-medium">حصة المنصة</th>
+                  <th className="px-4 py-3 font-medium">الحالة</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800 text-slate-200">
+                {settlements.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
+                      لا توجد تسويات مالية مسجلة حالياً.
+                    </td>
+                  </tr>
+                ) : (
+                  settlements.map((s) => (
+                    <tr key={s.id} className="hover:bg-slate-900/40 transition-colors">
+                      <td className="px-4 py-3 font-semibold text-slate-50">{s.id}</td>
+                      <td className="px-4 py-3">{s.createdAt ? new Date(s.createdAt).toLocaleDateString("ar") : "-"}</td>
+                      <td className="px-4 py-3">{(s.totalAmount || 0).toFixed(2)} د.أ</td>
+                      <td className="px-4 py-3 text-emerald-300/80">{(s.bankShare || 0).toFixed(2)} د.أ</td>
+                      <td className="px-4 py-3 text-emerald-100">{(s.platformShare || 0).toFixed(2)} د.أ</td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-medium text-emerald-400 border border-emerald-500/20">
+                          {s.status === 'completed' ? 'تمت التسوية' : 'بانتظار التحويل'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

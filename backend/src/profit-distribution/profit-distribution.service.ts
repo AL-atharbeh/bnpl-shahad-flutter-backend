@@ -32,16 +32,18 @@ export class ProfitDistributionService {
         // Calculate total financed (all completed orders)
         const uniqueOrders = new Map();
         allPayments.forEach(p => {
-            if (!uniqueOrders.has(p.orderId)) {
-                const orderTotal = Number(p.amount) * p.installmentsCount;
+            if (p && p.orderId && !uniqueOrders.has(p.orderId)) {
+                const amount = Number(p.amount) || 0;
+                const installments = Number(p.installmentsCount) || 1;
+                const orderTotal = amount * installments;
                 uniqueOrders.set(p.orderId, orderTotal);
             }
         });
-        const totalFinanced = Array.from(uniqueOrders.values()).reduce((sum, val) => sum + val, 0);
+        const totalFinanced = Array.from(uniqueOrders.values()).reduce((sum, val: number) => sum + (val || 0), 0);
 
         // Get all completed payments
-        const completedPayments = allPayments.filter(p => p.status === 'completed');
-        const totalCollected = completedPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+        const completedPayments = allPayments.filter(p => p && p.status === 'completed');
+        const totalCollected = completedPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
         // Calculate dynamic shares
         const ratios = await this.getCurrentRatios();
@@ -78,19 +80,20 @@ export class ProfitDistributionService {
             const endOfDay = date.endOf('day').toDate().getTime();
 
             const dayPayments = allPayments.filter(p => {
-                const paidAt = p.paidAt ? new Date(p.paidAt).getTime() : 0;
-                return paidAt >= startOfDay && paidAt <= endOfDay;
+                if (!p || !p.paidAt) return false;
+                const paidAtTime = new Date(p.paidAt).getTime();
+                return paidAtTime >= startOfDay && paidAtTime <= endOfDay;
             });
 
-            const totalCollected = dayPayments.reduce((sum, p) => sum + Number(p.amount), 0);
-            const bankShare = totalCollected * ratios.bankCommission;
-            const platformShare = totalCollected * ratios.platformCommission;
+            const totalColl = dayPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+            const bShare = totalColl * (ratios.bankCommission || 0.03);
+            const pShare = totalColl * (ratios.platformCommission || 0.02);
 
             chartData.push({
                 day: dayNames[date.day()],
-                totalCollected,
-                bankShare,
-                platformShare,
+                totalCollected: totalColl,
+                bankShare: bShare,
+                platformShare: pShare,
             });
         }
 
