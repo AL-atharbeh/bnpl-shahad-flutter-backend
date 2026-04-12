@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   getProfitDistributionStats,
   getProfitDistributionChart,
@@ -11,16 +12,16 @@ import {
   getAdminStores,
   updateStore,
 } from "@/services/api";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+
+// Dynamically import Recharts to prevent hydration errors in Next.js
+const ResponsiveContainer = dynamic(() => import("recharts").then((mod) => mod.ResponsiveContainer), { ssr: false });
+const BarChart = dynamic(() => import("recharts").then((mod) => mod.BarChart), { ssr: false });
+const Bar = dynamic(() => import("recharts").then((mod) => mod.Bar), { ssr: false });
+const XAxis = dynamic(() => import("recharts").then((mod) => mod.XAxis), { ssr: false });
+const YAxis = dynamic(() => import("recharts").then((mod) => mod.YAxis), { ssr: false });
+const CartesianGrid = dynamic(() => import("recharts").then((mod) => mod.CartesianGrid), { ssr: false });
+const Tooltip = dynamic(() => import("recharts").then((mod) => mod.Tooltip), { ssr: false });
+const Legend = dynamic(() => import("recharts").then((mod) => mod.Legend), { ssr: false });
 
 const settlementStatusStyles = {
   "تم التحويل":
@@ -194,7 +195,7 @@ export default function ProfitsPage() {
             <span>حجم العمليات</span>
           </p>
           <p className="mt-2 text-2xl font-semibold text-slate-50">
-            {stats?.totalFinanced?.toFixed(2) || 0} دينار
+            {Number(stats?.totalFinanced || 0).toFixed(2)} دينار
           </p>
           <p className="mt-1 text-[11px] text-slate-300">تم تمويلها عبر البنك</p>
         </div>
@@ -205,7 +206,7 @@ export default function ProfitsPage() {
             <span>حصة البنك</span>
           </p>
           <p className="mt-2 text-2xl font-semibold text-slate-50">
-            {stats?.bankTotalShare?.toFixed(2) || 0} دينار
+            {Number(stats?.bankTotalShare || 0).toFixed(2)} دينار
           </p>
           <p className="mt-1 text-[11px] text-slate-300">نقتطعها من كل دفعة عميل ونحوّلها للبنك</p>
         </div>
@@ -216,7 +217,7 @@ export default function ProfitsPage() {
             <span>عمولة المنصة</span>
           </p>
           <p className="mt-2 text-2xl font-semibold text-slate-50">
-            {stats?.platformTotalShare?.toFixed(2) || 0} دينار
+            {Number(stats?.platformTotalShare || 0).toFixed(2)} دينار
           </p>
           <p className="mt-1 text-[11px] text-slate-300">إجمالي أرباحك من العمليات</p>
         </div>
@@ -227,7 +228,7 @@ export default function ProfitsPage() {
             <span>أرباح بانتظار التحويل</span>
           </p>
           <p className="mt-2 text-2xl font-semibold">
-            {(stats?.pendingProfits || 0).toFixed(2)} دينار
+            {Number(stats?.pendingProfits || 0).toFixed(2)} دينار
           </p>
           <p className="mt-1 text-[11px]">تُحوّل في التسوية الأسبوعية القادمة</p>
         </div>
@@ -415,12 +416,12 @@ export default function ProfitsPage() {
                     <td className="px-4 py-3 font-semibold text-slate-50">{entry.id}</td>
                     <td className="px-4 py-3">{entry.customer}</td>
                     <td className="px-4 py-3 text-slate-300">{entry.store}</td>
-                    <td className="px-4 py-3 text-slate-200">{(entry.productValue || 0).toFixed(2)} دينار</td>
-                    <td className="px-4 py-3 text-sky-300/80">{(entry.bankRate || 0).toFixed(1)}%</td>
-                    <td className="px-4 py-3 text-emerald-300/80">{(entry.platformRate || 0).toFixed(1)}%</td>
-                    <td className="px-4 py-3 text-sky-200">{(entry.bankShare || 0).toFixed(2)} دينار</td>
-                    <td className="px-4 py-3 text-emerald-200">{(entry.platformShare || 0).toFixed(2)} دينار</td>
-                    <td className="px-4 py-3 text-slate-100">{(entry.netToMerchant || 0).toFixed(2)} دينار</td>
+                    <td className="px-4 py-3 text-slate-200">{Number(entry.productValue || 0).toFixed(2)} دينار</td>
+                    <td className="px-4 py-3 text-sky-300/80">{Number(entry.bankRate || 0).toFixed(1)}%</td>
+                    <td className="px-4 py-3 text-emerald-300/80">{Number(entry.platformRate || 0).toFixed(1)}%</td>
+                    <td className="px-4 py-3 text-sky-200">{Number(entry.bankShare || 0).toFixed(2)} دينار</td>
+                    <td className="px-4 py-3 text-emerald-200">{Number(entry.platformShare || 0).toFixed(2)} دينار</td>
+                    <td className="px-4 py-3 text-slate-100">{Number(entry.netToMerchant || 0).toFixed(2)} دينار</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex rounded-full px-3 py-1 text-[10px] font-medium ${settlementStatusStyles[entry.settlementStatus as keyof typeof settlementStatusStyles] || ""
                         }`}>
@@ -465,9 +466,9 @@ export default function ProfitsPage() {
                     <tr key={s.id} className="hover:bg-slate-900/40 transition-colors">
                       <td className="px-4 py-3 font-semibold text-slate-50">{s.id}</td>
                       <td className="px-4 py-3">{s.createdAt ? new Date(s.createdAt).toLocaleDateString("ar") : "-"}</td>
-                      <td className="px-4 py-3">{(s.totalAmount || 0).toFixed(2)} د.أ</td>
-                      <td className="px-4 py-3 text-emerald-300/80">{(s.bankShare || 0).toFixed(2)} د.أ</td>
-                      <td className="px-4 py-3 text-emerald-100">{(s.platformShare || 0).toFixed(2)} د.أ</td>
+                      <td className="px-4 py-3">{Number(s.totalAmount || 0).toFixed(2)} د.أ</td>
+                      <td className="px-4 py-3 text-emerald-300/80">{Number(s.bankShare || 0).toFixed(2)} د.أ</td>
+                      <td className="px-4 py-3 text-emerald-100">{Number(s.platformShare || 0).toFixed(2)} د.أ</td>
                       <td className="px-4 py-3">
                         <span className="inline-flex rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-medium text-emerald-400 border border-emerald-500/20">
                           {s.status === 'completed' ? 'تمت التسوية' : 'بانتظار التحويل'}
