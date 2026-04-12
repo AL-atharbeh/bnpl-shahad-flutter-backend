@@ -150,13 +150,13 @@ export default function StoresPage() {
     totalSalesValue: stores.reduce(
       (sum, store) =>
         sum +
-        parseFloat((store.totalSales || "0").replace(/,/g, "").replace(" دينار", "")),
+        parseFloat((store.totalSales || "0").replace(/,/g, "").replace(" JOD", "")),
       0
     ),
     totalPendingPayouts: stores.reduce(
       (sum, store) =>
         sum +
-        parseFloat((store.pendingPayouts || "0").replace(/,/g, "").replace(" دينار", "")),
+        parseFloat((store.pendingPayouts || "0").replace(/,/g, "").replace(" JOD", "")),
       0
     ),
   };
@@ -253,13 +253,13 @@ export default function StoresPage() {
         <div className="rounded-xl border border-slate-800 bg-[#021f2a] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.6)]">
           <p className="text-xs text-slate-400">إجمالي المبيعات عبر BNPL</p>
           <p className="mt-2 text-2xl font-semibold text-slate-50">
-            {displayStats.totalSalesValue.toLocaleString()} دينار
+            {displayStats.totalSalesValue.toLocaleString('en-US')} JOD
           </p>
         </div>
         <div className="rounded-xl border border-slate-800 bg-[#021f2a] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.6)]">
           <p className="text-xs text-slate-400">إجمالي المستحقات للمتاجر</p>
           <p className="mt-2 text-2xl font-semibold text-slate-50">
-            {displayStats.totalPendingPayouts.toLocaleString()} دينار
+            {displayStats.totalPendingPayouts.toLocaleString('en-US')} JOD
           </p>
         </div>
         <div className="rounded-xl border border-emerald-500/70 bg-gradient-to-br from-emerald-500 to-emerald-400 p-4 text-slate-950 shadow-[0_18px_40px_rgba(16,185,129,0.6)]">

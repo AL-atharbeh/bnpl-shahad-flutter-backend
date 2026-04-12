@@ -489,20 +489,15 @@ export class PaymentsService {
       const amount = Number(p.amount || 0);
       const isPaid = p.status === 'completed';
       const orderId = p.orderId;
-      const n = (val: any) => Number(val) / 100;
+      const normalizeRate = (val: any, fallback: number) => {
+        if (val === null || val === undefined) return fallback;
+        const num = Number(val);
+        // If > 1 (e.g. 3.0), it's a percentage. If <= 1 (e.g. 0.03), it's already a decimal.
+        return num >= 1 ? num / 100 : num;
+      };
 
-      // Link logic (Priority: Store Rate > Payment Rate > Global Fallback)
-      const bRate = (p.store?.bankCommissionRate !== null && p.store?.bankCommissionRate !== undefined)
-        ? n(p.store.bankCommissionRate)
-        : ((p.bankCommissionRate !== null && p.bankCommissionRate !== undefined)
-          ? n(p.bankCommissionRate)
-          : BANK_COMMISSION_RATE);
-
-      const pRate = (p.store?.platformCommissionRate !== null && p.store?.platformCommissionRate !== undefined)
-        ? n(p.store.platformCommissionRate)
-        : ((p.platformCommissionRate !== null && p.platformCommissionRate !== undefined)
-          ? n(p.platformCommissionRate)
-          : PLATFORM_COMMISSION_RATE);
+      const bRate = normalizeRate(p.store?.bankCommissionRate ?? p.bankCommissionRate, BANK_COMMISSION_RATE);
+      const pRate = normalizeRate(p.store?.platformCommissionRate ?? p.platformCommissionRate, PLATFORM_COMMISSION_RATE);
 
       const bankCommission = amount * bRate;
       const platformCommission = amount * pRate;
@@ -553,10 +548,12 @@ export class PaymentsService {
       }
 
       // Track collected bank share (collected amount minus platform share of that portion)
+      // Track collected bank share
       if (isPaid) {
         acc.bankTotalCollectedFromUsers += amount * (1 - pRate);
       }
 
+      console.log(`[Finance] Order ${orderId}: Store=${p.store?.nameAr}, bRate=${bRate*100}%, pRate=${pRate*100}%`);
       return acc;
     }, {
       totalSales: 0,
