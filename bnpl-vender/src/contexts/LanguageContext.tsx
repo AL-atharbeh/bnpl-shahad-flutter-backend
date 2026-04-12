@@ -16,7 +16,7 @@ const translations: Record<Language, Record<string, string>> = {
         // Sidebar & Navigation
         dashboard: "لوحة التحكم",
         transactions: "العمليات المالية",
-        finance: "التسويات المالية",
+        finance: "الأرباح النهائية",
         settings: "إعدادات المتجر",
         logout: "تسجيل الخروج",
         partnersPortal: "بوابة الشركاء",
@@ -113,7 +113,7 @@ const translations: Record<Language, Record<string, string>> = {
         uploadImage: "رفع صورة",
 
         // Finance
-        financialSettlements: "التسويات المالية",
+        financialSettlements: "الأرباح النهائية",
         manageProfits: "إدارة الأرباح والتحويلات البنكية الخاصة بمتجرك.",
         pendingBalance: "الرصيد المعلق",
         lastTransfer: "آخر تحويل",
@@ -198,7 +198,7 @@ const translations: Record<Language, Record<string, string>> = {
         // Sidebar & Navigation
         dashboard: "Dashboard",
         transactions: "Transactions",
-        finance: "Financial Settlements",
+        finance: "Final Profits",
         settings: "Store Settings",
         logout: "Logout",
         partnersPortal: "Partners Portal",
@@ -294,7 +294,7 @@ const translations: Record<Language, Record<string, string>> = {
         uploadImage: "Upload Image",
 
         // Finance
-        financialSettlements: "Financial Settlements",
+        financialSettlements: "Final Profits",
         manageProfits: "Manage profits and bank transfers for your store.",
         pendingBalance: "Pending Balance",
         lastTransfer: "Last Transfer",
