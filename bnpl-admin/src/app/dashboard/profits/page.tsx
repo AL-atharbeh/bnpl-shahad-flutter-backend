@@ -56,7 +56,7 @@ export default function ProfitsPage() {
         getProfitDistributionChart(7).catch(() => ({ data: { data: [] } })),
         getCurrentCommissionSettings().catch(() => ({ data: { data: { bankCommission: 0.03, platformCommission: 0.02 } } })),
         getAllSettlements({ page: 1, limit: 10 }).catch(() => ({ data: { data: { settlements: [] } } })),
-        getAllPayments({ page: 1, limit: 100 }),
+        getAllPayments({ page: 1, limit: 100 }).catch(() => ({ data: { data: [] } })),
         getAdminStores().catch(() => ({ data: [] })),
       ]);
 
@@ -64,36 +64,45 @@ export default function ProfitsPage() {
       setChartData(chartRes.data.data);
       setSettings(settingsRes.data.data);
       setSettlements(settlementsRes.data.data.settlements || []);
-      setAllStores(storesRes.data || []);
+      setAllStores(storesRes?.data || []);
 
       // Process payments to show one row per order
       const uniqueOrders = new Map();
-      (paymentsRes.data.data || []).forEach((p: any) => {
-        if (!uniqueOrders.has(p.orderId)) {
-          const productValue = Number(p.amount) * p.installmentsCount;
-          // Use captured rates from payment record, fallback to global settings
-          const bRate = p.bankCommissionRate ? Number(p.bankCommissionRate) / 100 : settingsRes.data.data.bankCommission || 0.03;
-          const pRate = p.platformCommissionRate ? Number(p.platformCommissionRate) / 100 : settingsRes.data.data.platformCommission || 0.02;
+      const paymentsList = paymentsRes?.data?.data || paymentsRes?.data || [];
+      
+      if (Array.isArray(paymentsList)) {
+        paymentsList.forEach((p: any) => {
+          if (p && p.orderId && !uniqueOrders.has(p.orderId)) {
+            const prodVal = Number(p.amount) * (p.installmentsCount || 1);
+            // Use captured rates from payment record, fallback to global settings
+            const bR = p.bankCommissionRate ? Number(p.bankCommissionRate) / 100 : (settingsRes?.data?.data?.bankCommission || 0.03);
+            const pR = p.platformCommissionRate ? Number(p.platformCommissionRate) / 100 : (settingsRes?.data?.data?.platformCommission || 0.02);
 
-          uniqueOrders.set(p.orderId, {
-            id: p.orderId,
-            customer: p.user?.name || "عميل غير معروف",
-            store: p.store?.name || "متجر غير معروف",
-            productValue: productValue,
-            bankRate: bRate * 100,
-            platformRate: pRate * 100,
-            bankShare: productValue * bRate,
-            platformShare: productValue * pRate,
-            netToMerchant: productValue * (1 - bRate - pRate),
-            settlementStatus: p.status === 'completed' ? 'تم التحويل' : 'بنتظار',
-            settlementDate: p.paidAt ? new Date(p.paidAt).toLocaleDateString("ar") : "-",
-          });
-        }
-      });
+            uniqueOrders.set(p.orderId, {
+              id: p.orderId,
+              customer: p.user?.name || "عميل غير معروف",
+              store: p.store?.name || "متجر غير معروف",
+              productValue: prodVal,
+              bankRate: bR * 100,
+              platformRate: pR * 100,
+              bankShare: prodVal * bR,
+              platformShare: prodVal * pR,
+              netToMerchant: prodVal * (1 - bR - pR),
+              settlementStatus: p.status === 'completed' ? 'تم التحويل' : 'بنتظار',
+              settlementDate: p.paidAt ? new Date(p.paidAt).toLocaleDateString("ar") : "-",
+            });
+          }
+        });
+      }
       setPayments(Array.from(uniqueOrders.values()));
 
-      setBankRate((settingsRes.data.data.bankCommission * 100).toString());
-      setPlatformRate((settingsRes.data.data.platformCommission * 100).toString());
+      if (settingsRes?.data?.data) {
+        setBankRate(((settingsRes.data.data.bankCommission || 0.03) * 100).toString());
+        setPlatformRate(((settingsRes.data.data.platformCommission || 0.02) * 100).toString());
+      } else {
+        setBankRate("3.0");
+        setPlatformRate("2.0");
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -118,7 +127,7 @@ export default function ProfitsPage() {
           platformCommissionRate: parseFloat(platformRate),
         });
       }
-      alert("تم حفظ التغييرات نجاح!");
+      alert("تم حفظ التغييرات بنجاح!");
       setEditMode(false);
       fetchData();
     } catch (error) {
@@ -210,7 +219,7 @@ export default function ProfitsPage() {
             <span>أرباح بانتظار التحويل</span>
           </p>
           <p className="mt-2 text-2xl font-semibold">
-            {stats?.pendingProfits?.toFixed(2) || 0} دينار
+            {(stats?.pendingProfits || 0).toFixed(2)} دينار
           </p>
           <p className="mt-1 text-[11px]">تُحوّل في التسوية الأسبوعية القادمة</p>
         </div>
@@ -388,7 +397,7 @@ export default function ProfitsPage() {
             <tbody className="divide-y divide-slate-800 bg-[#031824] text-slate-200">
               {filteredEntries.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-8 text-center text-slate-400">
+                  <td colSpan={11} className="px-4 py-8 text-center text-slate-400">
                     لا توجد عمليات مطابقة للاستعلام الحالي.
                   </td>
                 </tr>
