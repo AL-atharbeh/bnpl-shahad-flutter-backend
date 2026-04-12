@@ -808,6 +808,7 @@ export default function StoresPage() {
                           step="0.1"
                           value={selectedStore.commissionRate !== null && selectedStore.commissionRate !== undefined ? selectedStore.commissionRate : ""}
                           onChange={(e) => {
+                            if (!selectedStore) return;
                             const val = e.target.value === "" ? null : parseFloat(e.target.value);
                             setSelectedStore({ ...selectedStore, commissionRate: val });
                           }}
@@ -829,6 +830,7 @@ export default function StoresPage() {
                           step="0.1"
                           value={selectedStore.bankCommissionRate !== null && selectedStore.bankCommissionRate !== undefined ? selectedStore.bankCommissionRate : ""}
                           onChange={(e) => {
+                            if (!selectedStore) return;
                             const val = e.target.value === "" ? null : parseFloat(e.target.value);
                             setSelectedStore({ ...selectedStore, bankCommissionRate: val });
                           }}
@@ -850,6 +852,7 @@ export default function StoresPage() {
                           step="0.1"
                           value={selectedStore.platformCommissionRate !== null && selectedStore.platformCommissionRate !== undefined ? selectedStore.platformCommissionRate : ""}
                           onChange={(e) => {
+                            if (!selectedStore) return;
                             const val = e.target.value === "" ? null : parseFloat(e.target.value);
                             setSelectedStore({ ...selectedStore, platformCommissionRate: val });
                           }}
