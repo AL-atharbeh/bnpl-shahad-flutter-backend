@@ -798,20 +798,49 @@ export default function StoresPage() {
                   </h3>
                   <span className="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded uppercase">Admin Only</span>
                 </div>
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-3">
                   <div className="space-y-2">
-                    <label className="text-xs text-slate-400">نسبة العمولة المتفق عليها (%)</label>
+                    <label className="text-xs text-slate-400">إجمالي العمولة (%)</label>
                     <div className="flex items-center gap-2">
                       <input 
                         type="number" 
                         step="0.1"
-                        value={selectedStore.commissionRate || 2.5}
+                        value={selectedStore.commissionRate || 5.0}
                         onChange={(e) => setSelectedStore({...selectedStore, commissionRate: parseFloat(e.target.value)})}
-                        className="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-slate-50 text-sm focus:border-emerald-500 outline-none transition-all"
+                        className="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-slate-50 text-sm focus:border-emerald-500 outline-none transition-all font-mono"
                       />
                       <span className="text-emerald-500 font-bold">%</span>
                     </div>
                   </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-slate-400">حصة البنك (%)</label>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="number" 
+                        step="0.1"
+                        value={selectedStore.bankCommissionRate || 3.0}
+                        onChange={(e) => setSelectedStore({...selectedStore, bankCommissionRate: parseFloat(e.target.value)})}
+                        className="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-slate-50 text-sm focus:border-emerald-500 outline-none transition-all font-mono"
+                      />
+                      <span className="text-sky-400 font-bold">%</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-slate-400">حصة المنصة (%)</label>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="number" 
+                        step="0.1"
+                        value={selectedStore.platformCommissionRate || 2.0}
+                        onChange={(e) => setSelectedStore({...selectedStore, platformCommissionRate: parseFloat(e.target.value)})}
+                        className="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-slate-50 text-sm focus:border-emerald-500 outline-none transition-all font-mono"
+                      />
+                      <span className="text-amber-400 font-bold">%</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 grid gap-6 md:grid-cols-2">
                   <div className="space-y-2">
                     <label className="text-xs text-slate-400">دورية تحويل المستحقات (Payout Cycle)</label>
                     <select 
@@ -831,6 +860,8 @@ export default function StoresPage() {
                         try {
                           await storesService.updateStore(selectedStore.id, {
                             commissionRate: selectedStore.commissionRate,
+                            bankCommissionRate: selectedStore.bankCommissionRate,
+                            platformCommissionRate: selectedStore.platformCommissionRate,
                             payoutCycle: selectedStore.payoutCycle
                           });
                           alert("تم حفظ الإعدادات المالية بنجاح ✅");

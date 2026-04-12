@@ -19,7 +19,9 @@ const initialFormData = {
     logoUrl: "",
     websiteUrl: "",
     storeUrl: "",
-    commissionRate: "2.5",
+    commissionRate: "5.0",
+    bankCommissionRate: "3.0",
+    platformCommissionRate: "2.0",
     minOrderAmount: "50",
     maxOrderAmount: "5000",
     vendorId: "",
@@ -46,7 +48,9 @@ export default function StoreModal({ isOpen, onClose, onSuccess, editStore }: St
                     logoUrl: editStore.logoUrl || "",
                     websiteUrl: editStore.websiteUrl || "",
                     storeUrl: editStore.storeUrl || "",
-                    commissionRate: editStore.commissionRate?.toString() || "2.5",
+                    commissionRate: editStore.commissionRate?.toString() || "5.0",
+                    bankCommissionRate: editStore.bankCommissionRate?.toString() || "3.0",
+                    platformCommissionRate: editStore.platformCommissionRate?.toString() || "2.0",
                     minOrderAmount: editStore.minOrderAmount?.toString() || "50",
                     maxOrderAmount: editStore.maxOrderAmount?.toString() || "5000",
                     vendorId: editStore.vendorId?.toString() || "",
@@ -92,6 +96,8 @@ export default function StoreModal({ isOpen, onClose, onSuccess, editStore }: St
                 websiteUrl: formData.websiteUrl || undefined,
                 storeUrl: formData.storeUrl || undefined,
                 commissionRate: Number(formData.commissionRate),
+                bankCommissionRate: Number(formData.bankCommissionRate),
+                platformCommissionRate: Number(formData.platformCommissionRate),
                 minOrderAmount: Number(formData.minOrderAmount),
                 maxOrderAmount: Number(formData.maxOrderAmount),
                 vendorId: formData.vendorId ? Number(formData.vendorId) : undefined,
@@ -284,7 +290,7 @@ export default function StoreModal({ isOpen, onClose, onSuccess, editStore }: St
                         {/* Commission Rate */}
                         <div>
                             <label className="block text-sm font-medium text-slate-300 mb-2">
-                                نسبة العمولة (%)
+                                إجمالي العمولة (%)
                             </label>
                             <input
                                 type="number"
@@ -295,32 +301,36 @@ export default function StoreModal({ isOpen, onClose, onSuccess, editStore }: St
                             />
                         </div>
 
-                        {/* Min Order Amount */}
+                        {/* Bank Commission Rate */}
                         <div>
                             <label className="block text-sm font-medium text-slate-300 mb-2">
-                                الحد الأدنى للطلب
+                                حصة البنك (%)
                             </label>
                             <input
                                 type="number"
-                                value={formData.minOrderAmount}
-                                onChange={(e) => setFormData({ ...formData, minOrderAmount: e.target.value })}
+                                step="0.1"
+                                value={formData.bankCommissionRate}
+                                onChange={(e) => setFormData({ ...formData, bankCommissionRate: e.target.value })}
                                 className={inputClass}
                             />
                         </div>
 
-                        {/* Max Order Amount */}
+                        {/* Platform Commission Rate */}
                         <div>
                             <label className="block text-sm font-medium text-slate-300 mb-2">
-                                الحد الأقصى للطلب
+                                حصة المنصة (%)
                             </label>
                             <input
                                 type="number"
-                                value={formData.maxOrderAmount}
-                                onChange={(e) => setFormData({ ...formData, maxOrderAmount: e.target.value })}
+                                step="0.1"
+                                value={formData.platformCommissionRate}
+                                onChange={(e) => setFormData({ ...formData, platformCommissionRate: e.target.value })}
                                 className={inputClass}
                             />
                         </div>
                     </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
 
                     {/* Buttons */}
                     <div className="flex items-center justify-end gap-3 pt-4">
