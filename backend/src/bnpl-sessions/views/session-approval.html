@@ -470,7 +470,7 @@
                             <div class="dot ${i === 0 ? 'active' : ''}">${i + 1}</div>
                             <div class="installment-info">
                                 <span class="label">${i === 0 ? 'الدفعة الأولى (الآن)' : 'الدفعة ' + (i+1)}</span>
-                                <span class="date">${i === 0 ? 'تُدفع الآن' : dueDate.toLocaleDateString('ar-JO', {month: 'long', day: 'numeric'})}</span>
+                                <span class="date">${i === 0 ? 'تُدفع الآن' : dueDate.toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric'})}</span>
                             </div>
                             <div class="installment-val">${installmentAmount} ${currency}</div>
                         `;

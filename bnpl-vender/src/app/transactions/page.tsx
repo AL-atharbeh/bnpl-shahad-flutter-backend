@@ -101,14 +101,14 @@ export default function TransactionsPage() {
                                                 <div className="font-medium text-slate-200">{t.user?.name || t("unknownCustomer")}</div>
                                                 <div className="text-[11px] text-slate-500">{t.user?.phone}</div>
                                             </td>
-                                            <td className="px-6 py-4 font-semibold text-emerald-400">{(t.amount * (t.installmentsCount || 1)).toLocaleString()} {useLanguage().t("currency")}</td>
+                                            <td className="px-6 py-4 font-semibold text-emerald-400">{(t.amount * (t.installmentsCount || 1)).toLocaleString("en-US")} {useLanguage().t("currency")}</td>
                                             <td className="px-6 py-4">
                                                 <span className={`inline-flex rounded-full px-2 py-1 text-[10px] font-bold ${t.status === "completed" ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
                                                     }`}>
                                                     {t.status === "completed" ? useLanguage().t("paid") : useLanguage().t("processing")}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 text-slate-400">{new Date(t.createdAt).toLocaleDateString(language === "ar" ? "ar-JO" : "en-US")}</td>
+                                            <td className="px-6 py-4 text-slate-400">{new Date(t.createdAt).toLocaleDateString("en-US")}</td>
                                             <td className="px-6 py-4">
                                                 <button className="text-slate-500 hover:text-emerald-400">
                                                     <Eye className="h-4 w-4" />

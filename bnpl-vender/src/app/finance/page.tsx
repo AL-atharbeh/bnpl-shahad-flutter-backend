@@ -20,7 +20,7 @@ const n = (v: any): number => {
 };
 
 const fmt = (v: number, lang: string) =>
-  v.toLocaleString(lang === "ar" ? "ar-JO" : "en-US", {
+  v.toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -263,7 +263,7 @@ export default function FinancePage() {
                           <td className="px-6 py-5">
                             <div className="flex flex-col">
                               <span className="font-bold text-slate-200 group-hover:text-white transition-colors">#{o.orderId.slice(-8).toUpperCase()}</span>
-                              <span className="text-[10px] text-slate-500 mt-1 uppercase font-mono">{o.date?.toLocaleDateString(language === "ar" ? "ar-JO" : "en-US", { day: 'numeric', month: 'short' })}</span>
+                              <span className="text-[10px] text-slate-500 mt-1 uppercase font-mono">{o.date?.toLocaleDateString("en-US", { day: 'numeric', month: 'short' })}</span>
                             </div>
                           </td>
                           <td className="px-6 py-5">

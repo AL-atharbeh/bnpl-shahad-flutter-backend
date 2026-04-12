@@ -112,7 +112,7 @@ export default function FinalProfitsPage() {
               paidAmount: p.status === "completed" ? amount : 0,
               status: p.status,
               date: p.createdAt
-                ? new Date(p.createdAt).toLocaleDateString("ar-JO")
+                ? new Date(p.createdAt).toLocaleDateString("en-US")
                 : "-",
             });
           } else {

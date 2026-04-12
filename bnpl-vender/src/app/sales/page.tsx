@@ -279,7 +279,7 @@ export default function SalesPage() {
                                                                 <div className="rounded-2xl p-4 bg-[#01281e]/30 border border-emerald-900/30 space-y-3">
                                                                     <div className="flex justify-between text-xs">
                                                                         <span className="text-slate-500">{language === 'ar' ? 'تاريخ الطلب' : 'Order Date'}</span>
-                                                                        <span className="text-slate-200">{new Date(sale.createdAt).toLocaleString(language === "ar" ? "ar-JO" : "en-US")}</span>
+                                                                        <span className="text-slate-200">{new Date(sale.createdAt).toLocaleString("en-US")}</span>
                                                                     </div>
                                                                     <div className="flex justify-between text-xs">
                                                                         <span className="text-slate-500">{language === 'ar' ? 'رقم الهاتف' : 'Phone Number'}</span>
