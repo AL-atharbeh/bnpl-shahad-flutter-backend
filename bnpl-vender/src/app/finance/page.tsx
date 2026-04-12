@@ -12,24 +12,26 @@ import { getVendorSettlements, getVendorSettlementStats } from "@/services/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function FinancePage() {
+    const [mounted, setMounted] = useState(false);
     const [settlements, setSettlements] = useState<any[]>([]);
     const [stats, setStats] = useState<{ pendingBalance: number, lastTransfer: any } | null>(null);
     const [loading, setLoading] = useState(true);
     const { t, language } = useLanguage();
 
     useEffect(() => {
+        setMounted(true);
         async function fetchFinance() {
-            const userStr = localStorage.getItem("vendor_user");
+            const userStr = typeof window !== "undefined" ? localStorage.getItem("vendor_user") : null;
             if (!userStr) return;
 
             try {
                 const user = JSON.parse(userStr);
                 const [settlementsRes, statsRes] = await Promise.all([
-                    getVendorSettlements({ page: 1, limit: 50 }, user.storeId),
-                    getVendorSettlementStats(user.storeId)
+                    getVendorSettlements({ page: 1, limit: 50 }, user.storeId).catch(() => ({ data: { data: { settlements: [] } } })),
+                    getVendorSettlementStats(user.storeId).catch(() => ({ data: { data: { pendingBalance: 0, lastTransfer: null } } }))
                 ]);
-                setSettlements(settlementsRes.data.data.settlements || []);
-                setStats(statsRes.data.data);
+                setSettlements(settlementsRes?.data?.data?.settlements || []);
+                setStats(statsRes?.data?.data || null);
             } catch (error) {
                 console.error("Failed to fetch settlements", error);
             } finally {
@@ -38,6 +40,8 @@ export default function FinancePage() {
         }
         fetchFinance();
     }, []);
+
+    if (!mounted) return null;
 
     return (
         <DashboardLayout>
@@ -76,7 +80,7 @@ export default function FinancePage() {
                                 <CheckCircle2 className="h-3 w-3 text-emerald-500" />
                                 {stats?.lastTransfer ? (
                                     <>
-                                        {t("transferredOn")} {new Date(stats.lastTransfer.date).toLocaleDateString(language === "ar" ? "ar-JO" : "en-US", { day: 'numeric', month: 'long' })}
+                                        {t("transferredOn")} {stats?.lastTransfer?.date ? new Date(stats.lastTransfer.date).toLocaleDateString(language === "ar" ? "ar-JO" : "en-US", { day: 'numeric', month: 'long' }) : "-"}
                                     </>
                                 ) : (
                                     t("noTransfersYet")
@@ -102,12 +106,14 @@ export default function FinancePage() {
                                                 <Calendar className="h-4 w-4 text-emerald-500/60" />
                                             </div>
                                             <div>
-                                                <h4 className="text-sm font-bold text-slate-200">{t("monthlySettlement")} - {new Date(s.settlementDate).toLocaleDateString(language === "ar" ? "ar-JO" : "en-US", { month: 'long', year: 'numeric' })}</h4>
+                                                <h4 className="text-sm font-bold text-slate-200">
+                                                    {t("monthlySettlement")} - {s.settlementDate ? new Date(s.settlementDate).toLocaleDateString(language === "ar" ? "ar-JO" : "en-US", { month: 'long', year: 'numeric' }) : "-"}
+                                                </h4>
                                                 <p className="text-[11px] text-slate-500 mt-0.5 font-mono">{t("reference")}: #{s.id}</p>
                                             </div>
                                         </div>
                                         <div className={`${language === "ar" ? "text-left" : "text-right"}`}>
-                                            <div className="text-sm font-black text-emerald-400">{s.totalCollected.toLocaleString()} {t("currency")}</div>
+                                            <div className="text-sm font-black text-emerald-400">{(s.totalCollected || 0).toLocaleString()} {t("currency")}</div>
                                             <div className="text-[10px] font-bold text-emerald-600 mt-1 uppercase">{t("transferSuccess")}</div>
                                         </div>
                                     </div>

@@ -30,6 +30,7 @@ const settlementStatusStyles = {
 };
 
 export default function ProfitsPage() {
+  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
   const [chartData, setChartData] = useState<any[]>([]);
@@ -45,36 +46,48 @@ export default function ProfitsPage() {
   const [statusFilter, setStatusFilter] = useState("الكل");
 
   useEffect(() => {
+    setMounted(true);
     fetchData();
   }, []);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [statsRes, chartRes, settingsRes, settlementsRes, paymentsRes, storesRes] = await Promise.all([
-        getProfitDistributionStats().catch(() => ({ data: { data: null } })),
+      
+      // Fetch core data first
+      const statsRes = await getProfitDistributionStats().catch(() => ({ data: { data: null } }));
+      const settingsRes = await getCurrentCommissionSettings().catch(() => ({ data: { data: { bankCommission: 0.03, platformCommission: 0.02 } } }));
+      
+      if (statsRes?.data?.data) setStats(statsRes.data.data);
+      if (settingsRes?.data?.data) {
+        setSettings(settingsRes.data.data);
+        setBankRate(((settingsRes.data.data.bankCommission || 0.03) * 100).toString());
+        setPlatformRate(((settingsRes.data.data.platformCommission || 0.02) * 100).toString());
+      }
+
+      // Fetch supplementary data
+      const [chartRes, settlementsRes, paymentsRes, storesRes] = await Promise.all([
         getProfitDistributionChart(7).catch(() => ({ data: { data: [] } })),
-        getCurrentCommissionSettings().catch(() => ({ data: { data: { bankCommission: 0.03, platformCommission: 0.02 } } })),
         getAllSettlements({ page: 1, limit: 10 }).catch(() => ({ data: { data: { settlements: [] } } })),
         getAllPayments({ page: 1, limit: 100 }).catch(() => ({ data: { data: [] } })),
         getAdminStores().catch(() => ({ data: [] })),
       ]);
 
-      setStats(statsRes.data.data);
-      setChartData(chartRes.data.data);
-      setSettings(settingsRes.data.data);
-      setSettlements(settlementsRes.data.data.settlements || []);
-      setAllStores(storesRes?.data || []);
+      if (chartRes?.data?.data) setChartData(chartRes.data.data);
+      if (settlementsRes?.data?.data?.settlements) setSettlements(settlementsRes.data.data.settlements);
+      if (storesRes?.data) setAllStores(storesRes.data);
 
-      // Process payments to show one row per order
+      // Process payments
       const uniqueOrders = new Map();
       const paymentsList = paymentsRes?.data?.data || paymentsRes?.data || [];
       
       if (Array.isArray(paymentsList)) {
         paymentsList.forEach((p: any) => {
           if (p && p.orderId && !uniqueOrders.has(p.orderId)) {
-            const prodVal = Number(p.amount) * (p.installmentsCount || 1);
-            // Use captured rates from payment record, fallback to global settings
+            const amount = Number(p.amount) || 0;
+            const installments = p.installmentsCount || 1;
+            const prodVal = amount * installments;
+            
             const bR = p.bankCommissionRate ? Number(p.bankCommissionRate) / 100 : (settingsRes?.data?.data?.bankCommission || 0.03);
             const pR = p.platformCommissionRate ? Number(p.platformCommissionRate) / 100 : (settingsRes?.data?.data?.platformCommission || 0.02);
 
@@ -83,8 +96,8 @@ export default function ProfitsPage() {
               customer: p.user?.name || "عميل غير معروف",
               store: p.store?.name || "متجر غير معروف",
               productValue: prodVal,
-              bankRate: bR * 100,
-              platformRate: pR * 100,
+              bankRate: (bR * 100).toFixed(1),
+              platformRate: (pR * 100).toFixed(1),
               bankShare: prodVal * bR,
               platformShare: prodVal * pR,
               netToMerchant: prodVal * (1 - bR - pR),
@@ -96,19 +109,14 @@ export default function ProfitsPage() {
       }
       setPayments(Array.from(uniqueOrders.values()));
 
-      if (settingsRes?.data?.data) {
-        setBankRate(((settingsRes.data.data.bankCommission || 0.03) * 100).toString());
-        setPlatformRate(((settingsRes.data.data.platformCommission || 0.02) * 100).toString());
-      } else {
-        setBankRate("3.0");
-        setPlatformRate("2.0");
-      }
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
   };
+
+  if (!mounted) return null;
 
   const handleSaveSettings = async () => {
     try {
