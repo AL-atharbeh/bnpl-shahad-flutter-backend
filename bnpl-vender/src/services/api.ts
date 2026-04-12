@@ -52,7 +52,9 @@ export const uploadProductImage = (file: File) => {
     });
 };
 
+// Store & Commissions
 export const getStoreSettings = (storeId: number) => api.get(`/stores/${storeId}`);
+export const getCurrentCommissionSettings = () => api.get('/commission-settings/current');
 export const updateStoreSettings = (storeId: number, data: any) => api.put(`/stores/${storeId}`, data);
 export const createStore = (storeData: any) => api.post("/stores", storeData);
 
