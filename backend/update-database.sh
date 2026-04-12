@@ -15,12 +15,13 @@ NC='\033[0m' # No Color
 if docker ps | grep -q "bnpl-mysql"; then
     echo -e "${GREEN}✓${NC} MySQL container يعمل"
     
-    # تنفيذ Migration
-    echo "📝 تنفيذ Migration..."
+    # تنفيذ Migrations
+    echo "📝 تنفيذ Migrations..."
     docker exec -i bnpl-mysql mysql -ubnpl_user -pbnpl_password bnpl_db < add-otp-column.sql
+    docker exec -i bnpl-mysql mysql -ubnpl_user -pbnpl_password bnpl_db < add-commission-columns.sql
     
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✓${NC} تم إضافة عمود OTP بنجاح!"
+        echo -e "${GREEN}✓${NC} تم تحديث قاعدة البيانات بنجاح!"
         
         # التحقق من النتيجة
         echo "🔍 التحقق من التحديث..."
