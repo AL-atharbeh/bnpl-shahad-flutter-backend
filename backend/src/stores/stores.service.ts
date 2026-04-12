@@ -213,9 +213,11 @@ export class StoresService {
       status: 'pending', // New stores are pending until approved
       topStore: createStoreDto.topStore ?? false,
       rating: createStoreDto.rating ?? 0,
-      bankCommissionRate: createStoreDto.bankCommissionRate ?? 1.5,
-      platformCommissionRate: createStoreDto.platformCommissionRate ?? 1.0,
-      commissionRate: (createStoreDto.bankCommissionRate ?? 1.5) + (createStoreDto.platformCommissionRate ?? 1.0),
+      bankCommissionRate: createStoreDto.bankCommissionRate ?? null,
+      platformCommissionRate: createStoreDto.platformCommissionRate ?? null,
+      commissionRate: (createStoreDto.bankCommissionRate !== undefined && createStoreDto.platformCommissionRate !== undefined) 
+        ? Number(createStoreDto.bankCommissionRate) + Number(createStoreDto.platformCommissionRate) 
+        : null,
       minOrderAmount: createStoreDto.minOrderAmount ?? 50,
       maxOrderAmount: createStoreDto.maxOrderAmount ?? 5000,
       productsCount: 0,
@@ -259,9 +261,14 @@ export class StoresService {
 
     // Recalculate total commission rate if ratios changed
     if (updateStoreDto.bankCommissionRate !== undefined || updateStoreDto.platformCommissionRate !== undefined) {
-      const bankRate = updateStoreDto.bankCommissionRate !== undefined ? updateStoreDto.bankCommissionRate : Number(store.bankCommissionRate);
-      const platformRate = updateStoreDto.platformCommissionRate !== undefined ? updateStoreDto.platformCommissionRate : Number(store.platformCommissionRate);
-      store.commissionRate = Number(bankRate) + Number(platformRate);
+      const bankRate = updateStoreDto.bankCommissionRate !== undefined ? updateStoreDto.bankCommissionRate : store.bankCommissionRate;
+      const platformRate = updateStoreDto.platformCommissionRate !== undefined ? updateStoreDto.platformCommissionRate : store.platformCommissionRate;
+      
+      if (bankRate === null || platformRate === null) {
+        store.commissionRate = null;
+      } else {
+        store.commissionRate = Number(bankRate) + Number(platformRate);
+      }
     }
 
     return this.storeRepository.save(store);

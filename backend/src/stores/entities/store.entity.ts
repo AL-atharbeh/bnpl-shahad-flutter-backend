@@ -56,13 +56,13 @@ export class Store {
   @Column({ name: 'deal_description_ar', type: 'text', nullable: true })
   dealDescriptionAr: string;
 
-  @Column({ name: 'commission_rate', type: 'decimal', precision: 5, scale: 2, default: 5.0 })
+  @Column({ name: 'commission_rate', type: 'decimal', precision: 5, scale: 2, nullable: true })
   commissionRate: number;
 
-  @Column({ name: 'bank_commission_rate', type: 'decimal', precision: 5, scale: 2, default: 3.0 })
+  @Column({ name: 'bank_commission_rate', type: 'decimal', precision: 5, scale: 2, nullable: true })
   bankCommissionRate: number;
 
-  @Column({ name: 'platform_commission_rate', type: 'decimal', precision: 5, scale: 2, default: 2.0 })
+  @Column({ name: 'platform_commission_rate', type: 'decimal', precision: 5, scale: 2, nullable: true })
   platformCommissionRate: number;
 
   @Column({ name: 'min_order_amount', type: 'decimal', precision: 10, scale: 2, default: 50 })

@@ -81,9 +81,18 @@ export default function FinalProfitsPage() {
             const installments = n(p.installmentsCount) || 1;
             const productValue = amount * installments;
 
-            // Per-store rate or global
-            const br = p.bankCommissionRate ? n(p.bankCommissionRate) : bRate;
-            const pr = p.platformCommissionRate ? n(p.platformCommissionRate) : pRate;
+            // Link logic: 1. Payment Rate -> 2. Store Rate -> 3. Global Fallback
+            const br = (p.bankCommissionRate !== null && p.bankCommissionRate !== undefined) 
+              ? n(p.bankCommissionRate) 
+              : (p.store?.bankCommissionRate !== null && p.store?.bankCommissionRate !== undefined)
+                ? n(p.store.bankCommissionRate)
+                : bRate;
+
+            const pr = (p.platformCommissionRate !== null && p.platformCommissionRate !== undefined)
+              ? n(p.platformCommissionRate)
+              : (p.store?.platformCommissionRate !== null && p.store?.platformCommissionRate !== undefined)
+                ? n(p.store.platformCommissionRate)
+                : pRate;
 
             ordersMap.set(p.orderId, {
               orderId: p.orderId,

@@ -801,41 +801,56 @@ export default function StoresPage() {
                 <div className="grid gap-6 md:grid-cols-3">
                   <div className="space-y-2">
                     <label className="text-xs text-slate-400">إجمالي العمولة (%)</label>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="number" 
-                        step="0.1"
-                        value={selectedStore.commissionRate || 5.0}
-                        onChange={(e) => setSelectedStore({...selectedStore, commissionRate: parseFloat(e.target.value)})}
-                        className="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-slate-50 text-sm focus:border-emerald-500 outline-none transition-all font-mono"
-                      />
-                      <span className="text-emerald-500 font-bold">%</span>
+                    <div className="flex flex-col gap-1">
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={formData.commissionRate}
+                          onChange={(e) => setFormData({ ...formData, commissionRate: e.target.value })}
+                          className="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-slate-50 text-sm focus:border-emerald-500 outline-none transition-all font-mono"
+                          placeholder="إعدادات عامة"
+                        />
+                        {formData.commissionRate === "" && (
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-amber-500 font-bold bg-amber-500/10 px-1 rounded">GLOBAL</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs text-slate-400">حصة البنك (%)</label>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="number" 
-                        step="0.1"
-                        value={selectedStore.bankCommissionRate || 3.0}
-                        onChange={(e) => setSelectedStore({...selectedStore, bankCommissionRate: parseFloat(e.target.value)})}
-                        className="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-slate-50 text-sm focus:border-emerald-500 outline-none transition-all font-mono"
-                      />
-                      <span className="text-sky-400 font-bold">%</span>
+                    <div className="flex flex-col gap-1">
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={formData.bankCommissionRate}
+                          onChange={(e) => setFormData({ ...formData, bankCommissionRate: e.target.value })}
+                          className="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-slate-50 text-sm focus:border-emerald-500 outline-none transition-all font-mono"
+                          placeholder="إعدادات عامة"
+                        />
+                        {formData.bankCommissionRate === "" && (
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-sky-400 font-bold bg-sky-400/10 px-1 rounded">GLOBAL</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs text-slate-400">حصة المنصة (%)</label>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="number" 
-                        step="0.1"
-                        value={selectedStore.platformCommissionRate || 2.0}
-                        onChange={(e) => setSelectedStore({...selectedStore, platformCommissionRate: parseFloat(e.target.value)})}
-                        className="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-slate-50 text-sm focus:border-emerald-500 outline-none transition-all font-mono"
-                      />
-                      <span className="text-amber-400 font-bold">%</span>
+                    <div className="flex flex-col gap-1">
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={formData.platformCommissionRate}
+                          onChange={(e) => setFormData({ ...formData, platformCommissionRate: e.target.value })}
+                          className="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-slate-50 text-sm focus:border-emerald-500 outline-none transition-all font-mono"
+                          placeholder="إعدادات عامة"
+                        />
+                        {formData.platformCommissionRate === "" && (
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-emerald-400 font-bold bg-emerald-400/10 px-1 rounded">GLOBAL</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -858,10 +873,26 @@ export default function StoresPage() {
                     <button
                       onClick={async () => {
                         try {
+                          const initialFormData = {
+                            name: "",
+                            nameAr: "",
+                            description: "",
+                            descriptionAr: "",
+                            categoryId: "",
+                            logoUrl: "",
+                            websiteUrl: "",
+                            storeUrl: "",
+                            commissionRate: "",
+                            bankCommissionRate: "",
+                            platformCommissionRate: "",
+                            minOrderAmount: "50",
+                            maxOrderAmount: "5000",
+                            vendorId: "",
+                          };
                           await storesService.updateStore(selectedStore.id, {
-                            commissionRate: selectedStore.commissionRate,
-                            bankCommissionRate: selectedStore.bankCommissionRate,
-                            platformCommissionRate: selectedStore.platformCommissionRate,
+                            commissionRate: formData.commissionRate === "" ? null : parseFloat(formData.commissionRate),
+                            bankCommissionRate: formData.bankCommissionRate === "" ? null : parseFloat(formData.bankCommissionRate),
+                            platformCommissionRate: formData.platformCommissionRate === "" ? null : parseFloat(formData.platformCommissionRate),
                             payoutCycle: selectedStore.payoutCycle
                           });
                           alert("تم حفظ الإعدادات المالية بنجاح ✅");

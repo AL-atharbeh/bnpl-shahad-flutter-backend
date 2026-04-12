@@ -1,34 +1,16 @@
--- ==========================================================
--- سكريبت تصحيح العمولات (تفعيل الـ 5% للعمليات القديمة)
--- هذا السكريبت يحول العمليات من (1.5% / 1.0%) إلى (3% / 2%)
--- ==========================================================
+-- SQL Migration Script to enable Dynamic Commission System
+-- This script makes the commission columns nullable so that stores can fallback to global settings.
 
--- 1. تحديث سجلات الدفعات (Payments) لتحمل النسب والعمولات الصحيحة
-UPDATE payments 
-SET bank_commission_rate = 3.00, 
-    platform_commission_rate = 2.00, 
-    commission = amount * 0.05, 
-    store_amount = amount * 0.95
-WHERE bank_commission_rate = 1.50 
-  AND platform_commission_rate = 1.00;
+-- 1. Alter Stores table
+ALTER TABLE stores MODIFY bank_commission_rate decimal(5,2) NULL;
+ALTER TABLE stores MODIFY platform_commission_rate decimal(5,2) NULL;
+ALTER TABLE stores MODIFY commission_rate decimal(5,2) NULL;
 
--- 2. تحديث سجلات المتاجر (Stores) لتصبح العمولات الافتراضية هي 5%
-UPDATE stores 
-SET bank_commission_rate = 3.00, 
-    platform_commission_rate = 2.00, 
-    commission_rate = 5.00 
-WHERE bank_commission_rate = 1.50 
-  AND platform_commission_rate = 1.00;
+-- 2. Alter Payments table (for historical consistency and fallbacks)
+ALTER TABLE payments MODIFY bank_commission_rate decimal(5,2) NULL;
+ALTER TABLE payments MODIFY platform_commission_rate decimal(5,2) NULL;
 
--- 3. التأكد من جدول إعدادات العمولات الرئيسي (Commission Settings)
--- سنقوم بتحديث الصف الأول (أو إضافته) ليكون هو المرجع العالمي
-INSERT INTO commission_settings (bankCommission, platformCommission, storeDiscount, effectiveFrom, createdAt, updatedAt)
-VALUES (0.0300, 0.0200, 0.0500, NOW(), NOW(), NOW())
-ON DUPLICATE KEY UPDATE 
-    bankCommission = 0.0300, 
-    platformCommission = 0.0200, 
-    storeDiscount = 0.0500, 
-    updatedAt = NOW();
-
--- تحقق من النتائج:
--- SELECT id, order_id, bank_commission_rate, platform_commission_rate, commission FROM payments LIMIT 10;
+-- 3. [Optional] Reset existing stores that have the old default (3.0 and 2.0) to NULL 
+-- so they immediately start following your Global Settings.
+-- UPDATE stores SET bank_commission_rate = NULL WHERE bank_commission_rate = 3.0;
+-- UPDATE stores SET platform_commission_rate = NULL WHERE platform_commission_rate = 2.0;

@@ -61,8 +61,10 @@ export default function FinancePage() {
 
       if (storeRes?.data) {
         setVendorRates({
-          bank: n(storeRes.data.bankCommissionRate) || bRate,
-          platform: n(storeRes.data.platformCommissionRate) || pRate
+          bank: (storeRes.data.bankCommissionRate !== null && storeRes.data.bankCommissionRate !== undefined) 
+            ? n(storeRes.data.bankCommissionRate) : bRate,
+          platform: (storeRes.data.platformCommissionRate !== null && storeRes.data.platformCommissionRate !== undefined) 
+            ? n(storeRes.data.platformCommissionRate) : pRate
         });
       }
 
@@ -82,8 +84,18 @@ export default function FinancePage() {
             const installments = n(p.installmentsCount) || 1;
             const productValue = amount * installments;
 
-            const br = p.bankCommissionRate ? n(p.bankCommissionRate) : (vendorRates?.bank || bRate);
-            const pr = p.platformCommissionRate ? n(p.platformCommissionRate) : (vendorRates?.platform || pRate);
+            // Link logic: 1. Payment Rate -> 2. Current Store Rate (fetched above) -> 3. Global Fallback
+            const br = (p.bankCommissionRate !== null && p.bankCommissionRate !== undefined)
+              ? n(p.bankCommissionRate)
+              : ((storeRes?.data?.bankCommissionRate !== null && storeRes?.data?.bankCommissionRate !== undefined)
+                ? n(storeRes.data.bankCommissionRate)
+                : bRate);
+
+            const pr = (p.platformCommissionRate !== null && p.platformCommissionRate !== undefined)
+              ? n(p.platformCommissionRate)
+              : ((storeRes?.data?.platformCommissionRate !== null && storeRes?.data?.platformCommissionRate !== undefined)
+                ? n(storeRes.data.platformCommissionRate)
+                : pRate);
 
             ordersMap.set(p.orderId, {
               orderId: p.orderId,
