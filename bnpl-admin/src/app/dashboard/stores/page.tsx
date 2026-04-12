@@ -814,7 +814,7 @@ export default function StoresPage() {
                           className="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-slate-50 text-sm focus:border-emerald-500 outline-none transition-all font-mono"
                           placeholder="إعدادات عامة"
                         />
-                        {(selectedStore.commissionRate === "" || selectedStore.commissionRate === null || selectedStore.commissionRate === undefined) && (
+                        {(selectedStore.commissionRate === null || selectedStore.commissionRate === undefined) && (
                           <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-amber-500 font-bold bg-amber-500/10 px-1 rounded">GLOBAL</span>
                         )}
                       </div>
@@ -835,7 +835,7 @@ export default function StoresPage() {
                           className="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-slate-50 text-sm focus:border-emerald-500 outline-none transition-all font-mono"
                           placeholder="إعدادات عامة"
                         />
-                        {(selectedStore.bankCommissionRate === "" || selectedStore.bankCommissionRate === null || selectedStore.bankCommissionRate === undefined) && (
+                        {(selectedStore.bankCommissionRate === null || selectedStore.bankCommissionRate === undefined) && (
                           <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-sky-400 font-bold bg-sky-400/10 px-1 rounded">GLOBAL</span>
                         )}
                       </div>
@@ -856,7 +856,7 @@ export default function StoresPage() {
                           className="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-slate-50 text-sm focus:border-emerald-500 outline-none transition-all font-mono"
                           placeholder="إعدادات عامة"
                         />
-                        {(selectedStore.platformCommissionRate === "" || selectedStore.platformCommissionRate === null || selectedStore.platformCommissionRate === undefined) && (
+                        {(selectedStore.platformCommissionRate === null || selectedStore.platformCommissionRate === undefined) && (
                           <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-emerald-400 font-bold bg-emerald-400/10 px-1 rounded">GLOBAL</span>
                         )}
                       </div>
