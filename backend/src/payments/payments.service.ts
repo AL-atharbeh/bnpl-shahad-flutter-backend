@@ -489,19 +489,20 @@ export class PaymentsService {
       const amount = Number(p.amount || 0);
       const isPaid = p.status === 'completed';
       const orderId = p.orderId;
+      const n = (val: any) => Number(val) / 100;
 
-      // Dynamic commission logic
-      const bRate = (p.bankCommissionRate !== null && p.bankCommissionRate !== undefined)
-        ? Number(p.bankCommissionRate) / 100
-        : (p.store?.bankCommissionRate !== null && p.store?.bankCommissionRate !== undefined)
-          ? Number(p.store.bankCommissionRate) / 100
-          : BANK_COMMISSION_RATE;
+      // Link logic (Priority: Store Rate > Payment Rate > Global Fallback)
+      const bRate = (p.store?.bankCommissionRate !== null && p.store?.bankCommissionRate !== undefined)
+        ? n(p.store.bankCommissionRate)
+        : ((p.bankCommissionRate !== null && p.bankCommissionRate !== undefined)
+          ? n(p.bankCommissionRate)
+          : BANK_COMMISSION_RATE);
 
-      const pRate = (p.platformCommissionRate !== null && p.platformCommissionRate !== undefined)
-        ? Number(p.platformCommissionRate) / 100
-        : (p.store?.platformCommissionRate !== null && p.store?.platformCommissionRate !== undefined)
-          ? Number(p.store.platformCommissionRate) / 100
-          : PLATFORM_COMMISSION_RATE;
+      const pRate = (p.store?.platformCommissionRate !== null && p.store?.platformCommissionRate !== undefined)
+        ? n(p.store.platformCommissionRate)
+        : ((p.platformCommissionRate !== null && p.platformCommissionRate !== undefined)
+          ? n(p.platformCommissionRate)
+          : PLATFORM_COMMISSION_RATE);
 
       const bankCommission = amount * bRate;
       const platformCommission = amount * pRate;

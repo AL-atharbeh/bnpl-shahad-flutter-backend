@@ -81,17 +81,18 @@ export default function FinalProfitsPage() {
             const installments = n(p.installmentsCount) || 1;
             const productValue = amount * installments;
 
-            // Link logic: 1. Payment Rate -> 2. Store Rate -> 3. Global Fallback
-            const br = (p.bankCommissionRate !== null && p.bankCommissionRate !== undefined) 
-              ? n(p.bankCommissionRate) 
-              : (p.store?.bankCommissionRate !== null && p.store?.bankCommissionRate !== undefined)
-                ? n(p.store.bankCommissionRate)
+            // Priority Linkage: 1. Current Store Rate -> 2. Historical Payment Rate -> 3. Global Fallback
+            // This ensures that when the user updates a store's rates, it reflects on the reports immediately.
+            const br = (p.store?.bankCommissionRate !== null && p.store?.bankCommissionRate !== undefined)
+              ? n(p.store.bankCommissionRate)
+              : (p.bankCommissionRate !== null && p.bankCommissionRate !== undefined)
+                ? n(p.bankCommissionRate)
                 : bRate;
 
-            const pr = (p.platformCommissionRate !== null && p.platformCommissionRate !== undefined)
-              ? n(p.platformCommissionRate)
-              : (p.store?.platformCommissionRate !== null && p.store?.platformCommissionRate !== undefined)
-                ? n(p.store.platformCommissionRate)
+            const pr = (p.store?.platformCommissionRate !== null && p.store?.platformCommissionRate !== undefined)
+              ? n(p.store.platformCommissionRate)
+              : (p.platformCommissionRate !== null && p.platformCommissionRate !== undefined)
+                ? n(p.platformCommissionRate)
                 : pRate;
 
             ordersMap.set(p.orderId, {

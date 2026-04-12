@@ -84,17 +84,17 @@ export default function FinancePage() {
             const installments = n(p.installmentsCount) || 1;
             const productValue = amount * installments;
 
-            // Link logic: 1. Payment Rate -> 2. Current Store Rate (fetched above) -> 3. Global Fallback
-            const br = (p.bankCommissionRate !== null && p.bankCommissionRate !== undefined)
-              ? n(p.bankCommissionRate)
-              : ((storeRes?.data?.bankCommissionRate !== null && storeRes?.data?.bankCommissionRate !== undefined)
-                ? n(storeRes.data.bankCommissionRate)
+            // Priority Linkage: 1. Current Store Rate (fetched) -> 2. Historical Payment Rate -> 3. Global Fallback
+            const br = (storeRes?.data?.bankCommissionRate !== null && storeRes?.data?.bankCommissionRate !== undefined)
+              ? n(storeRes.data.bankCommissionRate)
+              : ((p.bankCommissionRate !== null && p.bankCommissionRate !== undefined)
+                ? n(p.bankCommissionRate)
                 : bRate);
 
-            const pr = (p.platformCommissionRate !== null && p.platformCommissionRate !== undefined)
-              ? n(p.platformCommissionRate)
-              : ((storeRes?.data?.platformCommissionRate !== null && storeRes?.data?.platformCommissionRate !== undefined)
-                ? n(storeRes.data.platformCommissionRate)
+            const pr = (storeRes?.data?.platformCommissionRate !== null && storeRes?.data?.platformCommissionRate !== undefined)
+              ? n(storeRes.data.platformCommissionRate)
+              : ((p.platformCommissionRate !== null && p.platformCommissionRate !== undefined)
+                ? n(p.platformCommissionRate)
                 : pRate);
 
             ordersMap.set(p.orderId, {
