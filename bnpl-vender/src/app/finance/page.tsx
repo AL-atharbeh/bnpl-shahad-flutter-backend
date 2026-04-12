@@ -249,7 +249,7 @@ export default function FinancePage() {
                             <div className="flex flex-col items-start gap-1">
                               <span className="font-black text-emerald-400">JOD {fmt(o.vendorNet)}</span>
                               <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">
-                                {language === "ar" ? "بعد خصم" : "AFTER"} {(storeRates.bank + storeRates.platform).toFixed(1)}%
+                                {language === "ar" ? "بعد خصم" : "AFTER"} {((vendorRates?.bank ?? globalBankRate) + (vendorRates?.platform ?? globalPlatformRate)).toFixed(1)}%
                               </span>
                             </div>
                           </td>
@@ -295,7 +295,7 @@ export default function FinancePage() {
                    </div>
                    <div className="flex flex-col items-end">
                       <p className="text-[10px] text-slate-500 mt-0.5">
-                        بعد خصم {(storeRates.bank + storeRates.platform).toFixed(1)}%
+                        بعد خصم {((vendorRates?.bank ?? globalBankRate) + (vendorRates?.platform ?? globalPlatformRate)).toFixed(1)}%
                       </p>
                       <span className="text-sm font-bold text-emerald-500">JOD {fmt(totalPlatformShare)}</span>
                    </div>
