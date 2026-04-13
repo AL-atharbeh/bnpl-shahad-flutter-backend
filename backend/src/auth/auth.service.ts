@@ -7,6 +7,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 import * as bcrypt from 'bcrypt';
 import { Store } from '../stores/entities/store.entity';
 import { User } from '../users/entities/user.entity';
@@ -268,10 +269,17 @@ export class AuthService {
 
     try {
       // 1. Create the store
+      const { apiKey, apiSecret } = this.generateApiCredentials();
       const store = this.storeRepository.create({
         name: storeName,
         nameAr: storeName,
         isActive: true,
+        status: 'approved',
+        commissionRate: 2.5,
+        bankCommissionRate: 1.5,
+        platformCommissionRate: 1.0,
+        apiKey,
+        apiSecret,
       });
       const savedStore = await this.storeRepository.save(store);
 
@@ -369,6 +377,15 @@ export class AuthService {
   private sanitizeVendor(vendor: Vendor) {
     const { passwordHash, ...sanitized } = vendor;
     return sanitized;
+  }
+
+  /**
+   * Private helper to generate API credentials for new stores
+   */
+  private generateApiCredentials(): { apiKey: string; apiSecret: string } {
+    const apiKey = `sh_pk_${uuidv4().replace(/-/g, '').substring(0, 24)}`;
+    const apiSecret = `sh_sk_${uuidv4().replace(/-/g, '')}${uuidv4().replace(/-/g, '')}`;
+    return { apiKey, apiSecret };
   }
 }
 
