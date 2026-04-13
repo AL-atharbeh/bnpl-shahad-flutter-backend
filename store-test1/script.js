@@ -262,8 +262,10 @@ async function createRealBnplSession() {
         const data = await response.json();
 
         if (data.success) {
-            // Redirect to the approval view
-            window.location.href = `${BACKEND_URL}/sessions/view/${data.data.sessionId}`;
+            // Redirect to the approval view using the URL provided by the backend
+            // or build it if web_redirect_url is missing
+            const redirectUrl = data.web_redirect_url || `${BACKEND_URL}/sessions/view/${data.session_id}`;
+            window.location.href = redirectUrl;
         } else {
             throw new Error(data.message || 'فشل في إنشاء الجلسة');
         }
