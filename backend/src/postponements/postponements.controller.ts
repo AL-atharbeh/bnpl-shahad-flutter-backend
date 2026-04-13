@@ -1,12 +1,18 @@
-import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request, Param, Query, Res, HttpException, HttpStatus, Delete } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PostponementsService } from './postponements.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { StripeService } from '../payments/stripe.service';
+import { PaymentsService } from '../payments/payments.service';
 
 @ApiTags('postponements')
 @Controller('postponements')
 export class PostponementsController {
-  constructor(private readonly postponementsService: PostponementsService) { }
+  constructor(
+    private readonly postponementsService: PostponementsService,
+    private readonly stripeService: StripeService,
+    private readonly paymentsService: PaymentsService,
+  ) { }
 
   @Get('can-postpone')
   @UseGuards(JwtAuthGuard)
@@ -68,6 +74,101 @@ export class PostponementsController {
     };
   }
 
+  @Get('extension-options')
+  @ApiOperation({ summary: 'Get all available paid extension options' })
+  async getExtensionOptions() {
+    const options = await this.postponementsService.getExtensionOptions();
+    return {
+      success: true,
+      data: options,
+    };
+  }
+
+  @Post(':paymentId/initiate-extension')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Initiate a paid extension for a specific payment' })
+  async initiateExtension(
+    @Request() req,
+    @Param('paymentId') paymentId: number,
+    @Body('optionId') optionId: number,
+  ) {
+    const initiationData = await this.postponementsService.initiatePaidExtension(
+      req.user.id,
+      paymentId,
+      optionId,
+    );
+
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    
+    // Create Stripe session
+    const session = await this.stripeService.createCheckoutSession({
+      amount: initiationData.fee,
+      currency: 'USD', // Using USD for testing
+      customerName: req.user.name || 'Customer',
+      customerEmail: (req.user.phone || 'customer') + '@app.com',
+      customerReference: `ext_${paymentId}_${initiationData.days}`,
+      successUrl: `${baseUrl}/api/v1/postponements/stripe-callback/success?paymentId=${paymentId}&days=${initiationData.days}&stripeSessionId={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${baseUrl}/api/v1/payments/view-error`,
+      productName: `تمديد موعد الدفع - ${initiationData.days} يوم`,
+      metadata: {
+        paymentId: paymentId.toString(),
+        days: initiationData.days.toString(),
+        type: 'extension',
+      },
+    });
+
+    return {
+      success: true,
+      data: {
+        url: session.url,
+      },
+    };
+  }
+
+  @Get('stripe-callback/success')
+  @ApiOperation({ summary: 'Handle successful Stripe payment for extension' })
+  async handleExtensionSuccess(
+    @Query('paymentId') paymentId: string,
+    @Query('days') days: string,
+    @Query('stripeSessionId') stripeSessionId: string,
+    @Res() res,
+    @Request() req,
+  ) {
+    try {
+      const isPaid = await this.stripeService.verifySession(stripeSessionId);
+
+      if (isPaid) {
+        // Apply the extension
+        await this.paymentsService.extendDueDate(parseInt(paymentId), parseInt(days));
+        
+        // Also mark it as postponed in the history? 
+        // Actually extendDueDate just updates some flags. 
+        // Let's make it real postponement.
+        await this.paymentsService.postponePayment(parseInt(paymentId), parseInt(days));
+
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        return res.send(`
+          <html>
+            <head>
+              <script>
+                window.location.href = "${baseUrl}/api/v1/payments/view-success";
+              </script>
+            </head>
+            <body>جاري التحويل...</body>
+          </html>
+        `);
+      } else {
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        return res.redirect(`${baseUrl}/api/v1/payments/view-error`);
+      }
+    } catch (error) {
+      console.error('❌ Error in extension success callback:', error);
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      return res.redirect(`${baseUrl}/api/v1/payments/view-error`);
+    }
+  }
+
   // Admin endpoints
   @Get('admin/stats')
   @ApiOperation({ summary: 'Get postponements statistics for admin' })
@@ -93,6 +194,25 @@ export class PostponementsController {
   @ApiOperation({ summary: 'Get postponements chart data for admin' })
   async getChartData() {
     return this.postponementsService.getChartData();
+  }
+
+  @Post('admin/extension-options')
+  @ApiOperation({ summary: 'Create a new extension option' })
+  async createExtensionOption(@Body() data: any) {
+    const option = await this.postponementsService.createExtensionOption(data);
+    return {
+      success: true,
+      data: option,
+    };
+  }
+
+  @Delete('admin/extension-options/:id')
+  @ApiOperation({ summary: 'Delete an extension option' })
+  async deleteExtensionOption(@Param('id') id: string) {
+    await this.postponementsService.deleteExtensionOption(parseInt(id));
+    return {
+      success: true,
+    };
   }
 }
 

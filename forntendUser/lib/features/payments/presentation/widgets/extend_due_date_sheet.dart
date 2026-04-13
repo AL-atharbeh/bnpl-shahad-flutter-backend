@@ -5,12 +5,16 @@ import '../../../../services/language_service.dart';
 import 'payment_method_sheet.dart';
 
 class ExtendOption {
+  final int? id;               // معرف الخيار من السيرفر
   final int days;
-  final String feeLabel;         // مثال: "KWD 1.950"
+  final double? fee;           // المبلغ كرقم
+  final String feeLabel;         // مثال: "JOD 1.950"
   final String targetDateLabel;  // مثال: "مُمدّد إلى سبتمبر 2025"
   final bool popular;            // تمييز الخيار
   const ExtendOption({
+    this.id,
     required this.days,
+    this.fee,
     required this.feeLabel,
     required this.targetDateLabel,
     this.popular = false,
@@ -190,26 +194,9 @@ class _ExtendDueDateSheetState extends State<ExtendDueDateSheet> {
               onPressed: () {
                 // إغلاق شاشة التمديد أولاً
                 Navigator.pop(context);
-                // فتح شاشة الدفع
-                PaymentMethodSheet.show(
-                  context,
-                  amountLabel: selected.feeLabel,
-                  onApplePay: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l10n.paymentSuccessfulApplePay),
-                        backgroundColor: const Color(0xFF16A34A),
-                      ),
-                    );
-                    // استدعاء callback التمديد بعد نجاح الدفع
-                    widget.onConfirm(selected);
-                  },
-                  onCardAdded: (card) {
-                    print('تمت إضافة بطاقة جديدة: ${card.last4}');
-                    // استدعاء callback التمديد بعد إضافة البطاقة
-                    widget.onConfirm(selected);
-                  },
-                );
+                
+                // الانتقال لتأكيد التمديد وبدء عملية الدفع
+                widget.onConfirm(selected);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF111827),

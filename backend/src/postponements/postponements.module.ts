@@ -3,12 +3,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostponementsController } from './postponements.controller';
 import { PostponementsService } from './postponements.service';
 import { Postponement } from './entities/postponement.entity';
+import { ExtensionOption } from './entities/extension-option.entity';
 import { PaymentsModule } from '../payments/payments.module';
 import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Postponement]),
+    TypeOrmModule.forFeature([Postponement, ExtensionOption]),
     forwardRef(() => PaymentsModule), // Use forwardRef to avoid circular dependency
     UsersModule,
   ],

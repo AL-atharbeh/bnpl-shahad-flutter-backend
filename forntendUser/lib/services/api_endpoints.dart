@@ -57,6 +57,8 @@ class ApiEndpoints {
   static const String postponementsCanPostpone = '/postponements/can-postpone';
   static const String postponementsPostponeFree = '/postponements/postpone-free';
   static const String postponementsHistory = '/postponements/history';
+  static const String extensionOptions = '/postponements/extension-options';
+  static String initiateExtension(int paymentId) => '/postponements/$paymentId/initiate-extension';
 
   // ==================== CATEGORIES ENDPOINTS ====================
   static const String categories = '/categories';

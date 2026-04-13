@@ -539,55 +539,89 @@ class _PaymentsPageState extends State<PaymentsPage> {
     }
   }
 
-  void _showExtendDueDate(BuildContext context, String merchantName, double amount, String dueDate, int? paymentId) {
-    final options = [
-      ExtendOption(
-        days: 7,
-        feeLabel: 'JD 0.500',
-        targetDateLabel: 'مُمدّد إلى $dueDate',
-      ),
-      ExtendOption(
-        days: 14,
-        feeLabel: 'JD 0.950',
-        targetDateLabel: 'مُمدّد إلى $dueDate',
-        popular: true,
-      ),
-      ExtendOption(
-        days: 30,
-        feeLabel: 'JD 1.500',
-        targetDateLabel: 'مُمدّد إلى $dueDate',
-      ),
-    ];
-
-    ExtendDueDateSheet.show(
-      context,
-      merchantName: merchantName,
-      originalAmountLabel: 'JD ${amount.toStringAsFixed(3)}',
-      originalDueLabel: dueDate,
-      options: options,
-      onConfirm: (option) => _handleExtendConfirm(context, paymentId, option),
-    );
-  }
-
-  Future<void> _handleExtendConfirm(BuildContext context, int? paymentId, ExtendOption option) async {
+  void _showExtendDueDate(BuildContext context, String merchantName, double amount, String dueDate, int? paymentId) async {
     if (paymentId == null) return;
+
     try {
+      // Show loading
       showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
-      final response = await _paymentService.extendDueDate(paymentId: paymentId, extensionDays: option.days);
-      if (context.mounted) Navigator.pop(context);
       
+      final response = await _paymentService.getExtensionOptions();
+      
+      if (context.mounted) Navigator.pop(context);
+
       if (response['success'] == true) {
-        _loadPayments();
+        final List<dynamic> optionsData = response['data'];
+        final List<ExtendOption> options = optionsData.map((opt) {
+          return ExtendOption(
+            id: opt['id'],
+            days: opt['days'],
+            fee: double.tryParse(opt['fee'].toString()),
+            feeLabel: 'JD ${opt['fee']}',
+            targetDateLabel: 'مُمدّد إلى $dueDate', // Target date calculation could be improved here
+            popular: opt['isPopular'] == true,
+          );
+        }).toList();
+
+        if (context.mounted) {
+          ExtendDueDateSheet.show(
+            context,
+            merchantName: merchantName,
+            originalAmountLabel: 'JD ${amount.toStringAsFixed(3)}',
+            originalDueLabel: dueDate,
+            options: options,
+            onConfirm: (option) => _handleExtendConfirm(context, paymentId, option),
+          );
+        }
       } else {
-        throw response['error'] ?? 'خطأ غير متوقع';
+        throw response['error'] ?? 'فشل تحميل خيارات التمديد';
       }
     } catch (e) {
       if (context.mounted) {
-        try {
-          Navigator.pop(context);
-        } catch (_) {}
+        try { Navigator.pop(context); } catch (_) {}
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e')));
       }
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e')));
+    }
+  }
+
+  Future<void> _handleExtendConfirm(BuildContext context, int? paymentId, ExtendOption option) async {
+    if (paymentId == null || option.id == null) return;
+    try {
+      showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+      
+      final response = await _paymentService.initiatePaidExtension(
+        paymentId: paymentId,
+        optionId: option.id!,
+      );
+      
+      if (context.mounted) Navigator.pop(context);
+      
+      if (response['success'] == true && response['data'] != null && response['data']['url'] != null) {
+        final paymentUrl = response['data']['url'];
+        
+        if (context.mounted) {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PaymentWebViewPage(
+                paymentUrl: paymentUrl,
+                sessionId: 'extension_$paymentId',
+              ),
+            ),
+          );
+
+          if (result == true) {
+            _loadPayments(); // Refresh list after successful payment
+          }
+        }
+      } else {
+        throw response['error'] ?? 'فشل بدء عملية الدفع';
+      }
+    } catch (e) {
+      if (context.mounted) {
+        try { Navigator.pop(context); } catch (_) {}
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e')));
+      }
     }
   }
 

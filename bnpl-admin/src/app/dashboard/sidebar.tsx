@@ -16,6 +16,7 @@ const navItems = [
   { href: "/dashboard/notifications", label: "الإشعارات" },
   { href: "/dashboard/reports", label: "التقارير" },
   { href: "/dashboard/settings", label: "الإعدادات العامة" },
+  { href: "/dashboard/extension-options", label: "خيارات التمديد" },
 ];
 
 export function Sidebar() {

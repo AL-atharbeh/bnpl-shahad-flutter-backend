@@ -1,19 +1,26 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan } from 'typeorm';
 import { Postponement } from './entities/postponement.entity';
+import { ExtensionOption } from './entities/extension-option.entity';
 import { PaymentsService } from '../payments/payments.service';
 import { UsersService } from '../users/users.service';
 import dayjs from 'dayjs';
 
 @Injectable()
-export class PostponementsService {
+export class PostponementsService implements OnModuleInit {
   constructor(
     @InjectRepository(Postponement)
     private postponementRepository: Repository<Postponement>,
+    @InjectRepository(ExtensionOption)
+    private extensionOptionRepository: Repository<ExtensionOption>,
     private paymentsService: PaymentsService,
     private usersService: UsersService,
   ) { }
+
+  async onModuleInit() {
+    await this.seedDefaultOptions();
+  }
 
   /**
    * Check if user can use free postponement (once per month)
@@ -166,6 +173,68 @@ export class PostponementsService {
     });
   }
 
+  /**
+   * Get all active extension options
+   */
+  async getExtensionOptions(): Promise<ExtensionOption[]> {
+    return this.extensionOptionRepository.find({
+      where: { isActive: true },
+      order: { days: 'ASC' },
+    });
+  }
+
+  /**
+   * Initiate a paid extension session
+   * This creates a Stripe session for the extension fee
+   */
+  async initiatePaidExtension(userId: number, paymentId: number, optionId: number): Promise<any> {
+    const payment = await this.paymentsService.getPaymentById(paymentId);
+    const option = await this.extensionOptionRepository.findOne({ where: { id: optionId } });
+
+    if (!option) {
+      throw new BadRequestException('خيار التمديد غير موجود');
+    }
+
+    if (payment.userId !== userId) {
+      throw new BadRequestException('لا تملك صلاحية الوصول لهذه المعاملة');
+    }
+
+    if (payment.status !== 'pending') {
+      throw new BadRequestException('لا يمكن تمديد هذه المعاملة لأنها ليست معلقة');
+    }
+
+    // Since we don't have a direct StripeService injection here yet (it's in PaymentsService)
+    // and we want to keep logic clean, let's assume we'll use a generic payment flow.
+    // However, I see PaymentsController uses StripeService directly.
+    // I will add StripeService to PostponementsModule or use a method in PaymentsService.
+    
+    // For now, I'll return the data needed for the controller to trigger Stripe.
+    return {
+      fee: Number(option.fee),
+      days: option.days,
+      paymentId: paymentId,
+      merchantName: payment.store?.nameAr || payment.store?.name || 'متجر',
+    };
+  }
+
+  /**
+   * Seed default extension options
+   */
+  async seedDefaultOptions() {
+    const count = await this.extensionOptionRepository.count();
+    if (count > 0) return;
+
+    const defaults = [
+      { days: 7, fee: 0.5, nameAr: 'تمديد لمدة أسبوع', nameEn: '1 Week Extension', isPopular: false },
+      { days: 14, fee: 0.95, nameAr: 'تمديد لمدة أسبوعين', nameEn: '2 Weeks Extension', isPopular: true },
+      { days: 30, fee: 1.5, nameAr: 'تمديد لمدة شهر', nameEn: '1 Month Extension', isPopular: false },
+    ];
+
+    for (const d of defaults) {
+      await this.extensionOptionRepository.save(this.extensionOptionRepository.create(d));
+    }
+  }
+
   // Admin methods
   async getAdminStats() {
     const totalPostponements = await this.postponementRepository.count();
@@ -282,6 +351,16 @@ export class PostponementsService {
       success: true,
       data: chartData,
     };
+  }
+
+  // Admin CRUD for Extension Options
+  async createExtensionOption(data: Partial<ExtensionOption>): Promise<ExtensionOption> {
+    const option = this.extensionOptionRepository.create(data);
+    return this.extensionOptionRepository.save(option);
+  }
+
+  async deleteExtensionOption(id: number): Promise<void> {
+    await this.extensionOptionRepository.delete(id);
   }
 }
 

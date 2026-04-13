@@ -119,4 +119,21 @@ class PaymentService {
 
     return await _apiService.post(ApiEndpoints.postponePayment(paymentId), data);
   }
+
+  // Get extension options for paid extension
+  Future<Map<String, dynamic>> getExtensionOptions() async {
+    return await _apiService.get(ApiEndpoints.extensionOptions);
+  }
+
+  // Initiate a paid extension flow
+  Future<Map<String, dynamic>> initiatePaidExtension({
+    required int paymentId,
+    required int optionId,
+  }) async {
+    final data = {
+      'optionId': optionId,
+    };
+
+    return await _apiService.post(ApiEndpoints.initiateExtension(paymentId), data);
+  }
 }
