@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getExtensionOptions, deleteExtensionOption, createExtensionOption } from "@/services/api";
-import {
     Plus,
     Trash2,
     Calendar,
@@ -10,13 +8,17 @@ import {
     Star,
     Check,
     X,
-    Clock
+    Clock,
+    Edit2
 } from "lucide-react";
+
+import { getExtensionOptions, deleteExtensionOption, createExtensionOption, updateExtensionOption } from "@/services/api";
 
 export default function ExtensionOptionsPage() {
     const [options, setOptions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddForm, setShowAddForm] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
     const [newOption, setNewOption] = useState({
         days: 7,
         fee: 0.5,
@@ -57,8 +59,13 @@ export default function ExtensionOptionsPage() {
             return;
         }
         try {
-            await createExtensionOption(newOption);
+            if (editingId) {
+                await updateExtensionOption(editingId, newOption);
+            } else {
+                await createExtensionOption(newOption);
+            }
             setShowAddForm(false);
+            setEditingId(null);
             setNewOption({
                 days: 7,
                 fee: 0.5,
@@ -68,8 +75,33 @@ export default function ExtensionOptionsPage() {
             });
             fetchOptions();
         } catch (error) {
-            console.error("Failed to create option", error);
+            console.error("Failed to save option", error);
         }
+    };
+
+    const handleEdit = (option: any) => {
+        setEditingId(option.id);
+        setNewOption({
+            days: option.days,
+            fee: parseFloat(option.fee),
+            nameAr: option.nameAr,
+            nameEn: option.nameEn,
+            isPopular: option.isPopular
+        });
+        setShowAddForm(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleCancel = () => {
+        setShowAddForm(false);
+        setEditingId(null);
+        setNewOption({
+            days: 7,
+            fee: 0.5,
+            nameAr: "",
+            nameEn: "",
+            isPopular: false
+        });
     };
 
     return (
@@ -80,7 +112,7 @@ export default function ExtensionOptionsPage() {
                     <p className="mt-1 text-xs text-slate-400">تحديد مدد التمديد المتاحة للمستخدمين وأسعارها.</p>
                 </div>
                 <button
-                    onClick={() => setShowAddForm(!showAddForm)}
+                    onClick={showAddForm ? handleCancel : () => setShowAddForm(true)}
                     className="flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-bold text-slate-950 hover:bg-emerald-400 transition-all active:scale-95 shadow-lg shadow-emerald-500/20"
                 >
                     {showAddForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
@@ -91,8 +123,8 @@ export default function ExtensionOptionsPage() {
             {showAddForm && (
                 <div className="rounded-2xl border border-emerald-500/30 bg-[#022a3a] p-6 shadow-xl animate-in fade-in slide-in-from-top-4 duration-300">
                     <h2 className="text-sm font-bold text-emerald-400 mb-4 flex items-center gap-2">
-                        <Plus className="h-4 w-4" />
-                        تفاصيل الخيار الجديد
+                        {editingId ? <Edit2 className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                        {editingId ? "تعديل خيار التمديد" : "تفاصيل الخيار الجديد"}
                     </h2>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         <div className="space-y-1.5">
@@ -149,7 +181,7 @@ export default function ExtensionOptionsPage() {
                                 onClick={handleCreate}
                                 className="w-full rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-slate-950 hover:bg-emerald-400 transition-all"
                             >
-                                حفظ الخيار
+                                {editingId ? "تحديث الخيار" : "حفظ الخيار"}
                             </button>
                         </div>
                     </div>
@@ -181,12 +213,20 @@ export default function ExtensionOptionsPage() {
                             <div className="h-12 w-12 rounded-2xl bg-slate-900/50 flex items-center justify-center text-emerald-500 border border-slate-800">
                                 <Clock className="h-6 w-6" />
                             </div>
-                            <button
-                                onClick={() => handleDelete(option.id)}
-                                className="text-slate-600 hover:text-red-500 transition-colors p-2"
-                            >
-                                <Trash2 className="h-5 w-5" />
-                            </button>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={() => handleEdit(option)}
+                                    className="text-slate-600 hover:text-emerald-500 transition-colors p-2"
+                                >
+                                    <Edit2 className="h-4 w-4" />
+                                </button>
+                                <button
+                                    onClick={() => handleDelete(option.id)}
+                                    className="text-slate-600 hover:text-red-500 transition-colors p-2"
+                                >
+                                    <Trash2 className="h-5 w-5" />
+                                </button>
+                            </div>
                         </div>
 
                         <div className="space-y-1">

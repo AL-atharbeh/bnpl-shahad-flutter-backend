@@ -54,7 +54,8 @@ export const getPostponementsStats = () => api.get('/postponements/admin/stats')
 export const getAllPostponements = (params?: any) => api.get('/postponements/admin/all', { params });
 export const getPostponementsChartData = () => api.get('/postponements/admin/chart-data');
 export const getExtensionOptions = () => api.get('/postponements/extension-options');
-export const createExtensionOption = (data: any) => api.post('/postponements/admin/extension-options', data); // I'll need to add this to backend too if I want full CRUD
+export const createExtensionOption = (data: any) => api.post('/postponements/admin/extension-options', data);
+export const updateExtensionOption = (id: number, data: any) => api.put(`/postponements/admin/extension-options/${id}`, data);
 export const deleteExtensionOption = (id: number) => api.delete(`/postponements/admin/extension-options/${id}`);
 
 // Payments API

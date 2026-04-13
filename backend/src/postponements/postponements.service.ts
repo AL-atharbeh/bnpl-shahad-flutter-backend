@@ -359,6 +359,11 @@ export class PostponementsService implements OnModuleInit {
     return this.extensionOptionRepository.save(option);
   }
 
+  async updateExtensionOption(id: number, data: Partial<ExtensionOption>): Promise<ExtensionOption> {
+    await this.extensionOptionRepository.update(id, data);
+    return this.extensionOptionRepository.findOne({ where: { id } });
+  }
+
   async deleteExtensionOption(id: number): Promise<void> {
     await this.extensionOptionRepository.delete(id);
   }

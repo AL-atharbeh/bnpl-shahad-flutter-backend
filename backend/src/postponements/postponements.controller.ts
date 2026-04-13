@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Request, Param, Query, Res, HttpException, HttpStatus, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request, Param, Query, Res, HttpException, HttpStatus, Delete, Put } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PostponementsService } from './postponements.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -200,6 +200,16 @@ export class PostponementsController {
   @ApiOperation({ summary: 'Create a new extension option' })
   async createExtensionOption(@Body() data: any) {
     const option = await this.postponementsService.createExtensionOption(data);
+    return {
+      success: true,
+      data: option,
+    };
+  }
+
+  @Put('admin/extension-options/:id')
+  @ApiOperation({ summary: 'Update an extension option' })
+  async updateExtensionOption(@Param('id') id: string, @Body() data: any) {
+    const option = await this.postponementsService.updateExtensionOption(parseInt(id), data);
     return {
       success: true,
       data: option,
