@@ -1035,8 +1035,8 @@ class _Content extends StatelessWidget {
                  },
                ),
 
-        // مسافة سفلية مريحة
-        SliverToBoxAdapter(child: SizedBox(height: bottomSafe + 32)),
+        // مسافة سفلية كبيرة لضمان ظهور المحتوى فوق شريط التنقل العائم
+        SliverToBoxAdapter(child: SizedBox(height: bottomSafe + 110)),
       ],
     ));
   }
@@ -1061,114 +1061,112 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            color: Colors.white.withValues(alpha: 0.7),
-            border: Border.all(color: BNPLColors.stroke),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x16000000),
-                blurRadius: 18,
-                offset: Offset(0, 8),
-              )
-            ],
-          ),
-          child: Column(
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0F172A), // Slate 900
+            Color(0xFF1E293B), // Slate 800
+          ],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.3),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  GestureDetector(
-                    onTap: () => PayDuesSheet.show(context, payments: payments),
-                    child: Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: BNPLColors.accent.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(Icons.pie_chart, color: BNPLColors.accent),
+                  Text(
+                    l10n.totalAmountDue,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const Spacer(),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(l10n.dueIn30Days, 
-                        style: const TextStyle(
-                          color: BNPLColors.subtext, 
-                          fontWeight: FontWeight.w700
-                        )
-                      ),
-                      Text('JD ${dueIn30.toStringAsFixed(3)}',
-                          style: const TextStyle(
-                            fontSize: 26, 
-                            fontWeight: FontWeight.w900, 
-                            color: BNPLColors.text
-                          )
-                      ),
-                    ],
+                  const SizedBox(height: 4),
+                  Text(
+                    'JD ${total.toStringAsFixed(3)}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: _metric(l10n.totalAmountDue, 'JD ${total.toStringAsFixed(3)}'),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _metric(l10n.dueIn7Days, 'JD ${dueIn7.toStringAsFixed(3)}', alignEnd: true),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              // شريط تقدّم بسيط يوحي بالدورات (ديكور بسيط)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: LinearProgressIndicator(
-                  minHeight: 8,
-                  value: .6,
-                  backgroundColor: const Color(0xFFEFF3F8),
-                  valueColor: AlwaysStoppedAnimation(BNPLColors.primary.withValues(alpha: 0.9)),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
                 ),
+                child: const Icon(Icons.account_balance_wallet_rounded, color: Colors.white, size: 28),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: _metricV2(l10n.dueIn7Days, 'JD ${dueIn7.toStringAsFixed(3)}', const Color(0xFFFACC15)), // Yellow 400
+              ),
+              Container(
+                height: 40,
+                width: 1,
+                color: Colors.white.withValues(alpha: 0.1),
+              ),
+              Expanded(
+                child: _metricV2(l10n.dueIn30Days, 'JD ${dueIn30.toStringAsFixed(3)}', const Color(0xFF4ADE80)), // Green 400
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _metric(String title, String value, {bool alignEnd = false}) {
+  Widget _metricV2(String title, String value, Color color) {
     return Column(
-      crossAxisAlignment: alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
-        Text(title, 
-          style: const TextStyle(
-            color: BNPLColors.subtext, 
-            fontWeight: FontWeight.w700
-          )
+        Text(
+          title,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.5),
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-        const SizedBox(height: 4),
-        Text(value, 
-          style: const TextStyle(
-            color: BNPLColors.text, 
-            fontWeight: FontWeight.w900
-          )
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ],
     );
   }
 }
 
-/// زر سريع ناعم
+/// بطاقة تفاعلية سريعة
 class _QuickAction extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -1187,24 +1185,36 @@ class _QuickAction extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 72,
+        padding: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: BNPLColors.stroke),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
           boxShadow: const [
-            BoxShadow(color: Color(0x11000000), blurRadius: 12, offset: Offset(0, 6)),
+            BoxShadow(
+              color: Color(0x08000000),
+              blurRadius: 12,
+              offset: Offset(0, 4),
+            ),
           ],
         ),
-        child: Row(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: BNPLColors.text),
-            const SizedBox(width: 10),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF00A66A).withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: const Color(0xFF00A66A), size: 24),
+            ),
+            const SizedBox(height: 12),
             Text(label, 
               style: const TextStyle(
                 fontWeight: FontWeight.w800, 
-                color: BNPLColors.text
+                fontSize: 14,
+                color: Color(0xFF1E293B)
               )
             ),
           ],
@@ -1214,7 +1224,7 @@ class _QuickAction extends StatelessWidget {
   }
 }
 
-/// بطاقة فاتورة هادئة ومريحة
+/// بطاقة فاتورة فاخرة بتصميم عصري
 class _BillCard extends StatelessWidget {
   final String merchant;
   final double amount;
@@ -1250,225 +1260,207 @@ class _BillCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Status color logic
+    Color statusColor;
+    if (dueTextKey == 'overdueDays') {
+      statusColor = const Color(0xFFEF4444); // Red 500
+    } else if (dueDays <= 3) {
+      statusColor = const Color(0xFFF97316); // Orange 500
+    } else {
+      statusColor = const Color(0xFF00A66A); // BNPL Custom Green
+    }
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
       decoration: BoxDecoration(
-        color: BNPLColors.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: BNPLColors.stroke),
-        boxShadow: const [
-          BoxShadow(color: Color(0x12000000), blurRadius: 14, offset: Offset(0, 8)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF64748B).withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
         ],
       ),
-      child: Column(
-        children: [
-          Row(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // المبلغ
-              Text('JD ${amount.toStringAsFixed(3)}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900, 
-                    color: BNPLColors.text
-                  )
-              ),
-              const SizedBox(width: 10),
+              // Status sidebar
+              Container(width: 6, color: statusColor),
+              
               Expanded(
-                child: Text(
-                  merchant,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800, 
-                    color: BNPLColors.text
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header: Merchant & Icon
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(icon, color: const Color(0xFF475569), size: 18),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  merchant,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 16,
+                                    color: Color(0xFF1E293B),
+                                  ),
+                                ),
+                                Text(
+                                  _getCycleText(),
+                                  style: const TextStyle(
+                                    color: Color(0xFF64748B),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                'JD ${amount.toStringAsFixed(3)}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 18,
+                                  color: Color(0xFF0F172A),
+                                ),
+                              ),
+                              Text(
+                                _getDueText(),
+                                style: TextStyle(
+                                  color: statusColor,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      
+                      if (freePostponeAvailable) ...[
+                        const SizedBox(height: 16),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF7ED),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFFED7AA)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.stars_rounded, color: Color(0xFFEA580C), size: 16),
+                              const SizedBox(width: 8),
+                              Text(
+                                l10n.oneTimeFreePostpone,
+                                style: const TextStyle(
+                                  color: Color(0xFFEA580C),
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      
+                      const SizedBox(height: 20),
+                      
+                      // Actions
+                      Row(
+                        children: [
+                          // Pay Button (Primary)
+                          Expanded(
+                            flex: 2,
+                            child: _actionButton(
+                              label: l10n.pay,
+                              onTap: onPay,
+                              color: const Color(0xFF00A66A),
+                              isPrimary: true,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          // Extend Button
+                          Expanded(
+                            flex: 1,
+                            child: _actionButton(
+                              label: l10n.extend,
+                              onTap: onExtend,
+                              color: const Color(0xFF1E293B),
+                              isPrimary: false,
+                            ),
+                          ),
+                          if (freePostponeAvailable && onFreePostpone != null) ...[
+                             const SizedBox(width: 10),
+                             GestureDetector(
+                               onTap: onFreePostpone,
+                               child: Container(
+                                 padding: const EdgeInsets.all(12),
+                                 decoration: BoxDecoration(
+                                   color: const Color(0xFFFFF7ED),
+                                   borderRadius: BorderRadius.circular(14),
+                                   border: Border.all(color: const Color(0xFFFED7AA)),
+                                 ),
+                                 child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFFEA580C), size: 20),
+                               ),
+                             ),
+                          ],
+                        ],
+                      ),
+                    ],
                   ),
-                  textAlign: TextAlign.center,
                 ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF2F5FA),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                alignment: Alignment.center,
-                child: Icon(icon, color: BNPLColors.subtext, size: 20),
               ),
             ],
           ),
-
-          const SizedBox(height: 6),
-
-          Row(
-             children: [
-               Expanded(
-                 child: Text(
-                   _getDueText(),
-                   style: const TextStyle(
-                     color: BNPLColors.accent, 
-                     fontWeight: FontWeight.w700
-                   ),
-                 ),
-               ),
-               Text(
-                 _getCycleText(),
-                 style: const TextStyle(
-                   color: BNPLColors.subtext, 
-                   fontWeight: FontWeight.w700
-                 ),
-               ),
-             ],
-           ),
-
-          // Badge التأجيل المجاني إذا كان متاحاً
-          if (freePostponeAvailable) ...[
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFFF4E6), Color(0xFFFFFBEB)],
-                ),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: const Color(0xFFFEF3C7),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.card_giftcard_rounded,
-                    size: 14,
-                    color: Color(0xFFF59E0B),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    l10n.oneTimeFreePostpone,
-                    style: const TextStyle(
-                      color: Color(0xFFF59E0B),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-
-          const SizedBox(height: 12),
-
-          // الأزرار
-          if (freePostponeAvailable && onFreePostpone != null)
-            // عرض زر التأجيل المجاني بشكل بارز
-            Column(
-              children: [
-                _softButton(
-                  label: l10n.postponeForFree,
-                  onTap: onFreePostpone!,
-                  special: true,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _softButton(
-                        label: l10n.pay,
-                        onTap: onPay,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _softButton(
-                        label: l10n.extend,
-                        onTap: onExtend,
-                        gray: true,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            )
-          else
-            // عرض الأزرار العادية فقط
-            Row(
-              children: [
-                Expanded(
-                  child: _softButton(
-                    label: l10n.pay,
-                    onTap: onPay,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _softButton(
-                    label: l10n.extend,
-                    onTap: onExtend,
-                    gray: true,
-                  ),
-                ),
-              ],
-            ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _softButton({
-    required String label, 
-    required VoidCallback onTap, 
-    bool gray = false, 
-    bool special = false,
+  Widget _actionButton({
+    required String label,
+    required VoidCallback onTap,
+    required Color color,
+    required bool isPrimary,
   }) {
-    // لون خاص للتأجيل المجاني
-    final bg = special 
-        ? const LinearGradient(
-            colors: [Color(0xFFFFF4E6), Color(0xFFFFFBEB)],
-          )
-        : null;
-    final solidBg = !special 
-        ? (gray ? const Color(0xFFF2F5F9) : BNPLColors.primary.withValues(alpha: 0.1))
-        : null;
-    final txt = special 
-        ? const Color(0xFFF59E0B) 
-        : (gray ? BNPLColors.text : BNPLColors.primary);
-    
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 44,
+        height: 48,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          gradient: bg,
-          color: solidBg,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: special ? const Color(0xFFFEF3C7) : BNPLColors.stroke,
-            width: special ? 1.5 : 1,
-          ),
+          color: isPrimary ? color : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: isPrimary ? Colors.transparent : const Color(0xFFE2E8F0)),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (special)
-              const Padding(
-                padding: EdgeInsets.only(left: 6, right: 6),
-                child: Icon(
-                  Icons.card_giftcard_rounded,
-                  size: 18,
-                  color: Color(0xFFF59E0B),
-                ),
-              ),
-            Text(
-              label, 
-              style: TextStyle(
-                fontWeight: FontWeight.w800, 
-                color: txt,
-              ),
-            ),
-          ],
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isPrimary ? Colors.white : color,
+            fontWeight: FontWeight.w800,
+            fontSize: 14,
+          ),
         ),
       ),
     );
@@ -1480,6 +1472,10 @@ class _BillCard extends StatelessWidget {
         return l10n.dueTomorrow;
       case 'dueInDays':
         return l10n.dueInDays(dueDays);
+      case 'overdueDays':
+        return isRTL ? 'متأخر منذ $dueDays يوم' : 'Overdue $dueDays days';
+      case 'dueToday':
+        return l10n.today;
       default:
         return dueTextKey;
     }
