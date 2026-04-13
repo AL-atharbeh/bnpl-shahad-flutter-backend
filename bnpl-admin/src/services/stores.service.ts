@@ -45,6 +45,16 @@ export interface Store {
     topProducts?: string[];
 }
 
+export interface StoreReview {
+    id: number;
+    storeId: number;
+    authorName: string;
+    rating: number;
+    comment: string;
+    commentAr?: string;
+    createdAt: string;
+}
+
 export interface Vendor {
     id: number;
     name: string;
@@ -110,6 +120,22 @@ export const storesService = {
 
     getVendors: async () => {
         const response = await api.get<{ success: boolean; data: Vendor[] }>('/stores/admin/vendors');
+        return response.data;
+    },
+
+    // Review Methods
+    getStoreReviews: async (storeId: number) => {
+        const response = await api.get<{ success: boolean; data: StoreReview[] }>(`/reviews/store/${storeId}`);
+        return response.data;
+    },
+
+    createReview: async (data: Partial<StoreReview>) => {
+        const response = await api.post<{ success: boolean; data: StoreReview }>('/reviews', data);
+        return response.data;
+    },
+
+    deleteReview: async (id: number) => {
+        const response = await api.delete<{ success: boolean; message: string }>(`/reviews/${id}`);
         return response.data;
     },
 };

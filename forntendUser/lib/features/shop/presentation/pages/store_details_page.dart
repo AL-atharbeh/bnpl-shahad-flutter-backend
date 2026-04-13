@@ -35,8 +35,10 @@ class _StoreDetailsPageState extends State<StoreDetailsPage> {
   
   Map<String, dynamic>? _storeData;
   List<Map<String, dynamic>> _products = [];
+  List<Map<String, dynamic>> _reviews = [];
   bool _isLoadingStore = true;
   bool _isLoadingProducts = true;
+  bool _isLoadingReviews = true;
 
   @override
   void initState() {
@@ -44,6 +46,7 @@ class _StoreDetailsPageState extends State<StoreDetailsPage> {
     if (widget.storeId != null) {
       _loadStoreData();
       _loadProducts();
+      _loadReviews();
     } else {
       setState(() {
         _isLoadingStore = false;
@@ -200,6 +203,32 @@ class _StoreDetailsPageState extends State<StoreDetailsPage> {
         _products = [];
         _isLoadingProducts = false;
       });
+    }
+  }
+
+  Future<void> _loadReviews() async {
+    if (widget.storeId == null) return;
+
+    setState(() => _isLoadingReviews = true);
+
+    try {
+      final response = await _storeService.getStoreReviews(widget.storeId!);
+      if (response['success'] == true) {
+        dynamic reviewsData = response['data'];
+        if (reviewsData is List) {
+          setState(() {
+            _reviews = List<Map<String, dynamic>>.from(reviewsData);
+            _isLoadingReviews = false;
+          });
+        } else {
+          setState(() => _isLoadingReviews = false);
+        }
+      } else {
+        setState(() => _isLoadingReviews = false);
+      }
+    } catch (e) {
+      debugPrint('❌ Failed to load reviews: $e');
+      setState(() => _isLoadingReviews = false);
     }
   }
 
@@ -565,19 +594,36 @@ class _StoreDetailsPageState extends State<StoreDetailsPage> {
                       _ratingBars(l10n),
 
                       const SizedBox(height: 22),
-                      _reviewBubble(
-                        l10n: l10n,
-                        name: l10n.dalal,
-                        date: l10n.august2025,
-                        text: l10n.dalalReview,
-                      ),
-                      const SizedBox(height: 12),
-                      _reviewBubble(
-                        l10n: l10n,
-                        name: l10n.mai,
-                        date: l10n.may2025,
-                        text: l10n.maiReview,
-                      ),
+                      _isLoadingReviews
+                          ? const Center(child: CircularProgressIndicator())
+                          : _reviews.isEmpty
+                              ? Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 20),
+                                  child: Center(
+                                    child: Text(
+                                      l10n.noReviewsYet ?? "لا توجد تقييمات بعد",
+                                      style: const TextStyle(color: _sub),
+                                    ),
+                                  ),
+                                )
+                              : Column(
+                                  children: _reviews.map((rev) => Column(
+                                    children: [
+                                      _reviewBubble(
+                                        l10n: l10n,
+                                        name: rev['authorName'] ?? 'Guest',
+                                        date: rev['createdAt'] != null 
+                                            ? rev['createdAt'].toString().split('T')[0]
+                                            : '',
+                                        text: (isRTL && rev['commentAr'] != null && rev['commentAr'].toString().isNotEmpty)
+                                            ? rev['commentAr']
+                                            : rev['comment'] ?? '',
+                                        ratingValue: (rev['rating'] is num) ? (rev['rating'] as num).toDouble() : 5.0,
+                                      ),
+                                      const SizedBox(height: 12),
+                                    ],
+                                  )).toList(),
+                                ),
 
                       const SizedBox(height: 120),
                     ],
@@ -800,6 +846,7 @@ class _StoreDetailsPageState extends State<StoreDetailsPage> {
     required String name,
     required String date,
     required String text,
+    double ratingValue = 5.0,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -813,11 +860,16 @@ class _StoreDetailsPageState extends State<StoreDetailsPage> {
         children: [
           Row(
             children: [
-              Text(l10n.excellentReview,
-                  style: const TextStyle(fontWeight: FontWeight.w800, color: _text)),
+              Row(
+                children: List.generate(5, (i) => Icon(
+                  i < ratingValue ? Icons.star_rounded : Icons.star_border_rounded,
+                  color: const Color(0xFFFF9800),
+                  size: 14,
+                )),
+              ),
               const Spacer(),
               Text('$name · $date',
-                  style: const TextStyle(color: _sub, fontSize: 12)),
+                  style: const TextStyle(color: _sub, fontSize: 12, fontWeight: FontWeight.w600)),
             ],
           ),
           const SizedBox(height: 8),

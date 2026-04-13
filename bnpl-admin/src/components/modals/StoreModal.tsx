@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Store, Vendor, storesService } from "@/services/stores.service";
+import ReviewManagement from "../stores/ReviewManagement";
 
 interface StoreModalProps {
     isOpen: boolean;
@@ -32,6 +33,7 @@ export default function StoreModal({ isOpen, onClose, onSuccess, editStore }: St
     const [vendors, setVendors] = useState<Vendor[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [activeTab, setActiveTab] = useState<"basic" | "reviews">("basic");
 
     const isEditMode = !!editStore;
 
@@ -128,20 +130,41 @@ export default function StoreModal({ isOpen, onClose, onSuccess, editStore }: St
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
             <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-slate-800 bg-[#021f2a] shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
                 {/* Header */}
-                <div className="sticky top-0 flex items-center justify-between border-b border-slate-800 bg-[#021f2a] px-6 py-4 z-10">
-                    <h2 className="text-lg font-semibold text-slate-50">
-                        {isEditMode ? "تعديل المتجر" : "إضافة متجر جديد"}
-                    </h2>
-                    <button
-                        onClick={onClose}
-                        className="rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-900 hover:text-slate-50 transition-colors"
-                    >
-                        ✕ إغلاق
-                    </button>
+                <div className="sticky top-0 border-b border-slate-800 bg-[#021f2a] z-10">
+                    <div className="flex items-center justify-between px-6 py-4">
+                        <h2 className="text-lg font-semibold text-slate-50">
+                            {isEditMode ? "تعديل المتجر" : "إضافة متجر جديد"}
+                        </h2>
+                        <button
+                            onClick={onClose}
+                            className="rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-900 hover:text-slate-50 transition-colors"
+                        >
+                            ✕ إغلاق
+                        </button>
+                    </div>
+
+                    {/* Tabs */}
+                    {isEditMode && (
+                        <div className="flex px-6 gap-6">
+                            <button
+                                onClick={() => setActiveTab("basic")}
+                                className={`pb-3 text-sm font-medium transition-colors border-b-2 ${activeTab === "basic" ? "text-emerald-400 border-emerald-400" : "text-slate-400 border-transparent hover:text-slate-200"}`}
+                            >
+                                المعلومات الأساسية
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("reviews")}
+                                className={`pb-3 text-sm font-medium transition-colors border-b-2 ${activeTab === "reviews" ? "text-emerald-400 border-emerald-400" : "text-slate-400 border-transparent hover:text-slate-200"}`}
+                            >
+                                التقييمات والتعليقات
+                            </button>
+                        </div>
+                    )}
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <div className="p-6">
+                    {activeTab === "basic" ? (
+                        <form onSubmit={handleSubmit} className="space-y-4">
                     {error && (
                         <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-200">
                             {error}
@@ -378,7 +401,12 @@ export default function StoreModal({ isOpen, onClose, onSuccess, editStore }: St
                                 : (isEditMode ? "تحديث المتجر" : "حفظ المتجر")}
                         </button>
                     </div>
-                </form>
+                        </div>
+                    </form>
+                    ) : (
+                        editStore && <ReviewManagement storeId={editStore.id} />
+                    )}
+                </div>
             </div>
         </div>
     );

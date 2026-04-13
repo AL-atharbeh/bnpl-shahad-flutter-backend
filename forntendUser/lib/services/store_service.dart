@@ -64,4 +64,9 @@ class StoreService {
     }
     return await _apiService.get(endpoint);
   }
+
+  // Get store reviews
+  Future<Map<String, dynamic>> getStoreReviews(int storeId) async {
+    return await _apiService.get(ApiEndpoints.getStoreReviews(storeId));
+  }
 }

@@ -14,6 +14,7 @@ import { Payment } from '../../payments/entities/payment.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { Deal } from '../../deals/entities/deal.entity';
 import { Vendor } from '../../vendors/entities/vendor.entity';
+import { Review } from './review.entity';
 
 @Entity('stores')
 export class Store {
@@ -143,5 +144,8 @@ export class Store {
   @ManyToOne(() => Vendor, (vendor) => vendor.stores)
   @JoinColumn({ name: 'vendor_id' })
   vendor: Vendor;
+
+  @OneToMany(() => Review, (review) => review.store)
+  reviews: Review[];
 }
 

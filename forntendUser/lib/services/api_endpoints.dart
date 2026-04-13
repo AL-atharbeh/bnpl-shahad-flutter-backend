@@ -40,6 +40,7 @@ class ApiEndpoints {
   static String storesByCategory(int categoryId) => '/stores/category/$categoryId';
   static String getStoreDetails(int id) => '/stores/$id';
   static String getStoreProducts(int id) => '/stores/$id/products';
+  static String getStoreReviews(int id) => '/reviews/store/$id';
 
   // ==================== PRODUCTS ENDPOINTS ====================
   static const String productsAll = '/products';
