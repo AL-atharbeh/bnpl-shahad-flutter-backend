@@ -542,27 +542,38 @@ class _PaymentsPageState extends State<PaymentsPage> {
   void _showExtendDueDate(BuildContext context, String merchantName, double amount, String dueDate, int? paymentId) async {
     if (paymentId == null) return;
 
-    // Use a reference to the scaffold messenger for safe context usage
     final messenger = ScaffoldMessenger.of(context);
+    bool dialogShowing = false;
 
     try {
       // Show loading
       showDialog(
         context: context, 
         barrierDismissible: false, 
-        builder: (_) => const Center(child: CircularProgressIndicator())
-      );
+        builder: (dialogCtx) {
+          dialogShowing = true;
+          return const Center(child: CircularProgressIndicator());
+        }
+      ).then((_) => dialogShowing = false);
       
       final response = await _paymentService.getExtensionOptions();
       
-      // Safe pop for loading dialog
-      if (context.mounted) {
+      // Safe pop for loading dialog - ONLY if it's actually showing
+      if (context.mounted && dialogShowing) {
         Navigator.of(context, rootNavigator: true).pop();
+        dialogShowing = false;
       }
 
       if (response['success'] == true) {
-        final List<dynamic> optionsData = response['data'] ?? [];
+        final backendResponse = response['data'];
+        List<dynamic> optionsData = [];
         
+        if (backendResponse is Map) {
+          optionsData = backendResponse['data'] ?? [];
+        } else if (backendResponse is List) {
+          optionsData = backendResponse;
+        }
+
         if (optionsData.isEmpty) {
           messenger.showSnackBar(const SnackBar(content: Text('لا توجد خيارات تمديد متاحة حالياً')));
           return;
@@ -580,6 +591,10 @@ class _PaymentsPageState extends State<PaymentsPage> {
         }).toList();
 
         if (context.mounted) {
+          // Add a tiny delay to ensure the dialog pop animation doesn't interfere with the sheet
+          await Future.delayed(const Duration(milliseconds: 100));
+          if (!context.mounted) return;
+
           ExtendDueDateSheet.show(
             context,
             merchantName: merchantName,
@@ -594,8 +609,9 @@ class _PaymentsPageState extends State<PaymentsPage> {
       }
     } catch (e) {
       if (context.mounted) {
-        // Double check if dialog is still there by catching pop error
-        try { Navigator.of(context, rootNavigator: true).pop(); } catch (_) {}
+        if (dialogShowing) {
+          try { Navigator.of(context, rootNavigator: true).pop(); } catch (_) {}
+        }
         messenger.showSnackBar(SnackBar(content: Text('خطأ: $e')));
       }
     }
@@ -604,39 +620,53 @@ class _PaymentsPageState extends State<PaymentsPage> {
   Future<void> _handleExtendConfirm(BuildContext context, int? paymentId, ExtendOption option) async {
     if (paymentId == null || option.id == null) return;
     final messenger = ScaffoldMessenger.of(context);
+    bool dialogShowing = false;
 
     try {
       showDialog(
         context: context, 
         barrierDismissible: false, 
-        builder: (_) => const Center(child: CircularProgressIndicator())
-      );
+        builder: (dialogCtx) {
+          dialogShowing = true;
+          return const Center(child: CircularProgressIndicator());
+        }
+      ).then((_) => dialogShowing = false);
       
       final response = await _paymentService.initiatePaidExtension(
         paymentId: paymentId,
         optionId: option.id!,
       );
       
-      if (context.mounted) {
+      if (context.mounted && dialogShowing) {
         Navigator.of(context, rootNavigator: true).pop();
+        dialogShowing = false;
       }
       
-      if (response['success'] == true && response['data'] != null && response['data']['url'] != null) {
-        final paymentUrl = response['data']['url'];
+      if (response['success'] == true && response['data'] != null) {
+        final backendResponse = response['data'];
+        String? paymentUrl;
         
-        if (context.mounted) {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => PaymentWebViewPage(
-                paymentUrl: paymentUrl,
-                sessionId: 'extension_$paymentId',
+        if (backendResponse is Map && backendResponse['data'] != null && backendResponse['data']['url'] != null) {
+          paymentUrl = backendResponse['data']['url'];
+        } else if (backendResponse is Map && backendResponse['url'] != null) {
+          paymentUrl = backendResponse['url'];
+        }
+        
+        if (paymentUrl != null) {
+          if (context.mounted) {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PaymentWebViewPage(
+                  paymentUrl: paymentUrl!,
+                  sessionId: 'extension_$paymentId',
+                ),
               ),
-            ),
-          );
+            );
 
-          if (result == true) {
-            _loadPayments(); // Refresh list after successful payment
+            if (result == true) {
+              _loadPayments(); // Refresh list after successful payment
+            }
           }
         }
       } else {
@@ -644,8 +674,10 @@ class _PaymentsPageState extends State<PaymentsPage> {
       }
     } catch (e) {
       if (context.mounted) {
-        try { Navigator.pop(context); } catch (_) {}
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e')));
+        if (dialogShowing) {
+          try { Navigator.of(context, rootNavigator: true).pop(); } catch (_) {}
+        }
+        messenger.showSnackBar(SnackBar(content: Text('خطأ: $e')));
       }
     }
   }

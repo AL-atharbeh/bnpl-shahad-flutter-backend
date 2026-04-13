@@ -136,4 +136,9 @@ class PaymentService {
 
     return await _apiService.post(ApiEndpoints.initiateExtension(paymentId), data);
   }
+
+  // Get postponement history (free and paid extensions)
+  Future<Map<String, dynamic>> getPostponementHistory() async {
+    return await _apiService.get(ApiEndpoints.postponementsHistory);
+  }
 }

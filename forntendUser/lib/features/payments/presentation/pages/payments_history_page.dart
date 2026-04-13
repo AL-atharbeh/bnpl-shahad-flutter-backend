@@ -24,12 +24,69 @@ class _PaymentsHistoryPageState extends State<PaymentsHistoryPage> {
   final _paymentService = PaymentService();
   DateTimeRange? _selectedDateRange;
   bool _isLoading = true;
+  int _selectedTab = 0; // 0: Instalments, 1: Extensions
   List<_Hist> _dbHistories = [];
+  List<_Hist> _extensionHistories = [];
 
   @override
   void initState() {
     super.initState();
-    _loadHistory();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    if (_selectedTab == 0) {
+      await _loadHistory();
+    } else {
+      await _loadExtensionHistory();
+    }
+  }
+
+  Future<void> _loadExtensionHistory() async {
+    setState(() => _isLoading = true);
+    try {
+      final response = await _paymentService.getPostponementHistory();
+      if (response['success'] == true) {
+        final backendResponse = response['data'];
+        List<dynamic> data = [];
+        
+        if (backendResponse is Map && backendResponse['data'] is List) {
+          data = backendResponse['data'];
+        } else if (backendResponse is List) {
+          data = backendResponse;
+        }
+
+        setState(() {
+          _extensionHistories = data.map((item) {
+            DateTime date = DateTime.now();
+            String? dateStr = item['createdAt'];
+            if (dateStr != null) {
+              try {
+                date = DateTime.parse(dateStr);
+              } catch (_) {}
+            }
+
+            final int days = item['daysPostponed'] ?? 0;
+            final isFree = item['isFree'] == true;
+
+            return _Hist(
+              merchant: item['merchantName'] ?? 'متجر',
+              amount: double.tryParse(item['amount']?.toString() ?? '0') ?? 0.0,
+              statusKey: isFree ? 'free' : 'paid',
+              date: date,
+              icon: Icons.history_rounded,
+              color: isFree ? Colors.green : Colors.blue,
+              subtitle: isFree ? 'تأجيل مجاني ($days يوم)' : 'تمديد مدفوع ($days يوم)',
+              isExtension: true,
+            );
+          }).toList();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading extension history: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _loadHistory() async {
@@ -85,7 +142,8 @@ class _PaymentsHistoryPageState extends State<PaymentsHistoryPage> {
   }
 
   List<_Hist> get _filteredHistories {
-    return _dbHistories.where((hist) {
+    final currentList = _selectedTab == 0 ? _dbHistories : _extensionHistories;
+    return currentList.where((hist) {
       // فلترة حسب التاريخ فقط
       if (_selectedDateRange != null) {
         return hist.date.isAfter(_selectedDateRange!.start.subtract(const Duration(days: 1))) &&
@@ -178,9 +236,70 @@ class _PaymentsHistoryPageState extends State<PaymentsHistoryPage> {
       ),
       body: Column(
         children: [
+          // تبويبات الاختيار
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE6ECF3)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() => _selectedTab = 0);
+                      _loadData();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: _selectedTab == 0 ? const Color(0xFF00A66A) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'الأقساط المدفوعة',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: _selectedTab == 0 ? Colors.white : const Color(0xFF6B7280),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() => _selectedTab = 1);
+                      _loadData();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: _selectedTab == 1 ? const Color(0xFF00A66A) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'سجل التمديدات',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: _selectedTab == 1 ? Colors.white : const Color(0xFF6B7280),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           // فلترة التاريخ
           Container(
-            margin: const EdgeInsets.all(16),
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -359,10 +478,10 @@ class _HistoryCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: const Color(0xFF00A66A).withValues(alpha: 0.1),
+              color: (hist.isExtension ? Colors.blue : const Color(0xFF00A66A)).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(hist.icon, color: const Color(0xFF00A66A), size: 24),
+            child: Icon(hist.icon, color: hist.isExtension ? Colors.blue : const Color(0xFF00A66A), size: 24),
           ),
           const SizedBox(width: 16),
           
@@ -381,17 +500,18 @@ class _HistoryCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  DateFormat('dd MMM yyyy, HH:mm').format(hist.date),
-                  style: const TextStyle(
-                    color: Color(0xFF6B7280),
+                  hist.subtitle ?? DateFormat('dd MMM yyyy, HH:mm').format(hist.date),
+                  style: TextStyle(
+                    color: hist.isExtension ? const Color(0xFF2563EB) : const Color(0xFF6B7280),
                     fontSize: 14,
+                    fontWeight: hist.isExtension ? FontWeight.w600 : FontWeight.normal,
                   ),
                 ),
               ],
             ),
           ),
           
-          // المبلغ فقط
+          // المبلغ والنوع
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -407,13 +527,13 @@ class _HistoryCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF00A66A).withValues(alpha: 0.1),
+                  color: (hist.statusKey == 'free' ? Colors.blue : const Color(0xFF00A66A)).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  l10n.paid,
-                  style: const TextStyle(
-                    color: Color(0xFF00A66A),
+                  hist.statusKey == 'free' ? 'مجاني' : l10n.paid,
+                  style: TextStyle(
+                    color: hist.statusKey == 'free' ? Colors.blue : const Color(0xFF00A66A),
                     fontWeight: FontWeight.w700,
                     fontSize: 12,
                   ),
@@ -434,6 +554,8 @@ class _Hist {
   final DateTime date;
   final IconData icon;
   final Color color;
+  final String? subtitle;
+  final bool isExtension;
 
   _Hist({
     required this.merchant,
@@ -442,5 +564,7 @@ class _Hist {
     required this.date,
     required this.icon,
     required this.color,
+    this.subtitle,
+    this.isExtension = false,
   });
 }
