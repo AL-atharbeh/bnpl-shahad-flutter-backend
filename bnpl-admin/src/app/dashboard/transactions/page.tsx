@@ -105,7 +105,7 @@ export default function TransactionsPage() {
       status: p.isFree ? "تأجيل مجاني" : "تأجيل مدفوع",
       statusColor: p.isFree ? "emerald" : "amber",
       date: new Date(p.createdAt).toLocaleDateString("ar"),
-      installments: `${p.daysPostponed} يوم`,
+      installments: `${p.daysPostponed} يوم (دفعة #${p.paymentId})`,
     })),
   ];
 

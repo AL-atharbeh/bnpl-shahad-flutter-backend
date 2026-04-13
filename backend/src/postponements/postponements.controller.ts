@@ -108,7 +108,7 @@ export class PostponementsController {
       customerName: req.user.name || 'Customer',
       customerEmail: (req.user.phone || 'customer') + '@app.com',
       customerReference: `ext_${paymentId}_${initiationData.days}`,
-      successUrl: `${baseUrl}/api/v1/postponements/stripe-callback/success?paymentId=${paymentId}&days=${initiationData.days}&stripeSessionId={CHECKOUT_SESSION_ID}`,
+      successUrl: `${baseUrl}/api/v1/postponements/stripe-callback/success?paymentId=${paymentId}&days=${initiationData.days}&fee=${initiationData.fee}&stripeSessionId={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${baseUrl}/api/v1/payments/view-error`,
       productName: `تمديد موعد الدفع - ${initiationData.days} يوم`,
       metadata: {
@@ -131,6 +131,7 @@ export class PostponementsController {
   async handleExtensionSuccess(
     @Query('paymentId') paymentId: string,
     @Query('days') days: string,
+    @Query('fee') fee: string,
     @Query('stripeSessionId') stripeSessionId: string,
     @Res() res,
     @Request() req,
@@ -139,13 +140,31 @@ export class PostponementsController {
       const isPaid = await this.stripeService.verifySession(stripeSessionId);
 
       if (isPaid) {
+        const pId = parseInt(paymentId);
+        const dCount = parseInt(days);
+        const fAmount = parseFloat(fee);
+
+        // Get payment details BEFORE extending to record original due date
+        const payment = await this.paymentsService.getPaymentById(pId);
+        const originalDueDate = payment.dueDate;
+        const newDueDate = dayjs(originalDueDate).add(dCount, 'day').toDate();
+        const merchantName = payment.store?.nameAr || payment.store?.name || 'متجر';
+
         // Apply the extension
-        await this.paymentsService.extendDueDate(parseInt(paymentId), parseInt(days));
+        await this.paymentsService.extendDueDate(pId, dCount);
+        await this.paymentsService.postponePayment(pId, dCount);
         
-        // Also mark it as postponed in the history? 
-        // Actually extendDueDate just updates some flags. 
-        // Let's make it real postponement.
-        await this.paymentsService.postponePayment(parseInt(paymentId), parseInt(days));
+        // Record in history for Admin visibility
+        await this.postponementsService.recordPostponement(
+          payment.userId,
+          pId,
+          originalDueDate,
+          newDueDate,
+          dCount,
+          false, // isFree = false
+          merchantName,
+          fAmount
+        );
 
         const baseUrl = `${req.protocol}://${req.get('host')}`;
         return res.send(`

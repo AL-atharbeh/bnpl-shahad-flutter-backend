@@ -164,6 +164,33 @@ export class PostponementsService implements OnModuleInit {
   }
 
   /**
+   * Record a postponement in the history
+   */
+  async recordPostponement(
+    userId: number,
+    paymentId: number,
+    originalDueDate: Date,
+    newDueDate: Date,
+    daysPostponed: number,
+    isFree: boolean,
+    merchantName: string,
+    fee: number,
+  ): Promise<Postponement> {
+    const postponement = this.postponementRepository.create({
+      userId,
+      paymentId,
+      originalDueDate,
+      newDueDate,
+      daysPostponed,
+      isFree,
+      merchantName,
+      amount: fee,
+    });
+
+    return this.postponementRepository.save(postponement);
+  }
+
+  /**
    * Get user's postponement history
    */
   async getPostponementHistory(userId: number): Promise<Postponement[]> {

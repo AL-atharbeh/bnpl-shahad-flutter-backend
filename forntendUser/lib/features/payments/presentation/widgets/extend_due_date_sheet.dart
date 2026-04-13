@@ -69,14 +69,33 @@ class ExtendDueDateSheet extends StatefulWidget {
 }
 
 class _ExtendDueDateSheetState extends State<ExtendDueDateSheet> {
-  int _selectedIndex = 1; // الافتراضي على خيار 14 يوم (كما بالصورة)
+  int _selectedIndex = 0; // Default to first option
+
+  @override
+  void initState() {
+    super.initState();
+    // Try to select the second option (14 days) by default if it exists
+    if (widget.options.length > 1) {
+      _selectedIndex = 1;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final languageService = Provider.of<LanguageService>(context);
     final isRTL = languageService.isArabic;
-    final selected = widget.options[_selectedIndex];
+    
+    if (widget.options.isEmpty) {
+      return const SizedBox(
+        height: 200,
+        child: Center(child: Text('لا توجد خيارات تمديد')),
+      );
+    }
+
+    // Safety check for index
+    final index = _selectedIndex >= widget.options.length ? 0 : _selectedIndex;
+    final selected = widget.options[index];
 
     return Padding(
       padding: EdgeInsets.only(
