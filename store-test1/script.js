@@ -1,3 +1,8 @@
+// Integration Constants
+const STORE_ID = 5;
+const PUBLIC_KEY = 'sh_pk_795894a435724ead8806090a';
+const BACKEND_URL = 'https://enthusiastic-stillness-production-5dce.up.railway.app/api/v1';
+
 // Product Data
 const products = [
     {
@@ -164,8 +169,14 @@ function showToast() {
     }, 3000);
 }
 
-// Mock Checkout Process
+// Checkout Process
 let currentStep = 1;
+let checkoutData = {
+    name: '',
+    phone: '',
+    address: '',
+    paymentMethod: 'shahd'
+};
 
 function openCheckoutModal() {
     toggleCart(false);
@@ -182,17 +193,85 @@ function closeCheckoutModal() {
 
 function handleNextStep() {
     if (currentStep === 1) {
+        // Collect shipping info
+        checkoutData.name = document.getElementById('cust-name').value;
+        checkoutData.phone = document.getElementById('cust-phone').value;
+        checkoutData.address = document.getElementById('cust-address').value;
+
+        if (!checkoutData.name || !checkoutData.phone) {
+            alert('يرجى إكمال البيانات المطلوبة');
+            return;
+        }
+
         currentStep = 2;
         updateModalContent();
     } else if (currentStep === 2) {
+        // Collect payment method
+        const selectedMethod = document.querySelector('input[name="payment"]:checked').id;
+        checkoutData.paymentMethod = selectedMethod;
+
         currentStep = 3;
         updateModalContent();
     } else {
-        // Final Success
-        cart = [];
-        updateCartUI();
-        closeCheckoutModal();
-        alert('🎉 تم تقديم طلبك بنجاح! شكراً لاختيارك Luxe Couture.');
+        // Final Action
+        if (checkoutData.paymentMethod === 'p3') {
+            createRealBnplSession();
+        } else {
+            // Mock Success for COD
+            cart = [];
+            updateCartUI();
+            closeCheckoutModal();
+            alert('🎉 تم تقديم طلبك بنجاح! شكراً لاختيارك Luxe Couture.');
+        }
+    }
+}
+
+async function createRealBnplSession() {
+    const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const orderId = 'LUXE-' + Date.now();
+    const btn = document.getElementById('next-step-btn-dynamic');
+    
+    btn.disabled = true;
+    btn.textContent = 'جاري إنشاء الجلسة...';
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/sessions/create`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': PUBLIC_KEY
+            },
+            body: JSON.stringify({
+                store_id: STORE_ID,
+                store_order_id: orderId,
+                total_amount: totalAmount,
+                currency: 'JOD',
+                customer_phone: checkoutData.phone,
+                customer_name: checkoutData.name,
+                items: cart.map(item => ({
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity,
+                    image: window.location.origin + '/store-test1/' + item.image
+                })),
+                success_url: window.location.origin + '/store-test1/?success=true',
+                cancel_url: window.location.origin + '/store-test1/?cancelled=true'
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Redirect to the approval view
+            window.location.href = `${BACKEND_URL}/sessions/view/${data.data.sessionId}`;
+        } else {
+            throw new Error(data.message || 'فشل في إنشاء الجلسة');
+        }
+    } catch (error) {
+        console.error('Session creation error:', error);
+        alert('❌ خطأ في عملية الربط: ' + error.message);
+        btn.disabled = false;
+        btn.textContent = 'تأكيد وشراء عبر شهد';
     }
 }
 
@@ -208,50 +287,64 @@ function updateModalContent() {
         checkoutFormContent.innerHTML = `
             <div class="form-group">
                 <label>الاسم الكامل</label>
-                <input type="text" placeholder="أدخل اسمك هنا..." id="cust-name">
+                <input type="text" placeholder="أدخل اسمك هنا..." id="cust-name" value="${checkoutData.name}">
             </div>
             <div class="form-group">
                 <label>رقم الهاتف</label>
-                <input type="tel" placeholder="07XXXXXXXX">
+                <input type="tel" placeholder="07XXXXXXXX" id="cust-phone" value="${checkoutData.phone}">
             </div>
             <div class="form-group">
                 <label>العنوان</label>
-                <textarea placeholder="المدينة، الشارع، البناية..."></textarea>
+                <textarea placeholder="المدينة، الشارع، البناية..." id="cust-address">${checkoutData.address}</textarea>
             </div>
             <button class="btn btn-primary w-100" id="next-step-btn-dynamic">المتابعة للدفع</button>
         `;
     } else if (currentStep === 2) {
         modalTitle.textContent = "طريقة الدفع";
         checkoutFormContent.innerHTML = `
-            <div class="form-group" style="border: 2px solid #ddd; padding: 15px; border-radius: 12px; margin-bottom: 10px;">
-                <input type="radio" name="payment" id="p1" checked>
+            <div class="form-group" style="border: 3px solid var(--accent); padding: 15px; border-radius: 12px; background: rgba(212, 175, 55, 0.1);">
+                <input type="radio" name="payment" id="p3" checked>
+                <label for="p3" style="display: inline; margin-right: 10px; font-weight: bold; color: var(--accent);">بالتقسيط عبر شهد (مفعل ✅)</label>
+            </div>
+            <div class="form-group" style="border: 2px solid #ddd; padding: 15px; border-radius: 12px; margin-bottom: 10px; margin-top: 15px;">
+                <input type="radio" name="payment" id="p1">
                 <label for="p1" style="display: inline; margin-right: 10px;">الدفع عند الاستلام</label>
             </div>
             <div class="form-group" style="border: 2px solid #ddd; padding: 15px; border-radius: 12px; opacity: 0.5;">
                 <input type="radio" name="payment" id="p2" disabled>
                 <label for="p2" style="display: inline; margin-right: 10px;">البطاقة الائتمانية (قريباً)</label>
             </div>
-            <div class="form-group" style="border: 3px solid var(--accent); padding: 15px; border-radius: 12px; background: rgba(212, 175, 55, 0.1);">
-                <input type="radio" name="payment" id="p3" disabled>
-                <label for="p3" style="display: inline; margin-right: 10px; font-weight: bold; color: var(--accent);">بالتقسيط عبر شهد (قيد التجهيز ⚠️)</label>
-            </div>
             <button class="btn btn-primary w-100" id="next-step-btn-dynamic">مراجعة الطلب</button>
         `;
     } else {
         modalTitle.textContent = "تأكيد الطلب";
         const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const methodText = checkoutData.paymentMethod === 'p3' ? 'تقسيط عبر شهد' : 'الدفع عند الاستلام';
         checkoutFormContent.innerHTML = `
             <div style="text-align: right; margin-bottom: 20px;">
                 <p><strong>عدد المواد:</strong> ${cart.length}</p>
                 <p><strong>الإجمالي المطلوب:</strong> ${total} د.أ</p>
-                <p><strong>طريقة الدفع:</strong> الدفع عند الاستلام</p>
+                <p><strong>طريقة الدفع:</strong> ${methodText}</p>
+                <p><strong>رقم الهاتف:</strong> ${checkoutData.phone}</p>
             </div>
-            <button class="btn btn-primary w-100" id="next-step-btn-dynamic">تأكيد وشراء</button>
+            <button class="btn btn-primary w-100" id="next-step-btn-dynamic">
+                ${checkoutData.paymentMethod === 'p3' ? 'تأكيد وشراء عبر شهد' : 'تأكيد وشراء'}
+            </button>
         `;
     }
 
     // Re-attach listener because we replaced the innerHTML
     document.getElementById('next-step-btn-dynamic').onclick = handleNextStep;
+}
+
+// Check for URL params
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('success') === 'true') {
+    alert('🎉 تم الدفع بنجاح عبر نظام شهد! شكراً لك.');
+    window.history.replaceState({}, document.title, window.location.pathname);
+} else if (urlParams.get('cancelled') === 'true') {
+    alert('❌ تم إلغاء عملية الدفع.');
+    window.history.replaceState({}, document.title, window.location.pathname);
 }
 
 // Start the app
