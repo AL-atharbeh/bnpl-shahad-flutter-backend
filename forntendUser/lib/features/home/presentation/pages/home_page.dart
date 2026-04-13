@@ -105,8 +105,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'titleEn': 'Fashion',
       'subtitleAr': 'أزياء وإكسسوارات',
       'subtitleEn': 'Clothing & Accessories',
-      'icon': Icons.style,
-      'image': 'assets/images/butti.jpg',
+      'icon': Icons.checkroom, // Better icon for fashion
+      'image': 'assets/images/zara.jpg', // Better generic image for fashion
       'color': const Color(0xFF34D399),
     },
     {
@@ -2209,19 +2209,49 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     }
     
     return Container(
-      margin: const EdgeInsets.only(top: 24),
-      child: SizedBox(
-        height: 160,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          reverse: false,
-          itemCount: categoriesToShow.length,
-          itemBuilder: (context, index) {
-            final category = categoriesToShow[index];
-            return _buildCategoryCard(category, isRTL);
-          },
-        ),
+      margin: const EdgeInsets.only(top: 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isRTL ? 'التصنيفات' : 'Categories',
+                      style: AppTextStyles.changaH4,
+                    ),
+                    Text(
+                      isRTL ? 'تصفح حسب النوع' : 'Browse by type',
+                      style: GoogleFonts.mada(
+                        fontSize: 12,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 160,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              reverse: false,
+              itemCount: categoriesToShow.length,
+              itemBuilder: (context, index) {
+                final category = categoriesToShow[index];
+                return _buildCategoryCard(category, isRTL);
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
