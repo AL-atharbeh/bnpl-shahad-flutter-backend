@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Store, storesService, StoreStats } from "@/services/stores.service";
 import StoreModal from "@/components/modals/StoreModal";
+import ReviewManagement from "@/components/stores/ReviewManagement";
 
 const mockStoreTransactions: any[] = [];
 const mockStorePayouts: any[] = [];
@@ -937,6 +938,11 @@ export default function StoresPage() {
                     </span>
                   </div>
                 </div>
+              </section>
+
+              {/* Store Reviews Management (Admin only) */}
+              <section className="rounded-xl border border-slate-800 bg-[#031824] p-4">
+                <ReviewManagement storeId={selectedStore.id} />
               </section>
 
               {/* Transactions */}

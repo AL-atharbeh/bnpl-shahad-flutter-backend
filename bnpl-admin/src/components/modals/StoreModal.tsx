@@ -41,6 +41,7 @@ export default function StoreModal({ isOpen, onClose, onSuccess, editStore }: St
         if (isOpen) {
             fetchVendors();
             if (editStore) {
+                setActiveTab("basic");
                 setFormData({
                     name: editStore.name || "",
                     nameAr: editStore.nameAr || "",
