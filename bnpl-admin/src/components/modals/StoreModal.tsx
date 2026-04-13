@@ -401,9 +401,8 @@ export default function StoreModal({ isOpen, onClose, onSuccess, editStore }: St
                                 : (isEditMode ? "تحديث المتجر" : "حفظ المتجر")}
                         </button>
                     </div>
-                        </div>
-                    </form>
-                    ) : (
+                </form>
+                ) : (
                         editStore && <ReviewManagement storeId={editStore.id} />
                     )}
                 </div>
