@@ -24,30 +24,11 @@ export class BannersService {
       where.categoryId = categoryId;
     }
 
-    const banners = await this.bannerRepository.find({
+    // Order by sort order
+    return await this.bannerRepository.find({
       where,
       relations: ['category'],
       order: { sortOrder: 'ASC', createdAt: 'DESC' },
-    });
-
-    // Filter by date range
-    return banners.filter(banner => {
-      // If no dates, always show
-      if (!banner.startDate && !banner.endDate) {
-        return true;
-      }
-
-      // Check start date
-      if (banner.startDate && banner.startDate > now) {
-        return false;
-      }
-
-      // Check end date
-      if (banner.endDate && banner.endDate < now) {
-        return false;
-      }
-
-      return true;
     });
   }
 

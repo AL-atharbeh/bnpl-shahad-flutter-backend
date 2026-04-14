@@ -6,6 +6,7 @@ import { Product } from '../products/entities/product.entity';
 import { Payment } from '../payments/entities/payment.entity';
 import { Notification } from '../notifications/entities/notification.entity';
 import { Deal } from '../deals/entities/deal.entity';
+import { Banner } from '../banners/entities/banner.entity';
 
 @Injectable()
 export class HomeService {
@@ -20,6 +21,8 @@ export class HomeService {
     private notificationRepository: Repository<Notification>,
     @InjectRepository(Deal)
     private dealRepository: Repository<Deal>,
+    @InjectRepository(Banner)
+    private bannerRepository: Repository<Banner>,
   ) {}
 
   /**
@@ -138,29 +141,21 @@ export class HomeService {
     ];
 
     // Banner images (static for now)
-    const banners = [
-      {
-        id: 1,
-        image: '/images/banners/banner1.jpg',
-        title: 'عروض خاصة',
-        titleEn: 'Special Offers',
-        link: '/offers',
-      },
-      {
-        id: 2,
-        image: '/images/banners/banner2.jpg',
-        title: 'تسوق الآن',
-        titleEn: 'Shop Now',
-        link: '/stores',
-      },
-      {
-        id: 3,
-        image: '/images/banners/banner3.jpg',
-        title: 'عروض جديدة',
-        titleEn: 'New Offers',
-        link: '/offers',
-      },
-    ];
+    // Get active banners from database
+    const dbBanners = await this.bannerRepository.find({
+      where: { isActive: true },
+      order: { sortOrder: 'ASC' },
+    });
+
+    const banners = dbBanners.map(b => ({
+      id: b.id,
+      image: b.imageUrl,
+      title: b.title,
+      titleEn: b.title || '',
+      link: b.linkUrl || '',
+      linkType: b.linkType,
+      linkId: b.linkId,
+    }));
 
     return {
       banners,
