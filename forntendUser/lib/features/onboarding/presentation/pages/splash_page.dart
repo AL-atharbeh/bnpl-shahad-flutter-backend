@@ -19,13 +19,17 @@ class _SplashPageState extends State<SplashPage>
   // ─── Animation Controllers ───
   late AnimationController _progressController; // For the loading bar
   late AnimationController _exitController;     // Fade out before exit
+  late AnimationController _logoController;      // For the initial logo sequence
 
   // ─── Progress Animation ───
   late Animation<double> _progressAnimation;
+  late Animation<double> _logoScaleAnimation;
+  late Animation<double> _logoFadeAnimation;
 
   // ─── Dynamic Splash Image ───
   String? _splashImageUrl;
   bool _isNetworkImage = false;
+  bool _showMainContent = false; // To hide bar until logo finishes
 
   // ─── Colors ───
   static const Color emeraldBright = Color(0xFF10A37F);
@@ -36,7 +40,22 @@ class _SplashPageState extends State<SplashPage>
     super.initState();
     _loadCachedSplash();
 
-    // 1. Progress Bar Animation
+    // 1. Logo Animation (Intro)
+    _logoController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+    _logoFadeAnimation = TweenSequence([
+      TweenSequenceItem(tween: Tween<double>(begin: 0.0, end: 1.0), weight: 40),
+      TweenSequenceItem(tween: ConstantTween<double>(1.0), weight: 30),
+      TweenSequenceItem(tween: Tween<double>(begin: 1.0, end: 0.0), weight: 30),
+    ]).animate(_logoController);
+    
+    _logoScaleAnimation = Tween<double>(begin: 0.8, end: 1.1).animate(
+      CurvedAnimation(parent: _logoController, curve: Curves.easeOutCubic),
+    );
+
+    // 2. Progress Bar Animation
     _progressController = AnimationController(
       duration: const Duration(milliseconds: 3000),
       vsync: this,
@@ -48,7 +67,7 @@ class _SplashPageState extends State<SplashPage>
       ),
     );
 
-    // 2. Exit Fade
+    // 3. Exit Fade (Final)
     _exitController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -58,16 +77,21 @@ class _SplashPageState extends State<SplashPage>
   }
 
   void _runSequencedAnimations() async {
-    // Start loading bar
-    _progressController.forward();
+    // Stage 1: Show Logo
+    await _logoController.forward();
     
-    // Background fetch the latest splash image for the NEXT launch
+    if (mounted) {
+      setState(() => _showMainContent = true);
+    }
+
+    // Stage 2: Start loading bar & Fetch fresh data
+    _progressController.forward();
     _fetchNewSplash();
 
-    // Wait for the bar to finish (matching controller duration)
+    // Stage 3: Wait for progress to finish
     await Future.delayed(const Duration(milliseconds: 3200));
     
-    // Start exit animation
+    // Stage 4: Exit app to Home/Landing
     if (mounted) {
       await _exitController.forward();
       _navigateNext();
@@ -125,67 +149,88 @@ class _SplashPageState extends State<SplashPage>
   void dispose() {
     _progressController.dispose();
     _exitController.dispose();
+    _logoController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: emeraldDeep, // Base color during transitions
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ── Background Image ──
-          _splashImageUrl != null && _isNetworkImage
-              ? Image.network(
-                  _splashImageUrl!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Image.asset(
-                    'assets/images/splah.png',
-                    fit: BoxFit.cover,
+          // ── 1. Dynamic Background Image (Visible after logo fades) ──
+          if (_showMainContent)
+            FadeInWidget(
+              child: _splashImageUrl != null && _isNetworkImage
+                  ? Image.network(
+                      _splashImageUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Image.asset(
+                        'assets/images/splah.png',
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : Image.asset(
+                      _splashImageUrl ?? 'assets/images/splah.png',
+                      fit: BoxFit.cover,
+                    ),
+            ),
+
+          // ── 2. Dark gradient overlay ──
+          if (_showMainContent)
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.4),
+                    ],
+                    stops: const [0.7, 1.0],
                   ),
-                )
-              : Image.asset(
-                  _splashImageUrl ?? 'assets/images/splah.png',
-                  fit: BoxFit.cover,
                 ),
+              ),
+            ),
 
-          // ── Dark gradient overlay at bottom for text readability ──
+          // ── 3. Initial Logo Sequence (Centered) ──
           Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.4),
-                  ],
-                  stops: const [0.7, 1.0],
+            child: ScaleTransition(
+              scale: _logoScaleAnimation,
+              child: FadeTransition(
+                opacity: _logoFadeAnimation,
+                child: Center(
+                  child: Image.asset(
+                    'assets/images/logoapp.png',
+                    width: 180,
+                    height: 180,
+                  ),
                 ),
               ),
             ),
           ),
 
-          // ── Premium Loading System ──
-          Positioned(
-            left: 45,
-            right: 45,
-            bottom: 90,
-            child: FadeTransition(
-              opacity: Tween<double>(begin: 1.0, end: 0.0).animate(_exitController),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 1. Dynamic Status Text
-                  _buildPremiumStatusText(),
-                  const SizedBox(height: 30),
-                  
-                  // 2. The "Unmatched" Progress Bar
-                  _buildUnmatchedProgressBar(),
-                ],
+          // ── 4. Loading indicator (Bottom) ──
+          if (_showMainContent)
+            Positioned(
+              left: 45,
+              right: 45,
+              bottom: 90,
+              child: FadeTransition(
+                opacity: Tween<double>(begin: 1.0, end: 0.0).animate(_exitController),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildPremiumStatusText(),
+                    const SizedBox(height: 30),
+                    _buildUnmatchedProgressBar(),
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -370,7 +415,25 @@ class _SplashPageState extends State<SplashPage>
           _splashImageUrl = cachedUrl;
           _isNetworkImage = cachedUrl.startsWith('http');
         });
+        
+        // Pre-cache the image so it's ready after the logo sequence
+        if (_isNetworkImage) {
+          _precacheImage(cachedUrl);
+        }
       }
+    }
+  }
+
+  void _precacheImage(String url) {
+    if (!mounted) return;
+    try {
+      precacheImage(NetworkImage(url), context).then((_) {
+        print('[SplashPage] Image pre-cached successfully: $url');
+      }).catchError((e) {
+        print('[SplashPage] Failed to pre-cache image: $e');
+      });
+    } catch (e) {
+      print('[SplashPage] Error in precacheImage: $e');
     }
   }
 
@@ -378,18 +441,74 @@ class _SplashPageState extends State<SplashPage>
     try {
       final bannerService = BannerService();
       final response = await bannerService.getSplashBanner();
+      
+      print('[SplashPage] Fetching new splash. Response success: ${response['success']}');
+      
       if (response['success'] && response['data'] != null) {
-        final config = response['data'];
-        final newUrl = config['splashImageUrl'];
-        if (newUrl != null && newUrl.isNotEmpty) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('cached_splash_url', newUrl);
-          print('[SplashPage] Cached new splash URL: $newUrl');
+        // Essential fix: ApiService wraps the result, and our backend also wraps in 'data'
+        final backendBody = response['data'];
+        final configData = backendBody['data'];
+        
+        if (configData != null) {
+          final String? newUrl = configData['splashImageUrl'];
+          print('[SplashPage] Found splashImageUrl: $newUrl');
+          
+          if (newUrl != null && newUrl.isNotEmpty) {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('cached_splash_url', newUrl);
+            
+            // Update UI immediately if the image is different
+            if (mounted && newUrl != _splashImageUrl) {
+              // Pre-cache the new one too
+              if (newUrl.startsWith('http')) {
+                _precacheImage(newUrl);
+              }
+              
+              setState(() {
+                _splashImageUrl = newUrl;
+                _isNetworkImage = newUrl.startsWith('http');
+              });
+              print('[SplashPage] Dynamic splash update applied successfully');
+            }
+          }
         }
       }
     } catch (e) {
-      print('[SplashPage] Failed to fetch new splash: $e');
+      print('[SplashPage] Error during fetching splash: $e');
     }
+  }
+}
+
+// Helper for smooth appearance
+class FadeInWidget extends StatefulWidget {
+  final Widget child;
+  const FadeInWidget({super.key, required this.child});
+
+  @override
+  State<FadeInWidget> createState() => _FadeInWidgetState();
+}
+
+class _FadeInWidgetState extends State<FadeInWidget> with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _fade;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(duration: const Duration(seconds: 1), vsync: this);
+    _fade = Tween<double>(begin: 0.0, end: 1.0).animate(_ctrl);
+    _ctrl.forward();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(opacity: _fade, child: widget.child);
   }
 }
 
