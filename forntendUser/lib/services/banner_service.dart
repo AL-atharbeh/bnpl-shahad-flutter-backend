@@ -30,7 +30,7 @@ class BannerService {
 
   // Get active splash banner
   Future<Map<String, dynamic>> getSplashBanner() async {
-    return await _apiService.get(ApiEndpoints.activeSplash);
+    return await _apiService.get(ApiEndpoints.appConfigSplash);
   }
 }
 

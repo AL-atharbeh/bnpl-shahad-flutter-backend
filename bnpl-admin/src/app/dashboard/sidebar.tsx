@@ -10,6 +10,7 @@ const navItems = [
   { href: "/dashboard/categories", label: "التصنيفات" },
   { href: "/dashboard/offers", label: "العروض" },
   { href: "/dashboard/banners", label: "البانرات" },
+  { href: "/dashboard/settings/splash", label: "شاشة الافتتاح" },
   { href: "/dashboard/transactions", label: "المعاملات" },
   { href: "/dashboard/payments", label: "الدفعات" },
   { href: "/dashboard/profits", label: "الأرباح النهائية" },

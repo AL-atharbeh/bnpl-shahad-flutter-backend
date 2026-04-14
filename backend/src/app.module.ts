@@ -24,6 +24,7 @@ import { SettlementsModule } from './settlements/settlements.module';
 import { ProfitDistributionModule } from './profit-distribution/profit-distribution.module';
 import { ReportsModule } from './reports/reports.module';
 import { BannersModule } from './banners/banners.module';
+import { AppConfigModule } from './app-config/app-config.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { BannersModule } from './banners/banners.module';
     ProfitDistributionModule,
     ReportsModule,
     BannersModule,
+    AppConfigModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -379,8 +379,8 @@ class _SplashPageState extends State<SplashPage>
       final bannerService = BannerService();
       final response = await bannerService.getSplashBanner();
       if (response['success'] && response['data'] != null) {
-        final banner = response['data'];
-        final newUrl = banner['imageUrl'];
+        final config = response['data'];
+        final newUrl = config['splashImageUrl'];
         if (newUrl != null && newUrl.isNotEmpty) {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('cached_splash_url', newUrl);

@@ -197,7 +197,7 @@ export default function BannerModal({ isOpen, onClose, onSuccess, editBanner }: 
                 <option value={LinkType.CATEGORY}>تصنيف (Category)</option>
                 <option value={LinkType.PRODUCT}>منتج (Product)</option>
                 <option value={LinkType.EXTERNAL}>رابط خارجي (External)</option>
-                <option value={LinkType.SPLASH}>شاشة افتتاحية (Splash Screen)</option>
+                <option value={LinkType.NONE}>بدون رابط</option>
               </select>
             </div>
             <div>
@@ -205,7 +205,7 @@ export default function BannerModal({ isOpen, onClose, onSuccess, editBanner }: 
               {formData.linkType === LinkType.EXTERNAL ? (
                 <input type="url" value={formData.linkUrl} onChange={e => setFormData({ ...formData, linkUrl: e.target.value })} className={inputClass} placeholder="https://external.com" />
               ) : (
-                <input type="number" value={formData.linkId} onChange={e => setFormData({ ...formData, linkId: e.target.value })} className={inputClass} placeholder="ID" disabled={formData.linkType === LinkType.NONE || formData.linkType === LinkType.SPLASH} />
+                <input type="number" value={formData.linkId} onChange={e => setFormData({ ...formData, linkId: e.target.value })} className={inputClass} placeholder="ID" disabled={formData.linkType === LinkType.NONE} />
               )}
             </div>
           </div>

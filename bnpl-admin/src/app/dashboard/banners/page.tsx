@@ -9,7 +9,6 @@ export default function BannersPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
-  const [activeTab, setActiveTab] = useState<"home" | "splash">("home");
 
   useEffect(() => {
     fetchBanners();
@@ -28,10 +27,6 @@ export default function BannersPage() {
       setLoading(false);
     }
   };
-
-  const filteredBanners = banners.filter(b => 
-    activeTab === "home" ? b.linkType !== LinkType.SPLASH : b.linkType === LinkType.SPLASH
-  );
 
   const handleEdit = (banner: Banner) => {
     setEditingBanner(banner);
@@ -53,29 +48,14 @@ export default function BannersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-50">إدارة المحتوى الإعلاني</h1>
-          <p className="text-sm text-slate-400">إدارة البانرات والصور الافتتاحية للتطبيق</p>
+          <h1 className="text-2xl font-bold text-slate-50">إدارة البانرات</h1>
+          <p className="text-sm text-slate-400">إدارة البانرات الدعائية التي تظهر في تطبيق الهاتف</p>
         </div>
         <button
           onClick={() => { setEditingBanner(null); setIsModalOpen(true); }}
           className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400 transition-colors"
         >
-          + إضافة {activeTab === "home" ? "بانر جديد" : "شاشة افتتاحية"}
-        </button>
-      </div>
-
-      <div className="flex gap-2 border-b border-slate-800 pb-px">
-        <button
-          onClick={() => setActiveTab("home")}
-          className={`px-6 py-2 text-sm font-medium transition-colors ${activeTab === "home" ? "border-b-2 border-emerald-500 text-emerald-400" : "text-slate-400 hover:text-slate-200"}`}
-        >
-          بانرات الصفحة الرئيسية
-        </button>
-        <button
-          onClick={() => setActiveTab("splash")}
-          className={`px-6 py-2 text-sm font-medium transition-colors ${activeTab === "splash" ? "border-b-2 border-emerald-500 text-emerald-400" : "text-slate-400 hover:text-slate-200"}`}
-        >
-          شاشة الافتتاح (Splash Screen)
+          + إضافة بانر جديد
         </button>
       </div>
 
@@ -96,10 +76,10 @@ export default function BannersPage() {
             <tbody className="divide-y divide-slate-800 text-slate-300">
               {loading ? (
                 <tr><td colSpan={7} className="px-6 py-12 text-center text-slate-500">جاري التحميل...</td></tr>
-              ) : filteredBanners.length === 0 ? (
-                <tr><td colSpan={7} className="px-6 py-12 text-center text-slate-500">لا توجد محتويات متاحة في هذا القسم</td></tr>
+              ) : banners.length === 0 ? (
+                <tr><td colSpan={7} className="px-6 py-12 text-center text-slate-500">لا توجد بانرات متاحة</td></tr>
               ) : (
-                filteredBanners.map((banner) => (
+                banners.map((banner) => (
                   <tr key={banner.id} className="hover:bg-slate-900/30 transition-colors">
                     <td className="px-6 py-4">
                       <div className="h-12 w-24 overflow-hidden rounded-md border border-slate-700 bg-slate-800">
