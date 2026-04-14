@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { configService } from "@/services/config.service";
 import { bannersService } from "@/services/banners.service";
-import { toast } from "react-hot-toast";
 
 export default function SplashSettingsPage() {
   const [imageUrl, setImageUrl] = useState<string>("");
@@ -37,10 +36,10 @@ export default function SplashSettingsPage() {
       const result = await bannersService.uploadImage(file);
       if (result.success) {
         setImageUrl(result.data.url);
-        toast.success("تم رفع الصورة بنجاح");
+        alert("تم رفع الصورة بنجاح");
       }
     } catch (err) {
-      toast.error("فشل في رفع الصورة");
+      alert("فشل في رفع الصورة");
     } finally {
       setUploadLoading(false);
     }
@@ -48,16 +47,16 @@ export default function SplashSettingsPage() {
 
   const handleSave = async () => {
     if (!imageUrl) {
-      toast.error("يرجى اختيار صورة أولاً");
+      alert("يرجى اختيار صورة أولاً");
       return;
     }
 
     setSaving(true);
     try {
       await configService.updateSplash(imageUrl);
-      toast.success("تم حفظ إعدادات شاشة الافتتاح بنجاح");
+      alert("تم حفظ إعدادات شاشة الافتتاح بنجاح");
     } catch (error) {
-      toast.error("فشل في حفظ الإعدادات");
+      alert("فشل في حفظ الإعدادات");
     } finally {
       setSaving(false);
     }
