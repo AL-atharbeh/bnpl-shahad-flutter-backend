@@ -6,11 +6,11 @@ import { Store } from '../stores/entities/store.entity';
 import { Product } from '../products/entities/product.entity';
 import { Payment } from '../payments/entities/payment.entity';
 import { Notification } from '../notifications/entities/notification.entity';
-import { Banner } from '../banners/entities/banner.entity';
+import { Deal } from '../deals/entities/deal.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Store, Product, Payment, Notification, Deal, Banner]),
+    TypeOrmModule.forFeature([Store, Product, Payment, Notification, Deal]),
   ],
   controllers: [HomeController],
   providers: [HomeService],
