@@ -112,5 +112,18 @@ export class BannersService {
   async getBannersByCategory(categoryId: number): Promise<Banner[]> {
     return this.getAllBanners(categoryId);
   }
+
+  /**
+   * Get the most recent active splash banner
+   */
+  async getActiveSplash(): Promise<Banner | null> {
+    return this.bannerRepository.findOne({
+      where: {
+        isActive: true,
+        linkType: LinkType.SPLASH,
+      },
+      order: { createdAt: 'DESC' },
+    });
+  }
 }
 

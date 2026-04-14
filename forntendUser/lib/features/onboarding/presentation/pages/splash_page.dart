@@ -6,6 +6,8 @@ import '../../../../routing/app_router.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../services/security_service.dart';
 
+import '../../../../services/banner_service.dart';
+
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -21,6 +23,10 @@ class _SplashPageState extends State<SplashPage>
   // ─── Progress Animation ───
   late Animation<double> _progressAnimation;
 
+  // ─── Dynamic Splash Image ───
+  String? _splashImageUrl;
+  bool _isNetworkImage = false;
+
   // ─── Colors ───
   static const Color emeraldBright = Color(0xFF10A37F);
   static const Color emeraldDeep = Color(0xFF01120B);
@@ -28,6 +34,7 @@ class _SplashPageState extends State<SplashPage>
   @override
   void initState() {
     super.initState();
+    _loadCachedSplash();
 
     // 1. Progress Bar Animation
     _progressController = AnimationController(
@@ -53,6 +60,9 @@ class _SplashPageState extends State<SplashPage>
   void _runSequencedAnimations() async {
     // Start loading bar
     _progressController.forward();
+    
+    // Background fetch the latest splash image for the NEXT launch
+    _fetchNewSplash();
 
     // Wait for the bar to finish (matching controller duration)
     await Future.delayed(const Duration(milliseconds: 3200));
@@ -125,10 +135,19 @@ class _SplashPageState extends State<SplashPage>
         fit: StackFit.expand,
         children: [
           // ── Background Image ──
-          Image.asset(
-            'assets/images/splah.png',
-            fit: BoxFit.cover,
-          ),
+          _splashImageUrl != null && _isNetworkImage
+              ? Image.network(
+                  _splashImageUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Image.asset(
+                    'assets/images/splah.png',
+                    fit: BoxFit.cover,
+                  ),
+                )
+              : Image.asset(
+                  _splashImageUrl ?? 'assets/images/splah.png',
+                  fit: BoxFit.cover,
+                ),
 
           // ── Dark gradient overlay at bottom for text readability ──
           Positioned.fill(
@@ -340,6 +359,37 @@ class _SplashPageState extends State<SplashPage>
         ],
       ),
     );
+  }
+
+  Future<void> _loadCachedSplash() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedUrl = prefs.getString('cached_splash_url');
+    if (cachedUrl != null && cachedUrl.isNotEmpty) {
+      if (mounted) {
+        setState(() {
+          _splashImageUrl = cachedUrl;
+          _isNetworkImage = cachedUrl.startsWith('http');
+        });
+      }
+    }
+  }
+
+  Future<void> _fetchNewSplash() async {
+    try {
+      final bannerService = BannerService();
+      final response = await bannerService.getSplashBanner();
+      if (response['success'] && response['data'] != null) {
+        final banner = response['data'];
+        final newUrl = banner['imageUrl'];
+        if (newUrl != null && newUrl.isNotEmpty) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('cached_splash_url', newUrl);
+          print('[SplashPage] Cached new splash URL: $newUrl');
+        }
+      }
+    } catch (e) {
+      print('[SplashPage] Failed to fetch new splash: $e');
+    }
   }
 }
 

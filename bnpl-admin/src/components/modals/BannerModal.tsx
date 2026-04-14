@@ -197,6 +197,7 @@ export default function BannerModal({ isOpen, onClose, onSuccess, editBanner }: 
                 <option value={LinkType.CATEGORY}>تصنيف (Category)</option>
                 <option value={LinkType.PRODUCT}>منتج (Product)</option>
                 <option value={LinkType.EXTERNAL}>رابط خارجي (External)</option>
+                <option value={LinkType.SPLASH}>شاشة افتتاحية (Splash Screen)</option>
               </select>
             </div>
             <div>

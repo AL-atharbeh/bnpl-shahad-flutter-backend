@@ -210,6 +210,16 @@ export class BannersController {
     }
   }
 
+  @Get('active-splash')
+  @ApiOperation({ summary: 'Get the active splash screen banner' })
+  async getActiveSplash() {
+    const banner = await this.bannersService.getActiveSplash();
+    return {
+      success: true,
+      data: banner,
+    };
+  }
+
   @Get('uploads/:filename')
   @ApiOperation({ summary: 'Get banner image' })
   async getBannerImage(@Param('filename') filename: string, @Res() res: Response) {

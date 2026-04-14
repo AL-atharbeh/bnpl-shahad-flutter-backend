@@ -14,6 +14,7 @@ export enum LinkType {
   STORE = 'store',
   PRODUCT = 'product',
   EXTERNAL = 'external',
+  SPLASH = 'splash',
   NONE = 'none',
 }
 
