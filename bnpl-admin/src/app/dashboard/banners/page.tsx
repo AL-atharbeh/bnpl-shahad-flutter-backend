@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Banner, bannersService } from "@/services/banners.service";
+import { Banner, LinkType, bannersService } from "@/services/banners.service";
 import BannerModal from "@/components/modals/BannerModal";
 
 export default function BannersPage() {

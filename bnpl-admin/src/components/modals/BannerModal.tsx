@@ -205,7 +205,7 @@ export default function BannerModal({ isOpen, onClose, onSuccess, editBanner }: 
               {formData.linkType === LinkType.EXTERNAL ? (
                 <input type="url" value={formData.linkUrl} onChange={e => setFormData({ ...formData, linkUrl: e.target.value })} className={inputClass} placeholder="https://external.com" />
               ) : (
-                <input type="number" value={formData.linkId} onChange={e => setFormData({ ...formData, linkId: e.target.value })} className={inputClass} placeholder="ID" disabled={formData.linkType === LinkType.NONE} />
+                <input type="number" value={formData.linkId} onChange={e => setFormData({ ...formData, linkId: e.target.value })} className={inputClass} placeholder="ID" disabled={formData.linkType === LinkType.NONE || formData.linkType === LinkType.SPLASH} />
               )}
             </div>
           </div>
