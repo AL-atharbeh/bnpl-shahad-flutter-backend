@@ -12,7 +12,6 @@ import {
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto, UpdateReviewDto } from './dto/create-review.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('reviews')
 @Controller('reviews')
@@ -20,7 +19,6 @@ export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Create a new review (Admin only)' })
   async create(@Body() createReviewDto: CreateReviewDto) {
     const review = await this.reviewsService.create(createReviewDto);
@@ -51,7 +49,6 @@ export class ReviewsController {
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Update a review (Admin only)' })
   async update(
     @Param('id', ParseIntPipe) id: number,
@@ -65,7 +62,6 @@ export class ReviewsController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Delete a review (Admin only)' })
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.reviewsService.remove(id);
