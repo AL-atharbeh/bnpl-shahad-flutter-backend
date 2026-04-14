@@ -46,9 +46,10 @@ export default function ReviewManagement({ storeId }: ReviewManagementProps) {
             setIsAdding(false);
             setFormData({ authorName: "", rating: 5, comment: "", commentAr: "" });
             fetchReviews();
-        } catch (error) {
-            console.error("Failed to add review", error);
-            alert("فشل في إضافة التقييم");
+        } catch (error: any) {
+            console.error("Failed to add review:", error);
+            const errorMessage = error.response?.data?.message || "فشل في إضافة التقييم";
+            alert(Array.isArray(errorMessage) ? errorMessage.join(", ") : errorMessage);
         }
     };
 
