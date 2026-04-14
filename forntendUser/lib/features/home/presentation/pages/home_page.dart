@@ -1551,23 +1551,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         ? _banners 
         : _fallbackBannerImages.map((img) => {'imageUrl': img}).toList();
         
-    // Filter to only show "banner1 zara"
-    final bannersToShow = allBanners.where((banner) {
-      final title = banner['title']?.toString().toLowerCase() ?? '';
-      final titleEn = banner['titleEn']?.toString().toLowerCase() ?? '';
-      final imageUrl = banner['imageUrl']?.toString().toLowerCase() ?? '';
-      
-      return title.contains('zara') || 
-             title.contains('زارا') || 
-             titleEn.contains('zara') || 
-             imageUrl.contains('banner1') || 
-             imageUrl.contains('zara');
-    }).toList();
-    
-    // If no specific "Zara" banner found, use the first one from assets as fallback
-    if (bannersToShow.isEmpty) {
-      bannersToShow.add({'imageUrl': 'assets/images/banner1.jpeg'});
-    }
+    // Use all available banners from database or fallback assets
+    final bannersToShow = allBanners;
     
     final bannersCount = bannersToShow.length;
     
