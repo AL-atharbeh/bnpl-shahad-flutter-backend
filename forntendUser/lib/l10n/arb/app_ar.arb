@@ -10,6 +10,11 @@
     "description": "Welcome message"
   },
   
+  "noReviewsYet": "لا توجد تقييمات لهذا المتجر بعد.",
+  "@noReviewsYet": {
+    "description": "Text shown when a store has no reviews"
+  },
+  
   "login": "تسجيل الدخول",
   "@login": {
     "description": "Login button text"

@@ -15,6 +15,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get welcome => 'مرحباً';
 
   @override
+  String get noReviewsYet => 'لا توجد تقييمات لهذا المتجر بعد.';
+
+  @override
   String get login => 'تسجيل الدخول';
 
   @override

@@ -10,6 +10,11 @@
     "description": "Welcome message"
   },
   
+  "noReviewsYet": "No reviews for this store yet.",
+  "@noReviewsYet": {
+    "description": "Text shown when a store has no reviews"
+  },
+  
   "login": "Login",
   "@login": {
     "description": "Login button text"

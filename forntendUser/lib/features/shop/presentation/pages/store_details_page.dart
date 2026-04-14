@@ -355,6 +355,13 @@ class _StoreDetailsPageState extends State<StoreDetailsPage> {
   }
 
   double get rating {
+    // If we have reviews loaded, calculate dynamic rating for maximum accuracy
+    if (!_isLoadingReviews && _reviews.isNotEmpty) {
+      final total = _reviews.fold<double>(0, (sum, rev) => sum + (rev['rating'] as num).toDouble());
+      return double.parse((total / _reviews.length).toStringAsFixed(1));
+    }
+    
+    // Fallback to store data
     if (_storeData != null && _storeData!['rating'] != null) {
       final ratingValue = _storeData!['rating'];
       if (ratingValue is String) {
@@ -363,10 +370,16 @@ class _StoreDetailsPageState extends State<StoreDetailsPage> {
         return ratingValue.toDouble();
       }
     }
-    return widget.rating ?? 4.5;
+    return widget.rating ?? 0.0;
   }
 
   int get reviewsCount {
+    // If we have reviews loaded, use the actual count
+    if (!_isLoadingReviews) {
+      return _reviews.length;
+    }
+    
+    // Fallback to store data if available
     if (_storeData != null && _storeData!['reviewsCount'] != null) {
       return _storeData!['reviewsCount'] as int;
     }

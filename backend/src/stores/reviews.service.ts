@@ -24,7 +24,12 @@ export class ReviewsService {
     }
 
     const review = this.reviewRepository.create(createReviewDto);
-    return this.reviewRepository.save(review);
+    const savedReview = await this.reviewRepository.save(review);
+    
+    // Update store overall rating
+    await this.updateStoreRating(createReviewDto.storeId);
+    
+    return savedReview;
   }
 
   async findAllByStore(storeId: number): Promise<Review[]> {
@@ -50,6 +55,28 @@ export class ReviewsService {
 
   async remove(id: number): Promise<void> {
     const review = await this.findOne(id);
+    const storeId = review.storeId;
     await this.reviewRepository.remove(review);
+    
+    // Update store overall rating
+    await this.updateStoreRating(storeId);
+  }
+
+  private async updateStoreRating(storeId: number): Promise<void> {
+    const reviews = await this.reviewRepository.find({
+      where: { storeId },
+    });
+
+    if (reviews.length === 0) {
+      await this.storeRepository.update(storeId, { rating: 0 });
+      return;
+    }
+
+    const totalRating = reviews.reduce((sum, review) => sum + Number(review.rating), 0);
+    const averageRating = totalRating / reviews.length;
+
+    await this.storeRepository.update(storeId, { 
+      rating: Number(averageRating.toFixed(1)) 
+    });
   }
 }

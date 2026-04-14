@@ -110,6 +110,12 @@ abstract class AppLocalizations {
   /// **'Welcome'**
   String get welcome;
 
+  /// Text shown when a store has no reviews
+  ///
+  /// In en, this message translates to:
+  /// **'No reviews for this store yet.'**
+  String get noReviewsYet;
+
   /// Login button text
   ///
   /// In en, this message translates to:

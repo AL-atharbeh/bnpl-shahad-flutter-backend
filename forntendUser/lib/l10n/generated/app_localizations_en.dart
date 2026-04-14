@@ -15,6 +15,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcome => 'Welcome';
 
   @override
+  String get noReviewsYet => 'No reviews for this store yet.';
+
+  @override
   String get login => 'Login';
 
   @override
