@@ -3004,5 +3004,9 @@
   "change": "Change",
   "@change": {
     "description": "Change button"
+  },
+  "aboutStore": "About Store",
+  "@aboutStore": {
+    "description": "About store section title"
   }
 }

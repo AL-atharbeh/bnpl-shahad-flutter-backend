@@ -442,6 +442,8 @@ class _StoreRow extends StatelessWidget {
           storeId: storeId,
           storeName: storeName,
           storeLogo: storeLogo,
+          storeBanner: store['bannerUrl']?.toString() ?? store['coverUrl']?.toString() ?? store['banner_url']?.toString(),
+          categoryId: store['categoryId'] as int? ?? store['category_id'] as int?,
         );
       },
       child: Padding(

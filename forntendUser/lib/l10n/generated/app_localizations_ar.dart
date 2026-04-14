@@ -1628,4 +1628,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get change => 'تغيير';
+
+  @override
+  String get aboutStore => 'عن المتجر';
 }

@@ -3217,6 +3217,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change'**
   String get change;
+
+  /// About store section title
+  ///
+  /// In en, this message translates to:
+  /// **'About Store'**
+  String get aboutStore;
 }
 
 class _AppLocalizationsDelegate

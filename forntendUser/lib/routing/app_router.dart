@@ -356,12 +356,13 @@ class AppRouter {
     Navigator.pushNamed(context, stores, arguments: {'categoryName': categoryName, 'categoryId': categoryId});
   }
 
-  static void navigateToStoreDetails(BuildContext context, {int? storeId, String? storeName, String? storeLogo, String? storeBanner, double? rating, int? reviewsCount, String? description}) {
+  static void navigateToStoreDetails(BuildContext context, {int? storeId, String? storeName, String? storeLogo, String? storeBanner, int? categoryId, double? rating, int? reviewsCount, String? description}) {
     Navigator.pushNamed(context, storeDetails, arguments: {
       if (storeId != null) 'storeId': storeId,
       if (storeName != null) 'storeName': storeName,
       if (storeLogo != null) 'storeLogo': storeLogo,
       if (storeBanner != null) 'storeBanner': storeBanner,
+      if (categoryId != null) 'categoryId': categoryId,
       if (rating != null) 'rating': rating,
       if (reviewsCount != null) 'reviewsCount': reviewsCount,
       if (description != null) 'description': description,

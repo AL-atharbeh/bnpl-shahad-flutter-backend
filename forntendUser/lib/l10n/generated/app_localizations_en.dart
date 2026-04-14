@@ -1637,4 +1637,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get change => 'Change';
+
+  @override
+  String get aboutStore => 'About Store';
 }
