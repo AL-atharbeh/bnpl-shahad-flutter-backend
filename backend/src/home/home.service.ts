@@ -6,6 +6,7 @@ import { Product } from '../products/entities/product.entity';
 import { Payment } from '../payments/entities/payment.entity';
 import { Notification } from '../notifications/entities/notification.entity';
 import { Deal } from '../deals/entities/deal.entity';
+import { BannersService } from '../banners/banners.service';
 
 @Injectable()
 export class HomeService {
@@ -20,6 +21,7 @@ export class HomeService {
     private notificationRepository: Repository<Notification>,
     @InjectRepository(Deal)
     private dealRepository: Repository<Deal>,
+    private bannersService: BannersService,
   ) {}
 
   /**
@@ -137,30 +139,53 @@ export class HomeService {
       },
     ];
 
-    // Banner images (static for now)
-    const banners = [
-      {
-        id: 1,
-        image: '/images/banners/banner1.jpg',
-        title: 'عروض خاصة',
-        titleEn: 'Special Offers',
-        link: '/offers',
-      },
-      {
-        id: 2,
-        image: '/images/banners/banner2.jpg',
-        title: 'تسوق الآن',
-        titleEn: 'Shop Now',
-        link: '/stores',
-      },
-      {
-        id: 3,
-        image: '/images/banners/banner3.jpg',
-        title: 'عروض جديدة',
-        titleEn: 'New Offers',
-        link: '/offers',
-      },
-    ];
+    // Get active banners from database (with fallback to static)
+    let banners = [];
+    try {
+      const dbBanners = await this.bannersService.getAllBanners();
+      if (dbBanners && dbBanners.length > 0) {
+        banners = dbBanners.map(b => ({
+          id: b.id,
+          imageUrl: b.imageUrl,
+          image: b.imageUrl, // Fallback for various frontend versions
+          title: b.title || b.titleAr || '',
+          titleEn: b.title || '',
+          link: b.linkUrl || '',
+          linkUrl: b.linkUrl || '',
+          linkType: b.linkType,
+          linkId: b.linkId,
+        }));
+      }
+    } catch (error) {
+      console.error('[HomeService] Failed to load banners from DB:', error);
+    }
+
+    // Use static fallback if no banners found in DB
+    if (banners.length === 0) {
+      banners = [
+        {
+          id: 1,
+          image: '/images/banners/banner1.jpg',
+          title: 'عروض خاصة',
+          titleEn: 'Special Offers',
+          link: '/offers',
+        },
+        {
+          id: 2,
+          image: '/images/banners/banner2.jpg',
+          title: 'تسوق الآن',
+          titleEn: 'Shop Now',
+          link: '/stores',
+        },
+        {
+          id: 3,
+          image: '/images/banners/banner3.jpg',
+          title: 'عروض جديدة',
+          titleEn: 'New Offers',
+          link: '/offers',
+        },
+      ];
+    }
 
     return {
       banners,
