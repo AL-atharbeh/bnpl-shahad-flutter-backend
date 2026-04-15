@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-const API = process.env.NEXT_PUBLIC_API_URL || "https://enthusiastic-stillness-production-5dce.up.railway.app/api/v1";
+import api from "@/services/api";
 
 type CashoutStatus = "pending" | "approved" | "rejected";
 
@@ -41,19 +40,19 @@ export default function RewardsPage() {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem("admin_token") || "";
-      const url = status && status !== "all"
-        ? `${API}/rewards/admin/cashout-requests?status=${status}`
-        : `${API}/rewards/admin/cashout-requests`;
-      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-      const data = await res.json();
-      if (data.success) {
-        setRequests(data.data || []);
+      const params = status && status !== "all" ? { status } : {};
+      const res = await api.get<{ success: boolean; data: CashoutRequest[] }>(
+        "/rewards/admin/cashout-requests",
+        { params }
+      );
+      if (res.data?.success) {
+        setRequests(res.data.data || []);
       } else {
         setError("تعذّر تحميل الطلبات.");
       }
-    } catch {
-      setError("تعذّر الاتصال بالخادم.");
+    } catch (e: any) {
+      console.error("Error fetching cashout requests:", e);
+      setError(`تعذّر الاتصال بالخادم. (${e?.response?.status || e?.message || "network error"})`);
     } finally {
       setLoading(false);
     }
@@ -66,23 +65,17 @@ export default function RewardsPage() {
   const updateStatus = async (id: number, status: CashoutStatus) => {
     setProcessingId(id);
     try {
-      const token = localStorage.getItem("admin_token") || "";
-      const res = await fetch(`${API}/rewards/admin/cashout-requests/${id}/status`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status, adminNote: noteInput[id] || "" }),
-      });
-      const data = await res.json();
-      if (data.success) {
+      const res = await api.patch<{ success: boolean; message: string }>(
+        `/rewards/admin/cashout-requests/${id}/status`,
+        { status, adminNote: noteInput[id] || "" }
+      );
+      if (res.data?.success) {
         await fetchRequests(filter);
       } else {
-        alert("فشل التحديث: " + (data.message || "خطأ غير معروف"));
+        alert("فشل التحديث");
       }
-    } catch {
-      alert("خطأ في الاتصال.");
+    } catch (e: any) {
+      alert(`خطأ: ${e?.response?.data?.message || e.message}`);
     } finally {
       setProcessingId(null);
     }
@@ -147,7 +140,11 @@ export default function RewardsPage() {
       {loading ? (
         <div className="text-center py-16 text-slate-400">جاري التحميل...</div>
       ) : requests.length === 0 ? (
-        <div className="text-center py-16 text-slate-400">لا توجد طلبات.</div>
+        <div className="text-center py-16 text-slate-400">
+          <p className="text-4xl mb-4">🏆</p>
+          <p>لا توجد طلبات صرف حتى الآن.</p>
+          <p className="text-xs text-slate-500 mt-2">عندما يرسل مستخدم طلب صرف نقاط، سيظهر هنا.</p>
+        </div>
       ) : (
         <div className="space-y-4">
           {requests.map((req) => (
@@ -232,11 +229,11 @@ function RequestCard({
 
       {/* Points & JOD */}
       <div className="flex gap-4 flex-wrap">
-        <div className="rounded-xl bg-slate-700/50 px-4 py-2 text-center">
+        <div className="rounded-xl bg-slate-700/50 px-4 py-2 text-center min-w-[90px]">
           <p className="text-xs text-slate-400">النقاط</p>
-          <p className="text-lg font-extrabold text-amber-400">{req.pointsRequested.toLocaleString()}</p>
+          <p className="text-lg font-extrabold text-amber-400">{req.pointsRequested?.toLocaleString()}</p>
         </div>
-        <div className="rounded-xl bg-slate-700/50 px-4 py-2 text-center">
+        <div className="rounded-xl bg-slate-700/50 px-4 py-2 text-center min-w-[90px]">
           <p className="text-xs text-slate-400">المبلغ</p>
           <p className="text-lg font-extrabold text-emerald-400">{Number(req.amountJod).toFixed(2)} JOD</p>
         </div>
@@ -254,10 +251,10 @@ function RequestCard({
       </div>
 
       {/* Date & Admin Note */}
-      <div className="flex justify-between items-center text-xs text-slate-500">
-        <span>{new Date(req.createdAt).toLocaleString("ar-JO")}</span>
+      <div className="flex justify-between items-center text-xs text-slate-500 flex-wrap gap-2">
+        <span>📅 {new Date(req.createdAt).toLocaleString("ar-JO")}</span>
         {req.adminNote && (
-          <span className="text-amber-400">ملاحظة: {req.adminNote}</span>
+          <span className="text-amber-400">📝 ملاحظة الأدمن: {req.adminNote}</span>
         )}
       </div>
 
@@ -275,16 +272,16 @@ function RequestCard({
             <button
               onClick={onApprove}
               disabled={isProcessing}
-              className="flex-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold py-2 transition-colors"
+              className="flex-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold py-2.5 transition-colors"
             >
-              {isProcessing ? "..." : "✓ موافقة"}
+              {isProcessing ? "..." : "✓ موافقة وتم التحويل"}
             </button>
             <button
               onClick={onReject}
               disabled={isProcessing}
-              className="flex-1 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 disabled:opacity-50 text-red-300 text-sm font-bold py-2 transition-colors"
+              className="flex-1 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 disabled:opacity-50 text-red-300 text-sm font-bold py-2.5 transition-colors"
             >
-              {isProcessing ? "..." : "✗ رفض"}
+              {isProcessing ? "..." : "✗ رفض وإرجاع النقاط"}
             </button>
           </div>
         </div>
