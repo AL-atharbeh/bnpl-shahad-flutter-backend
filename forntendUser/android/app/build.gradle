@@ -24,7 +24,7 @@ android {
 
     defaultConfig {
         applicationId = "com.shifracode.shahad"
-        minSdkVersion = flutter.minSdkVersion
+        minSdkVersion = 21
         targetSdk = 36
 
         versionCode flutter.versionCode

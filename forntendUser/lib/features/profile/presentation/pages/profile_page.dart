@@ -685,7 +685,6 @@ class _PaymentCardsCarouselState extends State<PaymentCardsCarousel> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    _updateCards();
     
     return Column(
       children: [

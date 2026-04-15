@@ -152,9 +152,8 @@ class _AddCardPageState extends State<AddCardPage> {
               ),
               child: CardField(
                 controller: _cardController,
-                style: const CardStyle(
-                  backgroundColor: Colors.white,
-                  textColor: Color(0xFF111827),
+                style: const TextStyle(
+                  color: Color(0xFF111827),
                   fontSize: 16,
                 ),
               ),
