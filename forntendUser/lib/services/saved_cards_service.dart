@@ -5,11 +5,20 @@ class SavedCardsService {
 
   /// Get list of saved cards
   Future<Map<String, dynamic>> getCards() async {
-    const endpoint = '/api/v1/saved-cards';
+    const endpoint = '/saved-cards';
     final response = await _apiService.get(endpoint);
     
     if (response['success']) {
-      final List<dynamic> cards = response['data'] ?? [];
+      final data = response['data'];
+      // Handle both direct array and wrapped response
+      List<dynamic> cards;
+      if (data is List) {
+        cards = data;
+      } else if (data is Map && data.containsKey('data')) {
+        cards = data['data'] ?? [];
+      } else {
+        cards = [];
+      }
       return {
         'success': true,
         'cards': cards,
@@ -24,13 +33,25 @@ class SavedCardsService {
 
   /// Create a SetupIntent on backend
   Future<Map<String, dynamic>> createSetupIntent() async {
-    const endpoint = '/api/v1/saved-cards/setup-intent';
+    const endpoint = '/saved-cards/setup-intent';
     final response = await _apiService.post(endpoint, {});
     
     if (response['success']) {
+      final data = response['data'];
+      // Handle both direct and wrapped response
+      final clientSecret = data is Map && data.containsKey('clientSecret')
+          ? data['clientSecret']
+          : (data is Map && data.containsKey('data') ? data['data']['clientSecret'] : null);
+      
+      if (clientSecret == null) {
+        return {
+          'success': false,
+          'error': 'لم يتم استلام مفتاح الإعداد من الخادم',
+        };
+      }
       return {
         'success': true,
-        'clientSecret': response['data']['clientSecret'],
+        'clientSecret': clientSecret,
       };
     } else {
       return {
@@ -42,15 +63,16 @@ class SavedCardsService {
 
   /// Confirm payment method after Stripe SDK confirmation
   Future<Map<String, dynamic>> confirmCard(String paymentMethodId) async {
-    const endpoint = '/api/v1/saved-cards/confirm';
+    const endpoint = '/saved-cards/confirm';
     final response = await _apiService.post(endpoint, {
       'paymentMethodId': paymentMethodId,
     });
     
     if (response['success']) {
+      final data = response['data'];
       return {
         'success': true,
-        'card': response['data'],
+        'card': data is Map && data.containsKey('data') ? data['data'] : data,
       };
     } else {
       return {
@@ -62,7 +84,7 @@ class SavedCardsService {
 
   /// Delete a saved card
   Future<Map<String, dynamic>> deleteCard(int cardId) async {
-    final endpoint = '/api/v1/saved-cards/$cardId';
+    final endpoint = '/saved-cards/$cardId';
     final response = await _apiService.delete(endpoint);
     
     if (response['success']) {
@@ -77,7 +99,7 @@ class SavedCardsService {
 
   /// Set a card as default
   Future<Map<String, dynamic>> setDefaultCard(int cardId) async {
-    final endpoint = '/api/v1/saved-cards/$cardId/default';
+    final endpoint = '/saved-cards/$cardId/default';
     final response = await _apiService.put(endpoint, {});
     
     if (response['success']) {

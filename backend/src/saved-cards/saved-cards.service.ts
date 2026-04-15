@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SavedCard } from './entities/saved-card.entity';
+import { Payment } from '../payments/entities/payment.entity';
 import { StripeService } from '../payments/stripe.service';
 import { UsersService } from '../users/users.service';
 
@@ -10,6 +11,8 @@ export class SavedCardsService {
   constructor(
     @InjectRepository(SavedCard)
     private savedCardRepository: Repository<SavedCard>,
+    @InjectRepository(Payment)
+    private paymentRepository: Repository<Payment>,
     private stripeService: StripeService,
     private usersService: UsersService,
   ) { }
@@ -132,5 +135,59 @@ export class SavedCardsService {
     return this.savedCardRepository.findOne({
       where: { userId, isDefault: true, isActive: true },
     });
+  }
+
+  async chargePayment(userId: number, paymentId: number, cardId: number) {
+    // 1. Find the card
+    const card = await this.savedCardRepository.findOne({
+      where: { id: cardId, userId, isActive: true },
+    });
+
+    if (!card) {
+      throw new NotFoundException('Card not found');
+    }
+
+    // 2. Find the payment
+    const payment = await this.paymentRepository.findOne({
+      where: { id: paymentId, userId, status: 'pending' },
+    });
+
+    if (!payment) {
+      throw new NotFoundException('Payment not found or already completed');
+    }
+
+    // 3. Charge via Stripe
+    try {
+      const charge = await this.stripeService.chargeWithSavedCard({
+        customerId: card.stripeCustomerId,
+        paymentMethodId: card.stripePaymentMethodId,
+        amount: Number(payment.amount),
+        currency: payment.currency || 'JOD',
+        description: `Quick payment for installment #${payment.installmentNumber}`,
+        metadata: {
+          paymentId: paymentId.toString(),
+          userId: userId.toString(),
+          type: 'quick_pay',
+        },
+      });
+
+      if (charge.status === 'succeeded') {
+        // 4. Mark payment as completed
+        payment.status = 'completed';
+        payment.paidAt = new Date();
+        payment.transactionId = charge.id;
+        await this.paymentRepository.save(payment);
+
+        return {
+          success: true,
+          message: 'تم الدفع بنجاح',
+          transactionId: charge.id,
+        };
+      } else {
+        throw new BadRequestException(`Charge status: ${charge.status}`);
+      }
+    } catch (error) {
+      throw new BadRequestException(`فشل الدفع: ${error.message}`);
+    }
   }
 }

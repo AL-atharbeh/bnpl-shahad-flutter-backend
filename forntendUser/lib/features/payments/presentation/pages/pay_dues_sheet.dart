@@ -5,6 +5,7 @@ import '../../../../services/language_service.dart';
 import '../../../../services/payment_service.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import 'quick_pay_sheet.dart';
 
 enum DuesFilter { next7, next30, all }
 
@@ -688,14 +689,34 @@ class _PayDuesSheetState extends State<PayDuesSheet> with SingleTickerProviderSt
                       ),
                       onPressed: _selected.isEmpty
                           ? null
-                          : () {
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(l10n.paymentSuccessful(totalSel.toStringAsFixed(3))),
-                                  backgroundColor: AppColors.primary,
-                                ),
+                          : () async {
+                              // Collect selected payment IDs
+                              final selectedPayments = _selected
+                                  .where((i) => i < _payments.length)
+                                  .map((i) => _payments[i])
+                                  .toList();
+                              
+                              final paymentIds = selectedPayments
+                                  .map((p) => p['id'] as int)
+                                  .toList();
+
+                              // Show quick pay sheet with saved cards
+                              final result = await QuickPaySheet.show(
+                                context,
+                                paymentIds: paymentIds,
+                                totalAmount: totalSel,
+                                currency: 'JOD',
                               );
+
+                              if (result == true && mounted) {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(l10n.paymentSuccessful(totalSel.toStringAsFixed(3))),
+                                    backgroundColor: AppColors.primary,
+                                  ),
+                                );
+                              }
                             },
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,

@@ -50,4 +50,14 @@ export class SavedCardsController {
   async setDefaultCard(@Request() req, @Param('id', ParseIntPipe) cardId: number) {
     return this.savedCardsService.setDefaultCard(req.user.id, cardId);
   }
+
+  @Post('charge')
+  @ApiOperation({ summary: 'Charge a payment using a saved card' })
+  async chargeWithCard(
+    @Request() req,
+    @Body('paymentId') paymentId: number,
+    @Body('cardId') cardId: number,
+  ) {
+    return this.savedCardsService.chargePayment(req.user.id, paymentId, cardId);
+  }
 }
