@@ -25,6 +25,7 @@ import { ProfitDistributionModule } from './profit-distribution/profit-distribut
 import { ReportsModule } from './reports/reports.module';
 import { BannersModule } from './banners/banners.module';
 import { AppConfigModule } from './app-config/app-config.module';
+import { SavedCardsModule } from './saved-cards/saved-cards.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { AppConfigModule } from './app-config/app-config.module';
     ReportsModule,
     BannersModule,
     AppConfigModule,
+    SavedCardsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

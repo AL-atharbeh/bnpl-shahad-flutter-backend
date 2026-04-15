@@ -8,6 +8,7 @@ import '../../../../services/auth_service.dart';
 import '../../../../routing/app_router.dart';
 import '../../../../services/points_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../services/saved_cards_service.dart';
 
 /// صفحة البروفايل (للاستعراض)
 class ProfilePage extends StatefulWidget {
@@ -544,17 +545,38 @@ class _SettingItem extends StatelessWidget {
 // ===================================================
 
 class PaymentCardData {
+  final int? id;
   final String holder;
   final String masked;
-  final String balance; // مثل: "$7.136"
-  final String validThru; // مثل: "12/26"
+  final String balance; 
+  final String validThru; 
+  final String brand;
+  final bool isDefault;
 
   PaymentCardData({
+    this.id,
     required this.holder,
     required this.masked,
     required this.balance,
     required this.validThru,
+    this.brand = 'mastercard',
+    this.isDefault = false,
   });
+
+  factory PaymentCardData.fromMap(Map<String, dynamic> map) {
+    final expMonth = map['expMonth']?.toString().padLeft(2, '0') ?? '00';
+    final expYear = map['expYear']?.toString().substring(map['expYear']?.toString().length == 4 ? 2 : 0) ?? '00';
+    
+    return PaymentCardData(
+      id: map['id'],
+      holder: map['cardholderName'] ?? 'بطاقة دفع',
+      masked: '•••• •••• •••• ${map['last4']}',
+      balance: 'JOD 0.00', // Actual balance is not stored on Stripe for credit cards
+      validThru: '$expMonth/$expYear',
+      brand: (map['brand']?.toString().toLowerCase() ?? 'mastercard'),
+      isDefault: map['isDefault'] ?? false,
+    );
+  }
 }
 
 class PaymentCardsCarousel extends StatefulWidget {
@@ -566,8 +588,16 @@ class PaymentCardsCarousel extends StatefulWidget {
 
 class _PaymentCardsCarouselState extends State<PaymentCardsCarousel> {
   final _controller = PageController(viewportFraction: .88);
+  final _savedCardsService = SavedCardsService();
   int _page = 0;
   List<PaymentCardData> _cards = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCards();
+  }
 
   @override
   void dispose() {
@@ -575,52 +605,49 @@ class _PaymentCardsCarouselState extends State<PaymentCardsCarousel> {
     super.dispose();
   }
 
-  void _updateCards() {
-    final l10n = AppLocalizations.of(context);
-    final languageService = Provider.of<LanguageService>(context, listen: false);
+  Future<void> _loadCards() async {
+    setState(() => _isLoading = true);
     
-    if (_cards.isEmpty) {
-      _cards = [
-        PaymentCardData(
-          holder: languageService.isArabic ? 'أحمد هداية' : 'Ahmad Hidayat',
-          masked: '•••• •••• •••• 4101',
-          balance: '\$7.136',
-          validThru: '12/26',
-        ),
-        PaymentCardData(
-          holder: languageService.isArabic ? l10n?.primaryCard ?? 'Primary Card' : 'Primary Card',
-          masked: '•••• •••• •••• 0981',
-          balance: '\$1,204',
-          validThru: '05/27',
-        ),
-      ];
+    try {
+      final result = await _savedCardsService.getCards();
+      if (result['success']) {
+        final List<dynamic> cardsData = result['cards'];
+        setState(() {
+          _cards = cardsData.map((m) => PaymentCardData.fromMap(m)).toList();
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint('Error loading cards: $e');
+      setState(() => _isLoading = false);
     }
   }
 
-  void _openAddSheet() async {
-    final added = await showModalBottomSheet<PaymentCardData>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (c) => const _AddCardSheet(),
-    );
+  void _openAddPage() async {
+    final result = await Navigator.pushNamed(context, AppRouter.addCard);
 
-    if (added != null) {
-      setState(() => _cards.add(added));
-      Future.delayed(const Duration(milliseconds: 150), () {
-        _controller.animateToPage(
-          _cards.length, // صفحة "الإضافة" ستصبح قبل الأخيرة
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeOut,
-        );
+    if (result != null && result is Map<String, dynamic>) {
+      // Re-load cards to ensure default status etc. is correct
+      _loadCards();
+      
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted && _cards.isNotEmpty) {
+          _controller.animateToPage(
+            _cards.length - 1, 
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeOut,
+          );
+        }
       });
     }
   }
 
   void _deleteCard(int index) async {
+    final cardId = _cards[index].id;
+    if (cardId == null) return;
+
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -642,12 +669,16 @@ class _PaymentCardsCarouselState extends State<PaymentCardsCarousel> {
     );
 
     if (confirmed == true) {
-      setState(() {
-        _cards.removeAt(index);
-        if (_page >= _cards.length) {
-          _page = _cards.length - 1;
+      final result = await _savedCardsService.deleteCard(cardId);
+      if (result['success']) {
+        _loadCards();
+      } else {
+        if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result['error'] ?? 'فشل حذف البطاقة')),
+          );
         }
-      });
+      }
     }
   }
 
@@ -674,7 +705,7 @@ class _PaymentCardsCarouselState extends State<PaymentCardsCarousel> {
                 ),
               ),
               TextButton.icon(
-                onPressed: _openAddSheet,
+                onPressed: _openAddPage,
                 style: TextButton.styleFrom(
                   foregroundColor: const Color(0xFF111827),
                   padding:
@@ -691,23 +722,25 @@ class _PaymentCardsCarouselState extends State<PaymentCardsCarousel> {
           ),
         ),
         const SizedBox(height: 10),
-
+ 
         SizedBox(
           height: 200,
-          child: PageView.builder(
-            controller: _controller,
-            itemCount: _cards.length + 1, // آخر عنصر = إضافة
-            onPageChanged: (i) => setState(() => _page = i),
-            itemBuilder: (context, i) {
-              if (i == _cards.length) {
-                return _AddCardInline(onTap: _openAddSheet);
-              }
-              return _PaymentCard(
-                data: _cards[i],
-                onDelete: () => _deleteCard(i),
-              );
-            },
-          ),
+          child: _isLoading 
+            ? const Center(child: CircularProgressIndicator())
+            : PageView.builder(
+              controller: _controller,
+              itemCount: _cards.length + 1, // آخر عنصر = إضافة
+              onPageChanged: (i) => setState(() => _page = i),
+              itemBuilder: (context, i) {
+                if (i == _cards.length) {
+                  return _AddCardInline(onTap: _openAddPage);
+                }
+                return _PaymentCard(
+                  data: _cards[i],
+                  onDelete: () => _deleteCard(i),
+                );
+              },
+            ),
         ),
 
         const SizedBox(height: 10),
@@ -917,6 +950,36 @@ class _AddCardInline extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _CardLogo extends StatelessWidget {
+  final String brand;
+  const _CardLogo({required this.brand});
+
+  @override
+  Widget build(BuildContext context) {
+    if (brand.toLowerCase() == 'visa') {
+      return const _VisaLogo();
+    }
+    return const _MastercardLogo();
+  }
+}
+
+class _VisaLogo extends StatelessWidget {
+  const _VisaLogo();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Text(
+      'VISA',
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: 20,
+        fontWeight: FontWeight.w900,
+        fontStyle: FontStyle.italic,
       ),
     );
   }

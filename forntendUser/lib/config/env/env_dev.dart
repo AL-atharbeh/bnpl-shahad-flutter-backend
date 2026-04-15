@@ -39,4 +39,6 @@ class EnvDev {
   static const int timeoutDuration = 30000; // 30 seconds
   static const bool enableLogging = true;
   static const String logLevel = 'DEBUG';
+  
+  static const String stripePublishableKey = 'pk_test_51THL3qGnJab9pZ97eIkQrwbZi0cTOhIlD8IJFUOzYg8wHcVcfsys8mVmoYlEHDO2GzRQDk9eEBy5T5jDe8NQIDlc00CsDA7uTg';
 }

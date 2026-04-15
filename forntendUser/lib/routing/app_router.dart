@@ -15,6 +15,7 @@ import '../../features/profile/presentation/pages/privacy_security_page.dart';
 import '../../features/profile/presentation/pages/language_page.dart';
 import '../../features/profile/presentation/pages/bnpl_business_page.dart';
 import '../../features/profile/presentation/pages/notifications_page.dart';
+import '../../features/profile/presentation/pages/add_card_page.dart';
 import '../../features/payments/presentation/pages/payments_page.dart';
 import '../../features/shop/presentation/pages/stores_page.dart';
 import '../../features/shop/presentation/pages/store_details_page.dart';
@@ -48,6 +49,7 @@ class AppRouter {
   static const String sessionConfirmation = '/session-confirmation';
   static const String search = '/search';
   static const String payments = '/payments';
+  static const String addCard = '/add-card';
 
   static Route<dynamic> _createCinematicRoute(Widget page, RouteSettings settings) {
     return PageRouteBuilder(
@@ -273,6 +275,12 @@ class AppRouter {
             settings: settings,
           );
         
+        case addCard:
+          return MaterialPageRoute(
+            builder: (_) => const AddCardPage(),
+            settings: settings,
+          );
+        
        default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
@@ -395,6 +403,10 @@ class AppRouter {
 
   static void navigateToSearch(BuildContext context) {
     Navigator.pushNamed(context, search);
+  }
+
+  static void navigateToAddCard(BuildContext context) {
+    Navigator.pushNamed(context, addCard);
   }
 
   static void goBack(BuildContext context) {

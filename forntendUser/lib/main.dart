@@ -13,11 +13,18 @@ import 'core/services/firebase_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/deep_link_service.dart';
 import 'core/theme/index.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+import 'config/env/env_dev.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Stripe
+  Stripe.publishableKey = EnvDev.stripePublishableKey;
+  await Stripe.instance.applySettings();
+  print('✅ Stripe initialized');
   
   // Hide debug messages in release mode
   if (kReleaseMode) {

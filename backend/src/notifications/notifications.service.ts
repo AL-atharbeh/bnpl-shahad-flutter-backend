@@ -186,4 +186,47 @@ export class NotificationsService {
 
     await this.firebaseService.unsubscribeFromTopic([user.fcmToken], topic);
   }
+
+  // --- Auto-payment Helpers ---
+
+  async sendPaymentReminder(userId: number, amount: number, dueDate: Date) {
+    const dateStr = dueDate.toLocaleDateString('ar-JO');
+    return this.sendToUser(
+      userId,
+      'تذكير بموعد الدفع ⏰',
+      `نود تذكيرك بأن قسطك القادم بقيمة ${amount} JOD مستحق في ${dateStr}. سيتم الخصم تلقائياً من بطاقتك.`,
+      { type: 'payment_reminder', amount: amount.toString() },
+      'info'
+    );
+  }
+
+  async sendAutoPaymentSuccess(userId: number, amount: number) {
+    return this.sendToUser(
+      userId,
+      'تم الدفع بنجاح ✅',
+      `تم خصم مبلغ ${amount} JOD من بطاقتك بنجاح مقابل القسط المستحق. شكراً لك!`,
+      { type: 'payment_success', amount: amount.toString() },
+      'success'
+    );
+  }
+
+  async sendAutoPaymentFailed(userId: number, amount: number, reason?: string) {
+    return this.sendToUser(
+      userId,
+      'فشل الخصم التلقائي ❌',
+      `فشلنا في خصم القسط المستحق بقيمة ${amount} JOD من بطاقتك${reason ? ': ' + reason : ''}. سنحاول مرة أخرى غداً.`,
+      { type: 'payment_failed', amount: amount.toString() },
+      'urgent'
+    );
+  }
+
+  async sendNoCardWarning(userId: number, amount: number) {
+    return this.sendToUser(
+      userId,
+      'يرجى إضافة وسيلة دفع 💳',
+      `لديك قسط مستحق بقيمة ${amount} JOD، يرجى إضافة بطاقة دفع لتفعيل الخصم التلقائي وتجنب التأخير.`,
+      { type: 'no_card_warning', amount: amount.toString() },
+      'urgent'
+    );
+  }
 }

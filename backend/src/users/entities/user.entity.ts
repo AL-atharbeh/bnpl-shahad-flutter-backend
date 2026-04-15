@@ -85,6 +85,9 @@ export class User {
   @Column({ name: 'fcm_token', type: 'text', nullable: true })
   fcmToken: string;
 
+  @Column({ name: 'stripe_customer_id', length: 100, nullable: true })
+  stripeCustomerId: string;
+
   @Column({ name: 'is_active', default: true })
   isActive: boolean;
 

@@ -76,4 +76,59 @@ export class StripeService {
   async retrieveSession(sessionId: string) {
     return this.stripe.checkout.sessions.retrieve(sessionId);
   }
+
+  async createCustomer(email: string, name: string, phone?: string) {
+    return this.stripe.customers.create({
+      email,
+      name,
+      phone,
+    });
+  }
+
+  async createSetupIntent(customerId: string) {
+    return this.stripe.setupIntents.create({
+      customer: customerId,
+      payment_method_types: ['card'],
+    });
+  }
+
+  async attachPaymentMethod(customerId: string, paymentMethodId: string) {
+    return this.stripe.paymentMethods.attach(paymentMethodId, {
+      customer: customerId,
+    });
+  }
+
+  async detachPaymentMethod(paymentMethodId: string) {
+    return this.stripe.paymentMethods.detach(paymentMethodId);
+  }
+
+  async getPaymentMethod(paymentMethodId: string) {
+    return this.stripe.paymentMethods.retrieve(paymentMethodId);
+  }
+
+  async chargeWithSavedCard(params: {
+    customerId: string;
+    paymentMethodId: string;
+    amount: number;
+    currency: string;
+    description?: string;
+    metadata?: Record<string, string>;
+  }) {
+    const { customerId, paymentMethodId, amount, currency, description, metadata } = params;
+    
+    // Convert amount to cents/fils
+    const isThreeDecimalCurrency = ['jod', 'kwd', 'bhd', 'omr'].includes(currency.toLowerCase());
+    const unitAmount = Math.round(amount * (isThreeDecimalCurrency ? 1000 : 100));
+
+    return this.stripe.paymentIntents.create({
+      amount: unitAmount,
+      currency: currency.toLowerCase(),
+      customer: customerId,
+      payment_method: paymentMethodId,
+      off_session: true,
+      confirm: true,
+      description: description || 'Automatic installment payment',
+      metadata: metadata || {},
+    });
+  }
 }
