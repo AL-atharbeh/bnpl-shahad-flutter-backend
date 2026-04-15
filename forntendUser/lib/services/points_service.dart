@@ -162,6 +162,31 @@ class PointsService extends ChangeNotifier {
     }
   }
 
+  /// Fetch the full points summary (balance, JOD value, eligibility) from the API.
+  Future<Map<String, dynamic>?> getPointsSummary() async {
+    try {
+      final response = await _apiService.get('/rewards/summary');
+      if (response['success'] == true) {
+        final raw = response['data'];
+        final data = raw['data'] ?? raw;
+        _summary = {
+          'points': (data['points'] as num?)?.toInt() ?? 0,
+          'jodValue': double.tryParse(data['jodValue']?.toString() ?? '0') ?? 0.0,
+          'cashoutEligible': data['cashoutEligible'] as bool? ?? false,
+          'hasPendingCashout': data['hasPendingCashout'] as bool? ?? false,
+          'minimumCashoutPoints': (data['minimumCashoutPoints'] as num?)?.toInt() ?? 1000,
+          'minimumCashoutJod': (data['minimumCashoutJod'] as num?)?.toDouble() ?? 10.0,
+        };
+        _currentPoints = _summary!['points'] as int;
+        notifyListeners();
+        return _summary;
+      }
+    } catch (e) {
+      debugPrint('❌ Error fetching points summary: $e');
+    }
+    return null;
+  }
+
   /// حساب النقاط من مبلغ الدفع
   int calculatePointsFromPayment(double paymentAmount) {
     return (paymentAmount * pointsPerDinar).floor();

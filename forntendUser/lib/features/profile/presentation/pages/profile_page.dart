@@ -158,6 +158,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
         iconTheme: const IconThemeData(color: Color(0xFF111827)),
+        leadingWidth: 100,
         leading: Padding(
           padding: const EdgeInsets.only(right: 8),
           child: _PointsIconButton(),
@@ -1249,38 +1250,26 @@ class _PointsIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final pointsService = Provider.of<PointsService>(context);
     final currentPoints = pointsService.currentPoints;
+    final displayPoints = currentPoints > 999 ? '+999' : currentPoints.toString();
 
     return GestureDetector(
       onTap: () => _showPointsBottomSheet(context),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-        decoration: BoxDecoration(
-          color: AppColors.financialGreen50,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: AppColors.primary.withOpacity(0.2),
-            width: 1,
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF2F2F7),
+            borderRadius: BorderRadius.circular(20),
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.stars_rounded,
-              color: AppColors.primary,
-              size: 18,
+          child: Text(
+            '$displayPoints نقطة',
+            style: const TextStyle(
+              color: Color(0xFF1C1C1E),
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              height: 1,
             ),
-            const SizedBox(width: 4),
-            Text(
-              currentPoints > 999 ? '999+' : currentPoints.toString(),
-              style: TextStyle(
-                color: AppColors.primary,
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                height: 1,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -1291,7 +1280,10 @@ class _PointsIconButton extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const _PointsBottomSheet(),
+      builder: (context) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.55,
+        child: const _PointsBottomSheet(),
+      ),
     );
   }
 }
@@ -1308,601 +1300,628 @@ class _PointsBottomSheet extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final pointsService = Provider.of<PointsService>(context);
     final currentPoints = pointsService.currentPoints;
-    final screenHeight = MediaQuery.of(context).size.height;
+    final jodValue = pointsService.jodValue;
+    final eligible = pointsService.cashoutEligible;
+    final pending = pointsService.hasPendingCashout;
+    const minCashout = 1000; // 10 JOD
+    final progress = (currentPoints / minCashout).clamp(0.0, 1.0);
 
     return Container(
-      height: screenHeight * 0.75,
       decoration: const BoxDecoration(
-        color: Color(0xFFFAFAFA),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        color: Color(0xFFF2F2F7), // iOS system background
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Handle bar
+          // Handle
           Container(
-            margin: const EdgeInsets.only(top: 12, bottom: 16),
-            width: 40,
+            margin: const EdgeInsets.only(top: 10, bottom: 20),
+            width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: const Color(0xFFD1D5DB),
+              color: const Color(0xFFD1D1D6),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
 
-          // Header - بطاقة النقاط الرئيسية المحسّنة
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            padding: const EdgeInsets.all(28),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFFE5E7EB),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                // العنوان
-                Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.financialGreen50,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.stars_rounded,
-                        color: AppColors.primary,
-                        size: 24,
-                      ),
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Main balance card ──
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Text(
-                        l10n.rewardsPoints,
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                
-                const Divider(height: 32, color: Color(0xFFF3F4F6)),
-                
-                // النقاط
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Label
                         Text(
-                          l10n.yourPoints,
+                          'رصيد النقاط',
                           style: TextStyle(
-                            color: AppColors.textSecondary,
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
+                            color: const Color(0xFF8E8E93),
+                            letterSpacing: -0.2,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
+                        // Points number
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.baseline,
                           textBaseline: TextBaseline.alphabetic,
                           children: [
                             Text(
                               currentPoints.toString(),
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 40,
-                                fontWeight: FontWeight.w800,
+                              style: const TextStyle(
+                                fontSize: 48,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF1C1C1E),
                                 height: 1,
+                                letterSpacing: -2,
                               ),
                             ),
-                            const SizedBox(width: 6),
-                            Text(
-                              l10n.points,
+                            const SizedBox(width: 8),
+                            const Text(
+                              'نقطة',
                               style: TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF8E8E93),
+                                letterSpacing: -0.3,
                               ),
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                    // القيمة المالية
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFFBEB),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: const Color(0xFFFEF3C7),
-                          width: 1,
+                        const SizedBox(height: 4),
+                        Text(
+                          '= ${jodValue.toStringAsFixed(2)} دينار أردني',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.primary,
+                            letterSpacing: -0.3,
+                          ),
                         ),
-                      ),
-                      child: Column(
-                        children: [
-                          const Text(
-                            '100 نقطة',
-                            style: TextStyle(
-                              color: Color(0xFF78716C),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
+
+                        const SizedBox(height: 24),
+
+                        // ── Progress toward cashout ──
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              eligible ? 'جاهز للصرف' : 'التقدم نحو الصرف',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF8E8E93),
+                              ),
+                            ),
+                            Text(
+                              '$currentPoints / $minCashout',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF48484A),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            minHeight: 5,
+                            backgroundColor: const Color(0xFFF2F2F7),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              eligible ? AppColors.primary : const Color(0xFF34C759),
                             ),
                           ),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.monetization_on,
-                                color: Color(0xFFF59E0B),
-                                size: 14,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '1 JD',
-                                style: TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
+                        ),
+                        if (!eligible) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            'تحتاج ${(minCashout - currentPoints).clamp(0, minCashout)} نقطة للوصول إلى 10 دنانير',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF8E8E93),
+                            ),
                           ),
                         ],
-                      ),
+                      ],
                     ),
-                  ],
-                ),
-                
-                const SizedBox(height: 20),
-                
-                // الأزرار
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _showPointsHistory(context);
-                        },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.textPrimary,
-                          side: const BorderSide(
-                            color: Color(0xFFE5E7EB),
-                            width: 1.5,
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                  ),
+
+                  // ── Info row: rate ──
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'معدل الاستبدال',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Color(0xFF1C1C1E),
+                            fontWeight: FontWeight.w400,
                           ),
                         ),
-                        icon: const Icon(Icons.history_rounded, size: 18),
-                        label: Text(
-                          l10n.pointsHistory,
-                          style: const TextStyle(
-                            fontSize: 13,
+                        Text(
+                          '100 نقطة = 1 دينار',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: AppColors.primary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ),
-                    ),
-                    // ── الزر الجديد: صرف الأموال عبر ClickPay ──
-                    // يُفعَّل فقط عند 1000 نقطة = 10 دنانير
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Builder(builder: (context) {
-                        final eligible = pointsService.cashoutEligible;
-                        final pending = pointsService.hasPendingCashout;
-                        return ElevatedButton.icon(
-                          onPressed: (!eligible || pending)
-                              ? null
-                              : () => _showCashoutDialog(context, pointsService),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            disabledBackgroundColor: const Color(0xFFD1D5DB),
-                            disabledForegroundColor: Colors.white70,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          icon: Icon(
-                            pending ? Icons.hourglass_top_rounded : Icons.account_balance_wallet_rounded,
-                            size: 18,
-                          ),
-                          label: Text(
-                            pending
-                                ? 'طلب معلق...'
-                                : eligible
-                                    ? 'صرف الرصيد'
-                                    : 'تحتاج 1000 نقطة',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // رسالة تحفيزية
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF0F9FF),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: const Color(0xFFE0F2FE),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.info_outline_rounded,
-                    color: Color(0xFF0284C7),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      l10n.earnPointsWithPayments,
-                      style: const TextStyle(
-                        color: Color(0xFF0C4A6E),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
 
-          const SizedBox(height: 20),
-
-          // العمليات الأخيرة
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                Text(
-                  'العمليات الأخيرة',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _showPointsHistory(context);
-                  },
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        l10n.viewAll,
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_forward_rounded,
-                        color: AppColors.primary,
-                        size: 16,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // قائمة العمليات
-          Expanded(
-            child: pointsService.transactions.isEmpty
-                ? Center(
+                  // ── Actions ──
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.receipt_long_rounded,
-                          size: 56,
-                          color: Colors.grey[300],
+                        // Cashout button
+                        _ActionRow(
+                          label: pending
+                              ? 'طلب صرف قيد المراجعة'
+                              : eligible
+                                  ? 'صرف الرصيد'
+                                  : 'صرف الرصيد (${minCashout - currentPoints} نقطة متبقية)',
+                          enabled: eligible && !pending,
+                          onTap: () => _showCashoutDialog(context, pointsService),
+                          isLast: false,
                         ),
-                        const SizedBox(height: 12),
-                        Text(
-                          l10n.noPaidTransactions,
-                          style: TextStyle(
-                            color: Colors.grey[500],
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
+                        const Divider(height: 1, indent: 20, endIndent: 0,
+                            color: Color(0xFFF2F2F7)),
+                        // History button
+                        _ActionRow(
+                          label: 'سجل النقاط',
+                          enabled: true,
+                          onTap: () {
+                            Navigator.pop(context);
+                            _showPointsHistory(context);
+                          },
+                          isLast: true,
                         ),
                       ],
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    itemCount: pointsService.transactions.length > 3 
-                        ? 3 
-                        : pointsService.transactions.length,
-                    itemBuilder: (context, index) {
-                      final transaction = pointsService.transactions[index];
-                      return _PointsTransactionItem(transaction: transaction);
-                    },
                   ),
+
+                  // ── Recent transactions title ──
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+                    child: Text(
+                      'العمليات الأخيرة',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF8E8E93),
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+
+                  // ── Transactions list ──
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: pointsService.transactions.isEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 32),
+                            child: Center(
+                              child: Text(
+                                'لا توجد عمليات بعد',
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  color: Color(0xFF8E8E93),
+                                ),
+                              ),
+                            ),
+                          )
+                        : ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            padding: EdgeInsets.zero,
+                            itemCount: pointsService.transactions.length > 5
+                                ? 5
+                                : pointsService.transactions.length,
+                            separatorBuilder: (_, __) => const Divider(
+                              height: 1, indent: 20, endIndent: 0,
+                              color: Color(0xFFF2F2F7),
+                            ),
+                            itemBuilder: (context, index) {
+                              final t = pointsService.transactions[index];
+                              final isEarned = t.type == PointsTransactionType.earned;
+                              final isLast = index == (pointsService.transactions.length > 5
+                                  ? 4
+                                  : pointsService.transactions.length - 1);
+                              return Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: isLast
+                                      ? const BorderRadius.vertical(bottom: Radius.circular(14))
+                                      : (index == 0
+                                          ? const BorderRadius.vertical(top: Radius.circular(14))
+                                          : BorderRadius.zero),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 14),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              t.description ?? (isEarned ? 'نقاط مكتسبة' : 'نقاط مستخدمة'),
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                                color: Color(0xFF1C1C1E),
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              _formatDate(t.timestamp),
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Color(0xFF8E8E93),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Text(
+                                        '${isEarned ? '+' : '-'}${t.points}',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: isEarned
+                                              ? const Color(0xFF34C759)
+                                              : const Color(0xFFFF3B30),
+                                          letterSpacing: -0.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  void _showPointsHistory(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final pointsService = Provider.of<PointsService>(context, listen: false);
-    
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (context, scrollController) {
-          return Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 20),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE5E7EB),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                Text(
-                  l10n.pointsHistory,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF111827),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: pointsService.transactions.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.history_rounded,
-                                size: 64,
-                                color: Colors.grey[300],
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                l10n.noPaidTransactions,
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          controller: scrollController,
-                          itemCount: pointsService.transactions.length,
-                          itemBuilder: (context, index) {
-                            final transaction = pointsService.transactions[index];
-                            return _PointsTransactionItem(transaction: transaction);
-                          },
-                        ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
+  String _formatDate(DateTime dt) {
+    final now = DateTime.now();
+    final diff = now.difference(dt).inDays;
+    if (diff == 0) return 'اليوم';
+    if (diff == 1) return 'أمس';
+    return '${dt.day}/${dt.month}/${dt.year}';
   }
+}
 
-  void _showRedeemDialog(BuildContext context, PointsService pointsService) {
-    _showCashoutDialog(context, pointsService);
-  }
+// ── Reusable action row (iOS style) ──
+class _ActionRow extends StatelessWidget {
+  final String label;
+  final bool enabled;
+  final VoidCallback onTap;
+  final bool isLast;
 
-  void _showCashoutDialog(BuildContext context, PointsService pointsService) {
-    final l10n = AppLocalizations.of(context)!;
-    final controller = TextEditingController();
+  const _ActionRow({
+    required this.label,
+    required this.enabled,
+    required this.onTap,
+    required this.isLast,
+  });
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) {
-          bool isLoading = false;
-          return AlertDialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Icons.account_balance_wallet_rounded,
-                      color: AppColors.primary, size: 22),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    'طلب صرف رصيد النقاط',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                  ),
-                ),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0FDF4),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.primary.withOpacity(0.2)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.stars_rounded, color: Color(0xFFF59E0B), size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            '\${pointsService.currentPoints} نقطة',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF111827)),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '= \${pointsService.jodValue.toStringAsFixed(2)} دينار أردني',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text('رابط ClickPay الخاص بك',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF374151))),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: controller,
-                  textDirection: TextDirection.ltr,
-                  decoration: InputDecoration(
-                    hintText: 'https://clickpay.com/...',
-                    hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
-                    filled: true,
-                    fillColor: const Color(0xFFF9FAFB),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: AppColors.primary),
-                    ),
-                    prefixIcon: const Icon(Icons.link_rounded, color: Color(0xFF6B7280)),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  '⚠️ ستُخصَم نقاطك فور الإرسال وسيتم التحويل بعد مراجعة الإدارة.',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-                ),
-                const SizedBox(height: 4),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(l10n.cancel, style: const TextStyle(color: Color(0xFF6B7280))),
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: isLast
+              ? const BorderRadius.vertical(bottom: Radius.circular(14))
+              : const BorderRadius.vertical(top: Radius.circular(14)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                color: enabled ? const Color(0xFF1C1C1E) : const Color(0xFFAEAEB2),
+                fontWeight: FontWeight.w400,
               ),
-              ElevatedButton(
-                onPressed: () async {
-                  final link = controller.text.trim();
-                  if (link.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('يرجى إدخال رابط ClickPay'), backgroundColor: Color(0xFFEF4444)),
-                    );
-                    return;
-                  }
-                  setDialogState(() => isLoading = true);
-                  final result = await pointsService.requestCashout(link);
-                  if (!ctx.mounted) return;
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(result['message'] as String),
-                      backgroundColor: result['success'] == true ? AppColors.primary : const Color(0xFFEF4444),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      duration: const Duration(seconds: 4),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: isLoading
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('إرسال الطلب', style: TextStyle(fontWeight: FontWeight.w700)),
-              ),
-            ],
-          );
-        },
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: enabled
+                  ? const Color(0xFFC7C7CC)
+                  : const Color(0xFFD1D1D6),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
+void _showPointsHistory(BuildContext context) {
+  final l10n = AppLocalizations.of(context)!;
+  final pointsService = Provider.of<PointsService>(context, listen: false);
+  
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => SizedBox(
+      height: MediaQuery.of(context).size.height * 0.55,
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFFF2F2F7),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(top: 10, bottom: 20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD1D1D6),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                l10n.pointsHistory,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1C1C1E),
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: pointsService.transactions.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'لا توجد عمليات مسجلة',
+                        style: TextStyle(
+                          color: Color(0xFF8E8E93),
+                          fontSize: 15,
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: pointsService.transactions.length,
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final transaction = pointsService.transactions[index];
+                        return _PointsTransactionItem(transaction: transaction);
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+// Ensure backward compatibility if anything else implicitly references it
+void _showRedeemDialog(BuildContext context, PointsService pointsService) {
+  _showCashoutDialog(context, pointsService);
+}
+
+void _showCashoutDialog(BuildContext context, PointsService pointsService) {
+  final controller = TextEditingController();
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setDialogState) {
+        bool isLoading = false;
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF2F2F7), // iOS style dialog bg
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Clean Header
+                const Text(
+                  'طلب صرف الرصيد',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1C1C1E),
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'سيتم تقديم طلب لسحب مبلغ ${pointsService.jodValue.toStringAsFixed(2)} دينار أردني، يرجى تزويدنا بالكليك الخاص بك.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF8E8E93),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Link Field
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: TextField(
+                    controller: controller,
+                    textDirection: TextDirection.ltr,
+                    style: const TextStyle(fontSize: 15, color: Color(0xFF1C1C1E)),
+                    decoration: const InputDecoration(
+                      hintText: '',
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'سيتم عرض الطلب على الإدارة فور الإرسال للموافقة عليه وتحويل المبلغ.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: Color(0xFF8E8E93)),
+                ),
+                const SizedBox(height: 24),
+
+                // Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: isLoading ? null : () => Navigator.pop(ctx),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          alignment: Alignment.center,
+                          child: const Text(
+                            'إلغاء',
+                            style: TextStyle(
+                              color: Color(0xFF007AFF),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: isLoading ? null : () async {
+                          final link = controller.text.trim();
+                          if (link.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text('يرجى إدخال الرابط'),
+                                backgroundColor: const Color(0xFFFF3B30),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                duration: const Duration(seconds: 4),
+                              ),
+                            );
+                            return;
+                          }
+                          setDialogState(() => isLoading = true);
+                          final result = await pointsService.requestCashout(link);
+                          if (!ctx.mounted) return;
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(result['message'] as String),
+                              backgroundColor: result['success'] == true ? AppColors.primary : const Color(0xFFFF3B30),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              duration: const Duration(seconds: 4),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          alignment: Alignment.center,
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text(
+                                  'إرسال',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
 
 // ===================================================
 // ========== (قديم - للحذف لاحقاً) =================
