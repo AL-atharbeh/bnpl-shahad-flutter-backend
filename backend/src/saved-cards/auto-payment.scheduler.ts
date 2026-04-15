@@ -7,7 +7,7 @@ import { SavedCard } from './entities/saved-card.entity';
 import { AutoPaymentLog } from './entities/auto-payment-log.entity';
 import { StripeService } from '../payments/stripe.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class AutoPaymentScheduler {

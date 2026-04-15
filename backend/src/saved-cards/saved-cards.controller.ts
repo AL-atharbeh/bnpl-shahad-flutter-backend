@@ -17,7 +17,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 @ApiTags('Saved Cards')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('api/v1/saved-cards')
+@Controller('saved-cards')
 export class SavedCardsController {
   constructor(private readonly savedCardsService: SavedCardsService) {}
 
