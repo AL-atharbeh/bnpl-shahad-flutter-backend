@@ -391,10 +391,15 @@ class _PaymentsPageState extends State<PaymentsPage> {
     PaymentMethodSheet.show(
       context,
       amountLabel: 'JD ${amount.toStringAsFixed(3)}',
+      amount: amount,
+      paymentId: paymentId,
       onApplePay: () => _initiatePaymentFlow(context, amount, paymentId, isApplePay: true),
       onCardAdded: (card) {
-        // Signal that Stripe/Card was selected
         _initiatePaymentFlow(context, amount, paymentId, isApplePay: false);
+      },
+      onPaymentSuccess: () {
+        _handleSuccessfulPayment(context, amount);
+        _loadPayments();
       },
     );
   }

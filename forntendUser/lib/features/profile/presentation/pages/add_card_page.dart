@@ -40,15 +40,17 @@ class _AddCardPageState extends State<AddCardPage> {
 
     try {
       // 1. Create SetupIntent on backend
+      debugPrint('🔄 Creating SetupIntent...');
       final setupResult = await _savedCardsService.createSetupIntent();
       if (!setupResult['success']) {
-        throw setupResult['error'];
+        throw setupResult['error'] ?? 'فشل إعداد البطاقة';
       }
 
       final clientSecret = setupResult['clientSecret'];
+      debugPrint('✅ Got clientSecret: ${clientSecret.toString().substring(0, 20)}...');
 
       // 2. Confirm SetupIntent using Stripe SDK
-      // This will handle 3DS and other security measures automatically
+      debugPrint('🔄 Confirming SetupIntent with Stripe SDK...');
       final setupIntent = await Stripe.instance.confirmSetupIntent(
         paymentIntentClientSecret: clientSecret,
         params: const PaymentMethodParams.card(
@@ -56,8 +58,15 @@ class _AddCardPageState extends State<AddCardPage> {
         ),
       );
 
-      if (setupIntent.status == PaymentIntentsStatus.Succeeded) {
+      debugPrint('📋 SetupIntent status: ${setupIntent.status}');
+      debugPrint('📋 SetupIntent paymentMethodId: ${setupIntent.paymentMethodId}');
+
+      // SetupIntent.status is a String, not an enum!
+      // Valid success statuses: 'Succeeded', 'succeeded', 'RequiresAction'
+      final status = setupIntent.status.toLowerCase();
+      if (status == 'succeeded' || status == 'requiresaction') {
         // 3. Send PaymentMethod ID to backend to save for future use
+        debugPrint('🔄 Confirming card on backend...');
         final confirmResult = await _savedCardsService.confirmCard(setupIntent.paymentMethodId);
         
         if (confirmResult['success']) {
@@ -71,12 +80,14 @@ class _AddCardPageState extends State<AddCardPage> {
             Navigator.of(context).pop(confirmResult['card']);
           }
         } else {
-          throw confirmResult['error'];
+          throw confirmResult['error'] ?? 'فشل حفظ البطاقة';
         }
       } else {
-        throw 'فشل التحقق من البطاقة';
+        debugPrint('❌ SetupIntent failed with status: ${setupIntent.status}');
+        throw 'فشل التحقق من البطاقة (الحالة: ${setupIntent.status})';
       }
     } catch (e) {
+      debugPrint('❌ Error in _handleSaveCard: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

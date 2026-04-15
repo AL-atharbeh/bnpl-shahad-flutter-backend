@@ -157,12 +157,14 @@ export class SavedCardsService {
     }
 
     // 3. Charge via Stripe
+    // NOTE: Use 'usd' for Stripe test mode. Change to payment.currency for production
+    // after adding JOD support in Stripe Dashboard
     try {
       const charge = await this.stripeService.chargeWithSavedCard({
         customerId: card.stripeCustomerId,
         paymentMethodId: card.stripePaymentMethodId,
         amount: Number(payment.amount),
-        currency: payment.currency || 'JOD',
+        currency: 'usd',
         description: `Quick payment for installment #${payment.installmentNumber}`,
         metadata: {
           paymentId: paymentId.toString(),

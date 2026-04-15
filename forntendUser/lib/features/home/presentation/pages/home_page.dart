@@ -3053,6 +3053,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                         PaymentMethodSheet.show(
                           context,
                           amountLabel: isRTL ? payment['amount'] : payment['amountEn'],
+                          amount: 0,
                           onApplePay: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
