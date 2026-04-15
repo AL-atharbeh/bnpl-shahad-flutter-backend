@@ -14,7 +14,6 @@ import { Payment } from '../payments/entities/payment.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([SavedCard, AutoPaymentLog, Payment]),
-    ScheduleModule.forRoot(),
     PaymentsModule,
     UsersModule,
     NotificationsModule,
