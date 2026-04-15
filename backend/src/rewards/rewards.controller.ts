@@ -17,16 +17,16 @@ import { CashoutStatus } from './entities/reward-cashout-request.entity';
 
 @ApiTags('rewards')
 @Controller('rewards')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
 export class RewardsController {
   constructor(private readonly rewardsService: RewardsService) {}
 
   // ──────────────────────────────────────────────
-  //  USER ENDPOINTS
+  //  USER ENDPOINTS (require JWT auth)
   // ──────────────────────────────────────────────
 
   @Get('summary')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get points balance, JOD value, and cashout eligibility' })
   async getSummary(@Request() req) {
     const summary = await this.rewardsService.getPointsSummary(req.user.id);
@@ -35,6 +35,8 @@ export class RewardsController {
 
   /** @deprecated Use /summary instead */
   @Get('points')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current reward points balance (legacy)' })
   async getPoints(@Request() req) {
     const points = await this.rewardsService.getUserPoints(req.user.id);
@@ -42,6 +44,8 @@ export class RewardsController {
   }
 
   @Get('history')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get points transaction history' })
   async getHistory(@Request() req) {
     const history = await this.rewardsService.getPointsHistory(req.user.id);
@@ -49,6 +53,8 @@ export class RewardsController {
   }
 
   @Get('my-cashout-requests')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get my cashout requests history' })
   async getMyCashoutRequests(@Request() req) {
     const requests = await this.rewardsService.getUserCashoutRequests(req.user.id);
@@ -56,6 +62,8 @@ export class RewardsController {
   }
 
   @Post('cashout')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Request cash transfer via ClickPay (min 1000 points = 10 JOD)',
   })
@@ -73,6 +81,8 @@ export class RewardsController {
 
   /** @deprecated */
   @Post('redeem')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Redeem points for discount (legacy)' })
   async redeemPoints(@Request() req, @Body('points') points: number) {
     const rewardPoint = await this.rewardsService.redeemPoints(req.user.id, points);
@@ -80,7 +90,7 @@ export class RewardsController {
   }
 
   // ──────────────────────────────────────────────
-  //  ADMIN ENDPOINTS
+  //  ADMIN ENDPOINTS (no auth required — same as other admin controllers)
   // ──────────────────────────────────────────────
 
   @Get('admin/cashout-requests')
