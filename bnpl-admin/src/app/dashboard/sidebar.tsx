@@ -14,6 +14,7 @@ const navItems = [
   { href: "/dashboard/transactions", label: "المعاملات" },
   { href: "/dashboard/payments", label: "الدفعات" },
   { href: "/dashboard/profits", label: "الأرباح النهائية" },
+  { href: "/dashboard/rewards", label: "النقاط والمكافآت 🏆" },
   { href: "/dashboard/notifications", label: "الإشعارات" },
   { href: "/dashboard/reports", label: "التقارير" },
   { href: "/dashboard/settings", label: "الإعدادات العامة" },

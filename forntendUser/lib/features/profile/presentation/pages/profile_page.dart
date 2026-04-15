@@ -1756,22 +1756,149 @@ class _PointsBottomSheet extends StatelessWidget {
   }
 
   void _showRedeemDialog(BuildContext context, PointsService pointsService) {
+    _showCashoutDialog(context, pointsService);
+  }
+
+  void _showCashoutDialog(BuildContext context, PointsService pointsService) {
     final l10n = AppLocalizations.of(context)!;
-    
+    final controller = TextEditingController();
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.redeemPoints),
-        content: Text(
-          'هذه الميزة قيد التطوير. قريباً ستتمكن من استبدال نقاطك بخصومات ومكافآت!',
-          style: const TextStyle(fontSize: 15),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.ok),
-          ),
-        ],
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          bool isLoading = false;
+          return AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.account_balance_wallet_rounded,
+                      color: AppColors.primary, size: 22),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'طلب صرف رصيد النقاط',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.stars_rounded, color: Color(0xFFF59E0B), size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            '\${pointsService.currentPoints} نقطة',
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF111827)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '= \${pointsService.jodValue.toStringAsFixed(2)} دينار أردني',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text('رابط ClickPay الخاص بك',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF374151))),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: controller,
+                  textDirection: TextDirection.ltr,
+                  decoration: InputDecoration(
+                    hintText: 'https://clickpay.com/...',
+                    hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
+                    filled: true,
+                    fillColor: const Color(0xFFF9FAFB),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.primary),
+                    ),
+                    prefixIcon: const Icon(Icons.link_rounded, color: Color(0xFF6B7280)),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  '⚠️ ستُخصَم نقاطك فور الإرسال وسيتم التحويل بعد مراجعة الإدارة.',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                ),
+                const SizedBox(height: 4),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(l10n.cancel, style: const TextStyle(color: Color(0xFF6B7280))),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final link = controller.text.trim();
+                  if (link.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('يرجى إدخال رابط ClickPay'), backgroundColor: Color(0xFFEF4444)),
+                    );
+                    return;
+                  }
+                  setDialogState(() => isLoading = true);
+                  final result = await pointsService.requestCashout(link);
+                  if (!ctx.mounted) return;
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(result['message'] as String),
+                      backgroundColor: result['success'] == true ? AppColors.primary : const Color(0xFFEF4444),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      duration: const Duration(seconds: 4),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: isLoading
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Text('إرسال الطلب', style: TextStyle(fontWeight: FontWeight.w700)),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
