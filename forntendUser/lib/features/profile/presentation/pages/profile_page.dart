@@ -1165,7 +1165,7 @@ class _AddCardSheetState extends State<_AddCardSheet> {
                       style: const TextStyle(fontWeight: FontWeight.w800),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF10B981),
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       minimumSize: const Size.fromHeight(48),
                       shape: RoundedRectangleBorder(
@@ -1202,7 +1202,7 @@ class _AddCardSheetState extends State<_AddCardSheet> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF10B981), width: 1.6),
+          borderSide: BorderSide(color: AppColors.primary, width: 1.6),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       ),
@@ -1503,31 +1503,46 @@ class _PointsBottomSheet extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (currentPoints >= 100) ...[
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () => _showRedeemDialog(context, pointsService),
+                    // ── الزر الجديد: صرف الأموال عبر ClickPay ──
+                    // يُفعَّل فقط عند 1000 نقطة = 10 دنانير
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Builder(builder: (context) {
+                        final eligible = pointsService.cashoutEligible;
+                        final pending = pointsService.hasPendingCashout;
+                        return ElevatedButton.icon(
+                          onPressed: (!eligible || pending)
+                              ? null
+                              : () => _showCashoutDialog(context, pointsService),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
+                            disabledBackgroundColor: const Color(0xFFD1D5DB),
+                            disabledForegroundColor: Colors.white70,
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          icon: const Icon(Icons.card_giftcard_rounded, size: 18),
+                          icon: Icon(
+                            pending ? Icons.hourglass_top_rounded : Icons.account_balance_wallet_rounded,
+                            size: 18,
+                          ),
                           label: Text(
-                            l10n.redeemPoints,
+                            pending
+                                ? 'طلب معلق...'
+                                : eligible
+                                    ? 'صرف الرصيد'
+                                    : 'تحتاج 1000 نقطة',
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                        ),
-                      ),
-                    ],
+                        );
+                      }),
+                    ),
                   ],
                 ),
               ],

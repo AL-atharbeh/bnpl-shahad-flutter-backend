@@ -6,6 +6,7 @@ import '../../../../services/payment_service.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'quick_pay_sheet.dart';
+import '../../../../services/saved_cards_service.dart';
 
 enum DuesFilter { next7, next30, all }
 
@@ -51,6 +52,9 @@ class _PayDuesSheetState extends State<PayDuesSheet> with SingleTickerProviderSt
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
+    // Prefetch saved cards
+    SavedCardsService().getCards();
+    
     if (widget.initialPayments != null && widget.initialPayments!.isNotEmpty) {
       _payments = widget.initialPayments!;
       _isLoading = false;
@@ -196,7 +200,7 @@ class _PayDuesSheetState extends State<PayDuesSheet> with SingleTickerProviderSt
     if (dueDays < 0) return const Color(0xFFEF4444);
     if (dueDays <= 3) return const Color(0xFFF59E0B);
     if (dueDays <= 7) return const Color(0xFFF97316);
-    return const Color(0xFF10B981);
+    return AppColors.primary;
   }
 
   String _getStatusText(int dueDays, AppLocalizations l10n, bool isRTL) {
@@ -341,10 +345,10 @@ class _PayDuesSheetState extends State<PayDuesSheet> with SingleTickerProviderSt
                               width: 64,
                               height: 64,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF0FDF4),
+                                color: AppColors.surface,
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              child: const Icon(Icons.check_circle_outline_rounded, size: 32, color: Color(0xFF10B981)),
+                              child: Icon(Icons.check_circle_outline_rounded, size: 32, color: AppColors.primary),
                             ),
                             const SizedBox(height: 16),
                             Text(

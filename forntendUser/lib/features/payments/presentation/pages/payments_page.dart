@@ -13,6 +13,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import 'pay_dues_sheet.dart';
 import 'payments_history_page.dart';
 import '../widgets/payment_method_sheet.dart';
+import '../../../../services/saved_cards_service.dart';
 import '../widgets/extend_due_date_sheet.dart';
 import '../widgets/free_postpone_sheet.dart';
 import 'payment_webview_page.dart';
@@ -46,6 +47,8 @@ class _PaymentsPageState extends State<PaymentsPage> {
   void initState() {
     super.initState();
     _loadPayments();
+    // Prefetch saved cards so they appear instantly when clicking Pay
+    SavedCardsService().getCards();
   }
   
   Future<void> _loadPayments() async {
@@ -525,7 +528,7 @@ class _PaymentsPageState extends State<PaymentsPage> {
                 ],
               ],
             ),
-            backgroundColor: const Color(0xFF16A34A),
+            backgroundColor: AppColors.primary,
             duration: const Duration(seconds: 4),
             behavior: SnackBarBehavior.floating,
           ),
@@ -537,7 +540,7 @@ class _PaymentsPageState extends State<PaymentsPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.paymentSuccessfulApplePay),
-            backgroundColor: const Color(0xFF16A34A),
+            backgroundColor: AppColors.primary,
           ),
         );
       }
@@ -742,7 +745,7 @@ class _PaymentsPageState extends State<PaymentsPage> {
                       Expanded(child: Text(l10n.postponeSuccess)),
                     ],
                   ),
-                  backgroundColor: const Color(0xFF16A34A),
+                  backgroundColor: AppColors.primary,
                   duration: const Duration(seconds: 3),
                   behavior: SnackBarBehavior.floating,
                 ),

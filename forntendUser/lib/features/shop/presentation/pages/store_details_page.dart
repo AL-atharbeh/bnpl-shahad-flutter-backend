@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../services/store_service.dart';
 import '../../../../config/env/env_dev.dart';
+import '../../../../core/theme/app_colors.dart';
 
 // ==== Design System Tokens ====
 const _text = Color(0xFF1E293B);
@@ -12,7 +13,7 @@ const _subStr = Color(0xFF64748B);
 const _chipBg = Color(0xFFF8FAFC);
 const _surfaceBg = Color(0xFFF8FAFC);
 const _premiumNavy = Color(0xFF0F172A);
-const _accentEmerald = Color(0xFF10B981);
+const _accentEmerald = AppColors.primary;
 const _surface = Color(0xFFF7F8FA);
 const _sub = Color(0xFF6B7280);
 const _stroke = Color(0xFFE6EAF0);

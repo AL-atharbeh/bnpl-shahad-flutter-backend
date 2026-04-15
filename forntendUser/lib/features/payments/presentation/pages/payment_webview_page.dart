@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class PaymentWebViewPage extends StatefulWidget {
   final String paymentUrl;
@@ -103,7 +104,7 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
         ),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: const Color(0xFF10B981),
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.close, size: 24),
@@ -125,8 +126,8 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const CircularProgressIndicator(
-                      color: Color(0xFF10B981),
+                    CircularProgressIndicator(
+                      color: AppColors.primary,
                       strokeWidth: 3,
                     ),
                     const SizedBox(height: 24),
@@ -194,7 +195,7 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
                 _initializeWebView();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF10B981),
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 shape: RoundedRectangleBorder(

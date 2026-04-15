@@ -97,7 +97,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'subtitleEn': 'Smart Devices',
       'icon': Icons.devices,
       'image': 'assets/images/phone.jpg',
-      'color': const Color(0xFF10B981),
+      'color': AppColors.primary,
     },
     {
       'id': 2,
@@ -107,7 +107,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'subtitleEn': 'Clothing & Accessories',
       'icon': Icons.checkroom, // Better icon for fashion
       'image': 'assets/images/zara.jpg', // Better generic image for fashion
-      'color': const Color(0xFF34D399),
+      'color': AppColors.primary,
     },
     {
       'id': 3,
@@ -117,7 +117,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'subtitleEn': 'Sports Equipment',
       'icon': Icons.sports_soccer,
       'image': 'assets/images/sport.jpg',
-      'color': const Color(0xFF6EE7B7),
+      'color': AppColors.primary,
     },
     {
       'id': 4,
@@ -127,7 +127,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'subtitleEn': 'Books & Magazines',
       'icon': Icons.book,
       'image': 'assets/images/book.jpg',
-      'color': const Color(0xFF059669),
+      'color': AppColors.primary,
     },
   ];
 
@@ -143,7 +143,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'categoryAr': 'أزياء',
       'categoryEn': 'Fashion',
       'rating': 4.8,
-      'color': const Color(0xFF10B981),
+      'color': AppColors.primary,
     },
     {
       'nameAr': 'ه&M',
@@ -153,7 +153,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'categoryAr': 'أزياء',
       'categoryEn': 'Fashion',
       'rating': 4.6,
-      'color': const Color(0xFF34D399),
+      'color': AppColors.primary,
     },
     {
       'nameAr': 'نايك',
@@ -163,7 +163,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'categoryAr': 'رياضة',
       'categoryEn': 'Sports',
       'rating': 4.9,
-      'color': const Color(0xFF6EE7B7),
+      'color': AppColors.primary,
     },
     {
       'nameAr': 'أديداس',
@@ -173,7 +173,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'categoryAr': 'رياضة',
       'categoryEn': 'Sports',
       'rating': 4.7,
-      'color': const Color(0xFF059669),
+      'color': AppColors.primary,
     },
     {
       'nameAr': 'أبل',
@@ -183,7 +183,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'categoryAr': 'إلكترونيات',
       'categoryEn': 'Electronics',
       'rating': 4.9,
-      'color': const Color(0xFF10B981),
+      'color': AppColors.primary,
     },
     {
       'nameAr': 'سامسونج',
@@ -193,7 +193,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'categoryAr': 'إلكترونيات',
       'categoryEn': 'Electronics',
       'rating': 4.5,
-      'color': const Color(0xFF34D399),
+      'color': AppColors.primary,
     },
     {
       'nameAr': 'أمازون',
@@ -203,7 +203,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'categoryAr': 'تسوق',
       'categoryEn': 'Shopping',
       'rating': 4.8,
-      'color': const Color(0xFF6EE7B7),
+      'color': AppColors.primary,
     },
     {
       'nameAr': 'إيكيا',
@@ -213,7 +213,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'categoryAr': 'منزل',
       'categoryEn': 'Home',
       'rating': 4.4,
-      'color': const Color(0xFF059669),
+      'color': AppColors.primary,
     },
     {
       'nameAr': 'ستاربكس',
@@ -223,7 +223,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'categoryAr': 'مشروبات',
       'categoryEn': 'Beverages',
       'rating': 4.6,
-      'color': const Color(0xFF10B981),
+      'color': AppColors.primary,
     },
     {
       'nameAr': 'ماكدونالدز',
@@ -233,7 +233,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'categoryAr': 'طعام',
       'categoryEn': 'Food',
       'rating': 4.3,
-      'color': const Color(0xFF34D399),
+      'color': AppColors.primary,
     },
     {
       'nameAr': 'ديزني',
@@ -243,7 +243,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'categoryAr': 'ترفيه',
       'categoryEn': 'Entertainment',
       'rating': 4.9,
-      'color': const Color(0xFF6EE7B7),
+      'color': AppColors.primary,
     },
     {
       'nameAr': 'نتفلكس',
@@ -253,7 +253,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'categoryAr': 'ترفيه',
       'categoryEn': 'Entertainment',
       'rating': 4.7,
-      'color': const Color(0xFF059669),
+      'color': AppColors.primary,
     },
     {
       'nameAr': 'سبوتيفاي',
@@ -263,7 +263,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'categoryAr': 'موسيقى',
       'categoryEn': 'Music',
       'rating': 4.8,
-      'color': const Color(0xFF10B981),
+      'color': AppColors.primary,
     },
     {
       'nameAr': 'يوتيوب',
@@ -273,7 +273,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'categoryAr': 'فيديو',
       'categoryEn': 'Video',
       'rating': 4.9,
-      'color': const Color(0xFF34D399),
+      'color': AppColors.primary,
     },
     {
       'nameAr': 'فيسبوك',
@@ -283,7 +283,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'categoryAr': 'تواصل',
       'categoryEn': 'Social',
       'rating': 4.5,
-      'color': const Color(0xFF6EE7B7),
+      'color': AppColors.primary,
     },
     {
       'nameAr': 'تويتر',
@@ -293,7 +293,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       'categoryAr': 'تواصل',
       'categoryEn': 'Social',
       'rating': 4.4,
-      'color': const Color(0xFF059669),
+      'color': AppColors.primary,
     },
   ];
 
@@ -444,14 +444,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           
           // Default colors for categories
           final defaultColors = [
-            const Color(0xFF10B981),
-            const Color(0xFF34D399),
-            const Color(0xFF6EE7B7),
-            const Color(0xFF059669),
-            const Color(0xFF10B981),
-            const Color(0xFF34D399),
-            const Color(0xFF6EE7B7),
-            const Color(0xFF059669),
+            AppColors.primary,
+            AppColors.primary,
+            AppColors.primary,
+            AppColors.primary,
+            AppColors.primary,
+            AppColors.primary,
+            AppColors.primary,
+            AppColors.primary,
           ];
           
           setState(() {
@@ -578,14 +578,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           
           // Default colors for stores
           final defaultColors = [
-            const Color(0xFF10B981),
-            const Color(0xFF34D399),
-            const Color(0xFF6EE7B7),
-            const Color(0xFF059669),
-            const Color(0xFF10B981),
-            const Color(0xFF34D399),
-            const Color(0xFF6EE7B7),
-            const Color(0xFF059669),
+            AppColors.primary,
+            AppColors.primary,
+            AppColors.primary,
+            AppColors.primary,
+            AppColors.primary,
+            AppColors.primary,
+            AppColors.primary,
+            AppColors.primary,
           ];
           
           final mappedStores = storesData.asMap().entries.map((entry) {
@@ -736,13 +736,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
             
             // Generate badge color based on discount
             Color badgeColor = const Color(0xFFD1FAE5);
-            Color storeColor = const Color(0xFF10B981);
+            Color storeColor = AppColors.primary;
             if (discount.contains('20') || discount.contains('25')) {
-              badgeColor = const Color(0xFF6EE7B7);
-              storeColor = const Color(0xFF6EE7B7);
+              badgeColor = AppColors.primary;
+              storeColor = AppColors.primary;
             } else if (discount.contains('15')) {
               badgeColor = const Color(0xFFA7F3D0);
-              storeColor = const Color(0xFF34D399);
+              storeColor = AppColors.primary;
             }
             
             return {
@@ -1587,7 +1587,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                   SnackBar(
                     content: Text(l10n.specialOffer),
                     duration: const Duration(seconds: 2),
-                    backgroundColor: const Color(0xFF10B981),
+                    backgroundColor: AppColors.primary,
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -1624,8 +1624,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              Color(0xFF10B981),
-                              Color(0xFF34D399),
+                              AppColors.primary,
+                              AppColors.primary,
                             ],
                           ),
                         ),
@@ -1678,8 +1678,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF10B981),
-            Color(0xFF34D399),
+            AppColors.primary,
+            AppColors.primary,
           ],
         ),
       ),
@@ -1721,7 +1721,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               title: isRTL ? 'جميع المتاجر' : 'All Stores',
               subtitle: isRTL ? 'اكتشف المتاجر الجديدة' : 'Discover new stores',
               icon: Icons.store,
-              color: const Color(0xFF10B981),
+              color: AppColors.primary,
               onTap: () {
                 AppRouter.navigateToAllStores(context);
               },
@@ -1736,7 +1736,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               title: isRTL ? 'العروض' : 'Deals',
               subtitle: isRTL ? 'أفضل العروض والخصومات' : 'Best offers & discounts',
               icon: Icons.local_offer,
-              color: const Color(0xFF34D399),
+              color: AppColors.primary,
               onTap: () {
                 AppRouter.navigateToOffers(context);
               },
@@ -2008,7 +2008,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: index == _currentStoresPage 
-                          ? const Color(0xFF10B981)
+                          ? AppColors.primary
                           : const Color(0xFFE5E7EB),
                     ),
                   ),
@@ -2582,9 +2582,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                             begin: Alignment.centerLeft,
                                             end: Alignment.centerRight,
                                             colors: [
-                                              const Color(0xFF10B981),
-                                              const Color(0xFF34D399),
-                                              const Color(0xFF6EE7B7),
+                                              AppColors.primary,
+                                              AppColors.primary,
+                                              AppColors.primary,
                                             ],
                                           ),
                                         ),
@@ -2600,9 +2600,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                             begin: Alignment.centerLeft,
                                             end: Alignment.centerRight,
                                             colors: [
-                                              const Color(0xFF10B981),
-                                              const Color(0xFF34D399),
-                                              const Color(0xFF6EE7B7),
+                                              AppColors.primary,
+                                              AppColors.primary,
+                                              AppColors.primary,
                                             ],
                                           ),
                                         ),
@@ -2619,9 +2619,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                             begin: Alignment.centerLeft,
                                             end: Alignment.centerRight,
                                             colors: [
-                                              const Color(0xFF10B981),
-                                              const Color(0xFF34D399),
-                                              const Color(0xFF6EE7B7),
+                                              AppColors.primary,
+                                              AppColors.primary,
+                                              AppColors.primary,
                                             ],
                                           ),
                                         ),
@@ -2656,7 +2656,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                             child: Text(
                               isRTL ? offer['descriptionAr'] : offer['descriptionEn'],
                               style: const TextStyle(
-                                color: Color(0xFF059669),
+                                color: AppColors.primary,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -2726,7 +2726,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                           ),
                           child: _buildStoreLogoImage(
                             offer['logo']?.toString() ?? '', 
-                            offer['storeColor'] as Color? ?? const Color(0xFF10B981), 
+                            offer['storeColor'] as Color? ?? AppColors.primary, 
                             isRTL ? (offer['storeNameAr']?.toString() ?? '') : (offer['storeNameEn']?.toString() ?? ''),
                           ),
                         ),
@@ -2750,7 +2750,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                           onPressed: _openStoreUrl,
                           style: ElevatedButton.styleFrom(
                             foregroundColor: Colors.white,
-                            backgroundColor: const Color(0xFF10B981),
+                            backgroundColor: AppColors.primary,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 12),
                             textStyle: const TextStyle(
@@ -2804,7 +2804,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     try {
       backgroundColor = Color(int.parse(bgColor.replaceFirst('#', '0xFF')));
     } catch (e) {
-      backgroundColor = const Color(0xFF10B981);
+      backgroundColor = AppColors.primary;
     }
     
     Color textColorParsed;
@@ -3034,7 +3034,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('تم تمديد تاريخ الاستحقاق بنجاح'),
-                                backgroundColor: const Color(0xFF16A34A),
+                                backgroundColor: AppColors.primary,
                               ),
                             );
                           },
@@ -3058,7 +3058,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('تم الدفع بنجاح عبر Apple Pay'),
-                                backgroundColor: const Color(0xFF16A34A),
+                                backgroundColor: AppColors.primary,
                               ),
                             );
                           },

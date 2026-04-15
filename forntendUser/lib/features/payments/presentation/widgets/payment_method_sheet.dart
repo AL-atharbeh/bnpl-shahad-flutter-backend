@@ -5,7 +5,6 @@ import '../../../../services/language_service.dart';
 import '../../../../services/saved_cards_service.dart';
 import '../../../../services/api_service.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../presentation/pages/payment_webview_page.dart';
 
 enum PaymentMethod { savedCard, newCard, applePay }
 
@@ -40,7 +39,6 @@ class PaymentMethodSheet extends StatefulWidget {
       context: context,
       useSafeArea: true,
       isScrollControlled: true,
-      showDragHandle: false,
       backgroundColor: Colors.transparent,
       builder: (_) => PaymentMethodSheet(
         amountLabel: amountLabel,
@@ -57,8 +55,7 @@ class PaymentMethodSheet extends StatefulWidget {
   State<PaymentMethodSheet> createState() => _PaymentMethodSheetState();
 }
 
-class _PaymentMethodSheetState extends State<PaymentMethodSheet>
-    with SingleTickerProviderStateMixin {
+class _PaymentMethodSheetState extends State<PaymentMethodSheet> {
   PaymentMethod _selected = PaymentMethod.savedCard;
   final SavedCardsService _savedCardsService = SavedCardsService();
   final ApiService _apiService = ApiService();
@@ -68,22 +65,10 @@ class _PaymentMethodSheetState extends State<PaymentMethodSheet>
   bool _isLoadingCards = true;
   bool _isProcessing = false;
 
-  late AnimationController _animController;
-
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
     _loadSavedCards();
-  }
-
-  @override
-  void dispose() {
-    _animController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadSavedCards() async {
@@ -109,7 +94,6 @@ class _PaymentMethodSheetState extends State<PaymentMethodSheet>
             _selected = PaymentMethod.newCard;
           }
         });
-        _animController.forward();
       } else {
         setState(() {
           _isLoadingCards = false;
@@ -144,33 +128,16 @@ class _PaymentMethodSheetState extends State<PaymentMethodSheet>
         throw errorMsg ?? 'فشل الدفع';
       }
     } catch (e) {
-      setState(() => _isProcessing = false);
       if (mounted) {
+        setState(() => _isProcessing = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('خطأ: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: const Color(0xFF1F2937),
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
-    }
-  }
-
-  String _getBrandName(String? brand) {
-    switch (brand?.toLowerCase()) {
-      case 'visa': return 'Visa';
-      case 'mastercard': return 'Mastercard';
-      case 'amex': return 'Amex';
-      default: return brand ?? 'Card';
-    }
-  }
-
-  Color _getBrandColor(String? brand) {
-    switch (brand?.toLowerCase()) {
-      case 'visa': return const Color(0xFF1A1F71);
-      case 'mastercard': return const Color(0xFFEB001B);
-      case 'amex': return const Color(0xFF2E77BC);
-      default: return const Color(0xFF6B7280);
     }
   }
 
@@ -179,469 +146,206 @@ class _PaymentMethodSheetState extends State<PaymentMethodSheet>
     final l10n = AppLocalizations.of(context)!;
     final languageService = Provider.of<LanguageService>(context);
     final isRTL = languageService.isArabic;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.8,
-      ),
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      padding: EdgeInsets.fromLTRB(24, 12, 24, bottomPadding + 20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Handle
-          const SizedBox(height: 12),
+          // Drag Handle
           Container(
-            width: 40, height: 4,
+            width: 36,
+            height: 4,
             decoration: BoxDecoration(
               color: const Color(0xFFE5E7EB),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 32),
 
-          // Header + Amount
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              children: [
-                Text(
-                  l10n.choosePaymentMethod,
-                  style: const TextStyle(
-                    fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF111827),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0FDF4),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFBBF7D0)),
-                  ),
-                  child: Text(
-                    widget.amountLabel,
-                    style: TextStyle(
-                      fontSize: 22, fontWeight: FontWeight.w900,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-              ],
+          // Total Label
+          Text(
+            l10n.totalAmountDue,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF6B7280),
+              letterSpacing: 0.5,
             ),
           ),
+          const SizedBox(height: 8),
+          Text(
+            widget.amountLabel,
+            style: const TextStyle(
+              fontSize: 34,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF111827),
+              letterSpacing: -1,
+            ),
+          ),
+          const SizedBox(height: 40),
 
-          const SizedBox(height: 20),
-
-          // Saved Cards Section
-          Flexible(
+          // Selection Section
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.4,
+            ),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // === Saved Cards ===
+                  // --- Apple Pay Option ---
+                  _buildPaymentRow(
+                    isSelected: _selected == PaymentMethod.applePay,
+                    onTap: () => setState(() => _selected = PaymentMethod.applePay),
+                    icon: const Icon(Icons.apple, size: 24, color: Colors.black),
+                    title: 'Apple Pay',
+                  ),
+                  const SizedBox(height: 12),
+
+                  // --- Saved Cards List ---
                   if (_isLoadingCards)
                     const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20),
-                      child: Center(
-                        child: SizedBox(
-                          width: 24, height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      ),
+                      padding: EdgeInsets.all(20),
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  else if (_cards.isNotEmpty) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: Row(
-                        children: [
-                          Icon(Icons.credit_card_rounded, size: 18,
-                            color: Colors.grey.shade600),
-                          const SizedBox(width: 8),
-                          Text(
-                            isRTL ? 'البطاقات المحفوظة' : 'Saved Cards',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700, fontSize: 14,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  else if (_cards.isNotEmpty)
                     ..._cards.asMap().entries.map((entry) {
                       final i = entry.key;
                       final card = entry.value;
                       final isSelected = _selected == PaymentMethod.savedCard && _selectedCardIndex == i;
-                      final brand = card['brand']?.toString();
+                      final brand = card['brand']?.toString().toUpperCase() ?? 'CARD';
                       final last4 = card['last4']?.toString() ?? '****';
-                      final expMonth = card['expMonth']?.toString().padLeft(2, '0') ?? '--';
-                      final expYear = card['expYear']?.toString() ?? '--';
-                      final isDefault = card['isDefault'] == true;
-                      final brandColor = _getBrandColor(brand);
 
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: GestureDetector(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _buildPaymentRow(
+                          isSelected: isSelected,
                           onTap: () => setState(() {
                             _selected = PaymentMethod.savedCard;
                             _selectedCardIndex = i;
                           }),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? AppColors.primary.withOpacity(0.04)
-                                  : const Color(0xFFF7F8FA),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: isSelected
-                                    ? AppColors.primary
-                                    : const Color(0xFFE6ECF3),
-                                width: isSelected ? 2 : 1,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                // Radio
-                                _RadioDot(selected: isSelected),
-                                const SizedBox(width: 12),
-                                // Brand
-                                Container(
-                                  width: 44, height: 30,
-                                  decoration: BoxDecoration(
-                                    color: brandColor.withOpacity(0.08),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      _getBrandName(brand),
-                                      style: TextStyle(
-                                        fontSize: 9, fontWeight: FontWeight.w800,
-                                        color: brandColor,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                // Info
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text(
-                                            '•••• $last4',
-                                            style: const TextStyle(
-                                              fontSize: 15, fontWeight: FontWeight.w700,
-                                              color: Color(0xFF111827),
-                                              letterSpacing: 1,
-                                            ),
-                                          ),
-                                          if (isDefault) ...[
-                                            const SizedBox(width: 8),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: AppColors.primary.withOpacity(0.1),
-                                                borderRadius: BorderRadius.circular(4),
-                                              ),
-                                              child: Text(
-                                                '⭐',
-                                                style: TextStyle(fontSize: 10),
-                                              ),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                      Text(
-                                        '$expMonth/$expYear',
-                                        style: const TextStyle(
-                                          fontSize: 12, color: Color(0xFF9CA3AF),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (isSelected)
-                                  Icon(Icons.check_circle_rounded,
-                                    color: AppColors.primary, size: 22),
-                              ],
-                            ),
-                          ),
+                          icon: const Icon(Icons.credit_card_outlined, size: 22, color: Color(0xFF4B5563)),
+                          title: '$brand •••• $last4',
                         ),
                       );
                     }),
-                    const SizedBox(height: 12),
-                  ],
 
-                  // === Divider ===
-                  if (_cards.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Row(
-                        children: [
-                          Expanded(child: Divider(color: Colors.grey.shade200)),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(
-                              isRTL ? 'أو' : 'OR',
-                              style: TextStyle(
-                                color: Colors.grey.shade400,
-                                fontSize: 12, fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          Expanded(child: Divider(color: Colors.grey.shade200)),
-                        ],
-                      ),
-                    ),
-
-                  // === New Card / Stripe ===
-                  GestureDetector(
+                  // --- New Card Option ---
+                  _buildPaymentRow(
+                    isSelected: _selected == PaymentMethod.newCard,
                     onTap: () => setState(() => _selected = PaymentMethod.newCard),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: _selected == PaymentMethod.newCard
-                            ? const Color(0xFFF0F7FF)
-                            : const Color(0xFFF7F8FA),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: _selected == PaymentMethod.newCard
-                              ? const Color(0xFF3B82F6)
-                              : const Color(0xFFE6ECF3),
-                          width: _selected == PaymentMethod.newCard ? 2 : 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          _RadioDot(selected: _selected == PaymentMethod.newCard,
-                            activeColor: const Color(0xFF3B82F6)),
-                          const SizedBox(width: 12),
-                          Container(
-                            width: 44, height: 30,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF3B82F6).withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Icon(Icons.credit_card_rounded,
-                              size: 16, color: Color(0xFF3B82F6)),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              isRTL ? 'بطاقة جديدة / Stripe' : 'New Card / Stripe',
-                              style: const TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.w700,
-                                color: Color(0xFF111827),
-                              ),
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: const Color(0xFFE6ECF3)),
-                            ),
-                            child: const Text(
-                              'Visa / MC',
-                              style: TextStyle(
-                                fontSize: 10, fontWeight: FontWeight.w700,
-                                color: Color(0xFF6B7280),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    icon: const Icon(Icons.add_circle_outline_rounded, size: 22, color: Color(0xFF4B5563)),
+                    title: isRTL ? 'إضافة بطاقة جديدة' : 'Add New Card',
                   ),
-
-                  const SizedBox(height: 8),
-
-                  // === Apple Pay ===
-                  GestureDetector(
-                    onTap: () => setState(() => _selected = PaymentMethod.applePay),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: _selected == PaymentMethod.applePay
-                            ? const Color(0xFFF5F5F5)
-                            : const Color(0xFFF7F8FA),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: _selected == PaymentMethod.applePay
-                              ? const Color(0xFF111827)
-                              : const Color(0xFFE6ECF3),
-                          width: _selected == PaymentMethod.applePay ? 2 : 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          _RadioDot(selected: _selected == PaymentMethod.applePay,
-                            activeColor: const Color(0xFF111827)),
-                          const SizedBox(width: 12),
-                          Container(
-                            width: 44, height: 30,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF111827).withOpacity(0.05),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Icon(Icons.apple, size: 18, color: Color(0xFF111827)),
-                          ),
-                          const SizedBox(width: 12),
-                          const Expanded(
-                            child: Text(
-                              'Apple Pay',
-                              style: TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.w700,
-                                color: Color(0xFF111827),
-                              ),
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF111827),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.apple, size: 14, color: Colors.white),
-                                SizedBox(width: 3),
-                                Text('Pay', style: TextStyle(
-                                  fontSize: 11, fontWeight: FontWeight.w800, color: Colors.white)),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
                 ],
               ),
             ),
           ),
 
-          // Pay Button
-          Container(
-            padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(context).padding.bottom + 20),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Color(0xFFF3F4F6))),
-            ),
-            child: SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: _isProcessing ? null : () async {
-                  if (_selected == PaymentMethod.savedCard && _selectedCardIndex != null) {
-                    await _payWithSavedCard();
-                  } else if (_selected == PaymentMethod.newCard) {
-                    widget.onCardAdded?.call(AddedCard(
-                      last4: 'STRIPE', holder: 'STRIPE', exp: '00/00'));
-                    Navigator.pop(context);
-                  } else if (_selected == PaymentMethod.applePay) {
-                    widget.onApplePay();
-                    Navigator.pop(context);
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _selected == PaymentMethod.savedCard
-                      ? AppColors.primary
-                      : _selected == PaymentMethod.applePay
-                          ? const Color(0xFF111827)
-                          : const Color(0xFF3B82F6),
-                  foregroundColor: Colors.white,
-                  elevation: 4,
-                  shadowColor: AppColors.primary.withOpacity(0.3),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+          const SizedBox(height: 40),
+
+          // Action Button
+          SizedBox(
+            width: double.infinity,
+            height: 58,
+            child: ElevatedButton(
+              onPressed: _isProcessing ? null : () async {
+                if (_selected == PaymentMethod.savedCard) {
+                  await _payWithSavedCard();
+                } else if (_selected == PaymentMethod.newCard) {
+                  widget.onCardAdded?.call(AddedCard(last4: 'NEW', holder: '', exp: ''));
+                  Navigator.pop(context);
+                } else if (_selected == PaymentMethod.applePay) {
+                  widget.onApplePay();
+                  Navigator.pop(context);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF111827),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
                 ),
-                child: _isProcessing
-                    ? const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(width: 20, height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white)),
-                          SizedBox(width: 12),
-                          Text('جاري الدفع...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                        ],
-                      )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            _selected == PaymentMethod.savedCard
-                                ? Icons.flash_on_rounded
-                                : _selected == PaymentMethod.applePay
-                                    ? Icons.apple
-                                    : Icons.credit_card_rounded,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${l10n.pay} ${widget.amountLabel}',
-                            style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
+                disabledBackgroundColor: const Color(0xFF9CA3AF),
               ),
+              child: _isProcessing
+                  ? const SizedBox(
+                      width: 24, height: 24,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                  : Text(
+                      isRTL ? 'تأكيد الدفع' : 'Confirm Payment',
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
             ),
           ),
         ],
       ),
     );
   }
-}
 
-// ========= Radio Dot =========
-class _RadioDot extends StatelessWidget {
-  final bool selected;
-  final bool dimmed;
-  final Color activeColor;
-  const _RadioDot({
-    required this.selected,
-    this.dimmed = false,
-    this.activeColor = const Color(0xFF10B981),
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      width: 22, height: 22,
-      decoration: BoxDecoration(
-        color: selected ? activeColor : (dimmed ? const Color(0xFFE7EBF2) : Colors.white),
-        border: Border.all(
-          color: selected ? activeColor : const Color(0xFFD7DCE4),
-          width: 2,
+  Widget _buildPaymentRow({
+    required bool isSelected,
+    required VoidCallback onTap,
+    required Widget icon,
+    required String title,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFF9FAFB) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? const Color(0xFFE5E7EB) : const Color(0xFFF3F4F6),
+            width: 1.5,
+          ),
         ),
-        shape: BoxShape.circle,
+        child: Row(
+          children: [
+            icon,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: const Color(0xFF111827),
+                ),
+              ),
+            ),
+            if (isSelected)
+              const Icon(Icons.check_circle_rounded, color: Color(0xFF111827), size: 22)
+            else
+              Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFE5E7EB), width: 1.5),
+                ),
+              ),
+          ],
+        ),
       ),
-      child: selected
-          ? const Center(
-              child: Icon(Icons.check_rounded, color: Colors.white, size: 14),
-            )
-          : null,
     );
   }
 }
 
-// ========= AddedCard Model =========
 class AddedCard {
   final String last4;
   final String holder;

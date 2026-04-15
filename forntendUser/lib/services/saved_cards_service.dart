@@ -3,8 +3,24 @@ import 'api_service.dart';
 class SavedCardsService {
   final ApiService _apiService = ApiService();
 
-  /// Get list of saved cards
-  Future<Map<String, dynamic>> getCards() async {
+  // Simple static cache to make cards appear instantly
+  static List<dynamic>? _cachedCards;
+  static DateTime? _lastFetch;
+  static const _cacheDuration = Duration(minutes: 5);
+
+  /// Get list of saved cards (uses cache if available and fresh)
+  Future<Map<String, dynamic>> getCards({bool forceRefresh = false}) async {
+    // Check cache
+    if (!forceRefresh && _cachedCards != null && _lastFetch != null) {
+      if (DateTime.now().difference(_lastFetch!) < _cacheDuration) {
+        return {
+          'success': true,
+          'cards': _cachedCards,
+          'fromCache': true,
+        };
+      }
+    }
+
     const endpoint = '/saved-cards';
     final response = await _apiService.get(endpoint);
     
@@ -19,6 +35,11 @@ class SavedCardsService {
       } else {
         cards = [];
       }
+
+      // Update cache
+      _cachedCards = cards;
+      _lastFetch = DateTime.now();
+
       return {
         'success': true,
         'cards': cards,
@@ -70,6 +91,7 @@ class SavedCardsService {
     
     if (response['success']) {
       final data = response['data'];
+      _cachedCards = null; // Clear cache so next fetch gets latest
       return {
         'success': true,
         'card': data is Map && data.containsKey('data') ? data['data'] : data,
@@ -88,6 +110,7 @@ class SavedCardsService {
     final response = await _apiService.delete(endpoint);
     
     if (response['success']) {
+      _cachedCards = null; // Clear cache
       return {'success': true};
     } else {
       return {
@@ -103,6 +126,7 @@ class SavedCardsService {
     final response = await _apiService.put(endpoint, {});
     
     if (response['success']) {
+      _cachedCards = null; // Clear cache
       return {'success': true};
     } else {
       return {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../services/product_service.dart';
 import '../../../../config/env/env_dev.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class ProductDetailsPage extends StatefulWidget {
   // إذا كان productId موجود، سيتم جلب البيانات من API
@@ -573,7 +574,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
             child: Text(
               l10n.tabby,
               style: const TextStyle(
-                color: Color(0xFF16A34A),
+                color: AppColors.primary,
                 fontWeight: FontWeight.w800,
               ),
             ),

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bnpl/config/env/env_dev.dart';
+import 'package:bnpl/core/theme/app_colors.dart';
 import 'package:bnpl/features/bnpl_sessions/data/bnpl_session_service.dart';
 import 'package:bnpl/features/payments/presentation/pages/payment_webview_page.dart';
 import '../../models/bnpl_session.dart';
@@ -155,7 +156,7 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('✅ تم الدفع بنجاح! تم إنشاء ${_session!.installmentsCount} أقساط'),
-                backgroundColor: const Color(0xFF10B981),
+                backgroundColor: AppColors.primary,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 duration: const Duration(seconds: 3),
@@ -199,7 +200,7 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('✅ تم إنشاء ${_session!.installmentsCount} أقساط بنجاح'),
-              backgroundColor: const Color(0xFF10B981),
+              backgroundColor: AppColors.primary,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               duration: const Duration(seconds: 3),
@@ -297,7 +298,7 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
       backgroundColor: const Color(0xFFF5F7FA),
       body: SafeArea(
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFF10B981)))
+            ? Center(child: CircularProgressIndicator(color: AppColors.primary))
             : _error != null
                 ? _buildErrorState()
                 : _session == null
@@ -345,7 +346,7 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
             ElevatedButton(
               onPressed: _loadSession,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF10B981),
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -492,7 +493,7 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
             style: GoogleFonts.cairo(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF10B981),
+              color: AppColors.primary,
             ),
           ),
         ],
@@ -594,15 +595,15 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
   Widget _buildAmountCard() {
     return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF10B981), Color(0xFF059669)],
+        gradient: LinearGradient(
+          colors: [AppColors.primary, AppColors.primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF10B981).withOpacity(0.3),
+            color: AppColors.primary.withOpacity(0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -725,15 +726,15 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF10B981).withOpacity(0.08),
-                  const Color(0xFF059669).withOpacity(0.05),
+                  AppColors.primary.withOpacity(0.08),
+                  AppColors.primary.withOpacity(0.05),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: const Color(0xFF10B981).withOpacity(0.2),
+                color: AppColors.primary.withOpacity(0.2),
                 width: 1.5,
               ),
             ),
@@ -745,7 +746,7 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF10B981),
+                        color: AppColors.primary,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
@@ -773,7 +774,7 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
                             style: GoogleFonts.cairo(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF10B981),
+                              color: AppColors.primary,
                             ),
                           ),
                         ],
@@ -825,7 +826,7 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
           child: ElevatedButton(
             onPressed: _isProcessing ? null : _approveAndPay,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF10B981),
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),

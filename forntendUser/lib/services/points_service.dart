@@ -97,37 +97,34 @@ class PointsService extends ChangeNotifier {
   bool get isInitialized => _isInitialized;
   bool get isLoading => _isLoading;
 
-  /// تهيئة الخدمة وتحميل البيانات من السيرفر
+  // ── Live summary from backend ──
+  Map<String, dynamic>? _summary;
+  Map<String, dynamic>? get summary => _summary;
+  bool get cashoutEligible => (_summary?['cashoutEligible'] as bool?) ?? false;
+  bool get hasPendingCashout => (_summary?['hasPendingCashout'] as bool?) ?? false;
+  double get jodValue => (_summary?['jodValue'] as num?)?.toDouble() ?? 0.0;
+
   Future<void> initialize() async {
     if (_isLoading) return;
     _isLoading = true;
     notifyListeners();
 
     try {
-      // 1. تحميل رصيد النقاط الحالي
-      final pointsResponse = await _apiService.get('/rewards/points');
-      if (pointsResponse['success'] == true) {
-        // Backend returns: { success: true, data: { currentPoints: N } }
-        // ApiService puts it in: pointsResponse['data']
-        final backendData = pointsResponse['data'];
-        final data = backendData['data'] ?? backendData;
-        _currentPoints = (data['currentPoints'] as num?)?.toInt() ?? 0;
-      }
-      
-      // 2. تحميل تاريخ العمليات
+      // Load full summary (balance + eligibility) from the new endpoint
+      await getPointsSummary();
+
+      // Load transaction history
       final historyResponse = await _apiService.get('/rewards/history');
       if (historyResponse['success'] == true) {
-        // Backend returns: { success: true, data: [...] }
         final backendData = historyResponse['data'];
-        final List<dynamic> historyData = backendData['data'] is List 
-            ? backendData['data'] 
+        final List<dynamic> historyData = backendData['data'] is List
+            ? backendData['data']
             : (backendData is List ? backendData : []);
-            
+
         _transactions = historyData
             .map((json) => PointsTransaction.fromJson(json as Map<String, dynamic>))
             .toList();
-        
-        // حساب إجمالي النقاط المكتسبة من التاريخ
+
         _totalEarnedPoints = _transactions
             .where((t) => t.type == PointsTransactionType.earned)
             .fold(0, (sum, t) => sum + t.points);
@@ -136,11 +133,10 @@ class PointsService extends ChangeNotifier {
       _isInitialized = true;
       _isLoading = false;
       notifyListeners();
-      
-      debugPrint('✅ PointsService initialized with $_currentPoints points');
+
+      debugPrint('✅ PointsService initialized with $_currentPoints points (${jodValue} JOD)');
     } catch (e) {
-      debugPrint('❌ Error initializing PointsService from API: $e');
-      // محاولة التحميل من SharedPreferences كاحتياطي
+      debugPrint('❌ Error initializing PointsService: $e');
       await _loadFromLocal();
       _isLoading = false;
       notifyListeners();
@@ -228,6 +224,31 @@ class PointsService extends ChangeNotifier {
 
     debugPrint('✅ Redeemed $pointsToRedeem points');
     return true;
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  //  CASHOUT — Request cash transfer via ClickPay
+  // ─────────────────────────────────────────────────────────────────
+
+  /// Request cash payout via ClickPay link (min 1000 points = 10 JOD).
+  /// Returns {'success': bool, 'message': String}
+  Future<Map<String, dynamic>> requestCashout(String clickPayLink) async {
+    try {
+      final response = await _apiService.post('/rewards/cashout', {
+        'clickPayLink': clickPayLink.trim(),
+      });
+      if (response['success'] == true) {
+        // Refresh summary after cashout
+        await getPointsSummary();
+        return {'success': true, 'message': 'تم إرسال طلب الصرف بنجاح، سيتم مراجعته من الإدارة.'};
+      } else {
+        final msg = response['data']?['message'] ?? response['message'] ?? 'حدث خطأ، حاول مرة أخرى.';
+        return {'success': false, 'message': msg};
+      }
+    } catch (e) {
+      debugPrint('❌ Error in requestCashout: $e');
+      return {'success': false, 'message': e.toString().replaceAll('Exception:', '').trim()};
+    }
   }
 
   /// حساب القيمة المالية للنقاط

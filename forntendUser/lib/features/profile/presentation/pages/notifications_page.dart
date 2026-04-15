@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../services/language_service.dart';
 import '../../../../models/in_app_notification.dart';
 import '../../../../services/in_app_notification_service.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -702,7 +703,7 @@ class _TypeMeta {
 _TypeMeta _typeMeta(NotificationType type) {
   switch (type) {
     case NotificationType.payment:
-      return _TypeMeta(color: const Color(0xFF10B981), icon: Icons.payments);
+      return _TypeMeta(color: AppColors.primary, icon: Icons.payments);
     case NotificationType.offer:
       return _TypeMeta(color: const Color(0xFFF59E0B), icon: Icons.local_offer);
     case NotificationType.security:
