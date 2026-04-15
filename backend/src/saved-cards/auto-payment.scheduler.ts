@@ -113,7 +113,7 @@ export class AutoPaymentScheduler {
         customerId: defaultCard.stripeCustomerId,
         paymentMethodId: defaultCard.stripePaymentMethodId,
         amount: payment.amount,
-        currency: payment.currency,
+        currency: 'usd',
         description: `Auto-payment for Installment #${payment.installmentNumber} (Order: ${payment.orderId})`,
         metadata: {
           paymentId: payment.id.toString(),
