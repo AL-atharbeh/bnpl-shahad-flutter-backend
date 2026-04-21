@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import '../../../../utils/image_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../l10n/generated/app_localizations.dart';
@@ -45,6 +46,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   bool _showPromoBanner = true;
   late PageController _bannerPageController;
   late PageController _storesPageController;
+  final GlobalKey _navBarKey = GlobalKey();
+  double _dragProgress = 0.0;
+  bool _isDragging = false;
   late AnimationController _bannerAnimationController;
   late AnimationController _fadeAnimationController;
   late AnimationController _slideAnimationController;
@@ -301,6 +305,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _dragProgress = _currentNavIndex.toDouble();
     
     _bannerPageController = PageController();
     _storesPageController = PageController();
@@ -896,6 +901,47 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       }
     });
     _bannerAnimationController.forward();
+  }
+
+  void _onNavDragUpdate(DragUpdateDetails details) {
+    if (_navBarKey.currentContext == null) return;
+    
+    final RenderBox box = _navBarKey.currentContext!.findRenderObject() as RenderBox;
+    final Offset localOffset = box.globalToLocal(details.globalPosition);
+    final double width = box.size.width;
+    
+    // Use the reliable LanguageService from Provider
+    final languageService = Provider.of<LanguageService>(context, listen: false);
+    final bool isArabic = languageService.isArabic;
+    
+    // Improved mapping: divide width into 4 equal segments
+    double progress = (localOffset.dx / (width / 4)) - 0.5;
+    progress = progress.clamp(0.0, 3.0);
+    
+    // If Arabic mode (RTL), index 0 is on the physical right.
+    // dx=0 (left) should map to index 3, dx=width (right) should map to index 0.
+    double logicalProgress = isArabic ? (3.0 - progress) : progress;
+    
+    int hoverIndex = logicalProgress.round();
+    
+    if (_isDragging && hoverIndex != _currentNavIndex) {
+      HapticFeedback.selectionClick();
+    }
+
+    setState(() {
+      _dragProgress = logicalProgress;
+      _isDragging = true;
+    });
+  }
+
+  void _onNavDragEnd() {
+    int finalIndex = _dragProgress.round().clamp(0, 3);
+    setState(() {
+      _isDragging = false;
+      _currentNavIndex = finalIndex;
+      _dragProgress = finalIndex.toDouble();
+    });
+    HapticFeedback.lightImpact();
   }
 
   @override
@@ -3155,55 +3201,94 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   }
 
     Widget _buildGlassmorphismBottomNav() {
-    final l10n = AppLocalizations.of(context)!;
+    final languageService = Provider.of<LanguageService>(context);
+    final bool isArabic = languageService.isArabic;
     
     return Positioned(
-      left: 20,
-      right: 20,
-      bottom: 20,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(35),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withValues(alpha: 0.4),
-                  Colors.white.withValues(alpha: 0.25),
+      left: 40, // Increased from 25 to 50 for a more compact hub look
+      right: 40,
+      bottom: 30,
+      child: GestureDetector(
+        onHorizontalDragUpdate: _onNavDragUpdate,
+        onHorizontalDragEnd: (_) => _onNavDragEnd(),
+        onLongPressStart: (details) {
+          HapticFeedback.heavyImpact();
+          _onNavDragUpdate(DragUpdateDetails(globalPosition: details.globalPosition));
+        },
+        onLongPressMoveUpdate: (details) {
+          _onNavDragUpdate(DragUpdateDetails(globalPosition: details.globalPosition));
+        },
+        onLongPressEnd: (_) => _onNavDragEnd(),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(35),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+            child: Container(
+              key: _navBarKey,
+              height: 65, // Slimmer more elegant bar
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(35),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  width: 1.0,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 40,
+                    offset: const Offset(0, 15),
+                  ),
                 ],
               ),
-              borderRadius: BorderRadius.circular(35),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.5),
-                width: 2,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // World-Class Fluid Indicator - Refined Proportion
+                  AnimatedAlign(
+                    duration: Duration(milliseconds: _isDragging ? 80 : 500),
+                    curve: _isDragging ? Curves.linear : Curves.easeOutBack,
+                    alignment: Alignment(
+                      (isArabic ? -1.0 : 1.0) * (_dragProgress - 1.5) * 0.61, 
+                      0.0,
+                    ),
+                    child: Container(
+                      width: MediaQuery.of(context).size.width * 0.15, // Slimmer pill
+                      height: 48, // Reduced height for elegance
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF10B981),
+                            Color(0xFF059669),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF10B981).withValues(alpha: 0.4),
+                            blurRadius: 15,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  // Icons with Liquid Transition
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildNavIcon(Icons.grid_view_rounded, 0),
+                      _buildNavIcon(Icons.shopping_bag_rounded, 1),
+                      _buildNavIcon(Icons.account_balance_wallet_rounded, 2),
+                      _buildNavIcon(Icons.person_rounded, 3),
+                    ],
+                  ),
+                ],
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 30,
-                  offset: const Offset(0, 10),
-                  spreadRadius: 0,
-                ),
-                BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.4),
-                  blurRadius: 0,
-                  offset: const Offset(0, 1),
-                  spreadRadius: 0,
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavIcon(Icons.home, 0, l10n.home),
-                _buildNavIcon(Icons.shopping_bag_outlined, 1, l10n.shopping),
-                _buildNavIcon(Icons.payment, 2, l10n.payments),
-                _buildNavIcon(Icons.person, 3, l10n.profile),
-              ],
             ),
           ),
         ),
@@ -3211,50 +3296,53 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     );
   }
 
-  Widget _buildNavIcon(IconData icon, int index, String label) {
-    bool isActive = index == _currentNavIndex;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _currentNavIndex = index;
-        });
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: isActive ? LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withValues(alpha: 0.6),
-                  Colors.white.withValues(alpha: 0.4),
-                ],
-              ) : null,
-              border: isActive ? Border.all(
-                color: Colors.white.withValues(alpha: 0.7),
-                width: 1,
-              ) : null,
-            ),
-            child: Icon(
-              icon,
-              size: 28,
-              color: isActive ? AppColors.primary : Colors.grey[700],
-            ),
+  Widget _buildNavIcon(IconData icon, int index) {
+    // Distance from the current drag progress
+    final double distance = (_dragProgress - index).abs();
+    final double proximity = (1.0 - distance).clamp(0.0, 1.0);
+    
+    final double scale = 0.85 + (proximity * 0.2); // More subtle scale
+    final Color iconColor = Color.lerp(
+      Colors.grey[500]!.withValues(alpha: 0.6),
+      Colors.white,
+      Curves.easeIn.transform(proximity),
+    )!;
+
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          HapticFeedback.mediumImpact();
+          setState(() {
+            _currentNavIndex = index;
+            _dragProgress = index.toDouble();
+          });
+        },
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Transform.scale(
+                scale: scale,
+                child: Icon(
+                  icon,
+                  size: 24, // Optimized icon size
+                  color: iconColor,
+                ),
+              ),
+              const SizedBox(height: 3),
+              // Subtler dot
+              Container(
+                width: 3 * proximity,
+                height: 3 * proximity,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: proximity * 0.8),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: GoogleFonts.mada(
-              fontSize: 10,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-              color: isActive ? AppColors.primary : Colors.grey[700],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
