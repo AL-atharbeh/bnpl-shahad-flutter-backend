@@ -7,7 +7,7 @@ export default function NotFound() {
         </p>
         <h1 className="text-lg font-semibold">This page does not exist.</h1>
         <p className="text-xs text-slate-400">
-          Please check the URL or go back to your dashboard.
+          Please check the URL or go back to your .
         </p>
       </div>
     </div>
