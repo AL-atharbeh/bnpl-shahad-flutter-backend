@@ -1,7 +1,7 @@
 // Integration Constants
 const STORE_ID = 5;
 const PUBLIC_KEY = 'sh_pk_795894a435724ead8806090a';
-const BACKEND_URL = 'https://enthusiastic-stillness-production-5dce.up.railway.app/api/v1';
+const BACKEND_URL = 'https://api.shahedapp.com/api/v1';
 
 // Product Data
 const products = [

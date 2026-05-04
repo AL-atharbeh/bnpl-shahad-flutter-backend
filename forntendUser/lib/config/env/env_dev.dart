@@ -25,7 +25,7 @@ class EnvDev {
   // Current IP: 172.20.10.2 (update if changed)
   
   // Default: iOS Simulator (localhost)
-  static const String baseUrl = 'https://enthusiastic-stillness-production-5dce.up.railway.app/api/v1';
+  static const String baseUrl = 'https://api.shahedapp.com/api/v1';
   // static const String baseUrl = 'http://10.0.2.2:3000/api/v1'; // Android Emulator
   
   // Alternative URLs (uncomment the one you need):

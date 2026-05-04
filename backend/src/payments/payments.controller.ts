@@ -835,16 +835,16 @@ export class PaymentsController {
           console.error(`❌ Failed to approve session ${sessionId} after payment:`, error.message);
         }
 
-        const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://enthusiastic-stillness-production-5dce.up.railway.app';
+        const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://api.shahedapp.com';
         return res.redirect(`${baseUrl}/api/v1/payments/view-success?sessionId=${sessionId}`);
       } else {
         console.warn(`⚠️ Payment verification failed: ${actualPaymentId}`);
-        const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://enthusiastic-stillness-production-5dce.up.railway.app';
+        const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://api.shahedapp.com';
         return res.redirect(`${baseUrl}/api/v1/payments/view-error`);
       }
     } catch (error) {
       console.error('❌ Error in success callback:', error);
-      const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://enthusiastic-stillness-production-5dce.up.railway.app';
+      const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://api.shahedapp.com';
       return res.redirect(`${baseUrl}/api/v1/payments/view-error`);
     }
   }
@@ -907,15 +907,15 @@ export class PaymentsController {
         }
 
         // Redirect to new success page
-        const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://enthusiastic-stillness-production-5dce.up.railway.app';
+        const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://api.shahedapp.com';
         return res.redirect(`${baseUrl}/api/v1/payments/view-success?sessionId=${sessionId}`);
       } else {
-        const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://enthusiastic-stillness-production-5dce.up.railway.app';
+        const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://api.shahedapp.com';
         return res.redirect(`${baseUrl}/api/v1/payments/view-error?sessionId=${sessionId}`);
       }
     } catch (error) {
       console.error('❌ Error in Stripe success callback:', error);
-      const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://enthusiastic-stillness-production-5dce.up.railway.app';
+      const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://api.shahedapp.com';
       return res.redirect(`${baseUrl}/api/v1/payments/view-error?sessionId=${sessionId}`);
     }
   }
@@ -928,7 +928,7 @@ export class PaymentsController {
     @Request() req,
   ) {
     console.log(`❌ Stripe error callback received for session: ${sessionId}`);
-    const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://enthusiastic-stillness-production-5dce.up.railway.app';
+    const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'https://api.shahedapp.com';
     return res.redirect(`${baseUrl}/api/v1/payments/view-error?sessionId=${sessionId}`);
   }
 

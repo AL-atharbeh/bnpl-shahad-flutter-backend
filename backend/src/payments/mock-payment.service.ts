@@ -29,7 +29,7 @@ export class MockPaymentService {
     constructor(private readonly configService: ConfigService) {
         this.ngrokUrl = this.configService.get<string>('APP_URL') || 
             this.configService.get<string>('NGROK_URL') || 
-            'https://pantropical-apolonia-unproportionably.ngrok-free.dev';
+            'https://api.shahedapp.com';
         this.logger.log(`✅ Mock Payment Service initialized using URL: ${this.ngrokUrl}`);
     }
 

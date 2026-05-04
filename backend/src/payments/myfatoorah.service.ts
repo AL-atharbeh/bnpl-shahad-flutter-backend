@@ -62,7 +62,7 @@ export class MyFatoorahService {
         this.ngrokUrl =
             this.configService.get<string>('APP_URL') ||
             this.configService.get<string>('NGROK_URL') ||
-            'https://pantropical-apolonia-unproportionably.ngrok-free.dev';
+            'https://api.shahedapp.com';
 
         this.logger.log('✅ MyFatoorah Service initialized');
         this.logger.log(`📍 Base URL: ${this.baseUrl}`);

@@ -1,4 +1,4 @@
-const PRODUCTION_URL = 'https://enthusiastic-stillness-production-5dce.up.railway.app';
+const PRODUCTION_URL = 'https://api.shahedapp.com';
 let origin = window.location.origin;
 
 if (origin === 'null' || !origin.startsWith('http')) {

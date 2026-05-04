@@ -162,7 +162,7 @@ export class BnplSessionsService {
             success: true,
             session_id: sessionId,
             redirect_url: `bnpl://session?id=${sessionId}`,
-            web_redirect_url: `${process.env.APP_URL || 'https://enthusiastic-stillness-production-5dce.up.railway.app'}/api/v1/sessions/view/${sessionId}`,
+            web_redirect_url: `${process.env.APP_URL || 'https://api.shahedapp.com'}/api/v1/sessions/view/${sessionId}`,
             expires_at: expiresAt,
         };
     }
@@ -447,7 +447,7 @@ export class BnplSessionsService {
             // Generate payment URL for first installment via STRIPE
             console.log('💳 Generating Stripe payment session for testing...');
 
-            const baseUrl = 'https://enthusiastic-stillness-production-5dce.up.railway.app';
+            const baseUrl = 'https://api.shahedapp.com';
             
             const paymentResponse = await this.stripeService.createCheckoutSession({
                 amount: installmentAmount,

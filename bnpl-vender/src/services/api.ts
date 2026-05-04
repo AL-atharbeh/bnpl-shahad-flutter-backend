@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'https://enthusiastic-stillness-production-5dce.up.railway.app/api/v1',
+    baseURL: 'https://api.shahedapp.com/api/v1',
     headers: {
         'Content-Type': 'application/json',
     },
