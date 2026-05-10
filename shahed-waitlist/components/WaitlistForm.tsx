@@ -39,52 +39,56 @@ export default function WaitlistForm() {
 
   if (status === 'success') {
     return (
-      <div className="max-w-md mx-auto p-10 bg-white rounded-3xl shadow-2xl border border-gold/10 text-center animate-fade-in">
-        <div className="w-20 h-20 bg-gold/10 text-gold rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">
-          ✨
+      <div className="max-w-md mx-auto p-12 bg-white rounded-[2rem] shadow-2xl border border-primary/10 text-center animate-fade-in">
+        <div className="w-24 h-24 bg-mint text-primary rounded-full flex items-center justify-center mx-auto mb-8 text-5xl">
+          ✅
         </div>
-        <h3 className="text-2xl font-bold text-luxury-black mb-3">{message}</h3>
-        <p className="text-gray-500">تم حفظ بياناتك بنجاح، ترقبوا أخبارنا قريباً عبر الرسائل النصية.</p>
+        <h3 className="text-3xl font-bold text-luxury-black mb-4">{message}</h3>
+        <p className="text-primary-light font-medium">تم تسجيلك بنجاح في قائمة الانتظار الحصرية.</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-md mx-auto p-8 md:p-10 bg-white rounded-3xl shadow-2xl border border-gold/10 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="max-w-md mx-auto p-8 md:p-12 bg-white rounded-[2.5rem] shadow-2xl border border-primary/5 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="text-center mb-4">
+          <h3 className="text-2xl font-bold text-luxury-black">انضم إلينا الآن</h3>
+          <p className="text-primary-light/70 mt-2">سجل بياناتك لتكون أول من يستخدم شهد</p>
+        </div>
+
         <div>
-          <label htmlFor="phone" className="block text-sm font-bold text-gray-700 mb-2">رقم الهاتف</label>
+          <label htmlFor="phone" className="block text-sm font-bold text-primary mb-3">رقم الهاتف</label>
           <input
             id="phone"
             type="tel"
             required
             placeholder="07XXXXXXXX"
-            className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/50 focus:bg-white focus:border-gold focus:ring-4 focus:ring-gold/5 outline-none transition-all text-left dir-ltr text-lg"
+            className="w-full px-6 py-5 rounded-2xl border border-gray-100 bg-gray-50/50 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all text-left dir-ltr text-xl font-medium"
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
           />
-          <p className="text-xs text-gray-400 mt-2">مثال: 0791234567</p>
         </div>
 
         <div>
-          <label htmlFor="store" className="block text-sm font-bold text-gray-700 mb-2">المتجر المفضل</label>
+          <label htmlFor="store" className="block text-sm font-bold text-primary mb-3">متجرك المفضل</label>
           <input
             id="store"
             type="text"
             required
-            placeholder="أين تتسوق عادةً؟"
-            className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/50 focus:bg-white focus:border-gold focus:ring-4 focus:ring-gold/5 outline-none transition-all text-lg"
+            placeholder="أين تحب أن تتسوق؟"
+            className="w-full px-6 py-5 rounded-2xl border border-gray-100 bg-gray-50/50 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all text-xl"
             value={formData.store}
             onChange={(e) => setFormData({ ...formData, store: e.target.value })}
           />
         </div>
 
         <div>
-          <label htmlFor="city" className="block text-sm font-bold text-gray-700 mb-2">المدينة</label>
+          <label htmlFor="city" className="block text-sm font-bold text-primary mb-3">المدينة</label>
           <div className="relative">
             <select
               id="city"
-              className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/50 focus:bg-white focus:border-gold focus:ring-4 focus:ring-gold/5 outline-none transition-all appearance-none text-lg"
+              className="w-full px-6 py-5 rounded-2xl border border-gray-100 bg-gray-50/50 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none text-xl font-medium cursor-pointer"
               value={formData.city}
               onChange={(e) => setFormData({ ...formData, city: e.target.value })}
             >
@@ -93,8 +97,8 @@ export default function WaitlistForm() {
               <option value="الزرقاء">الزرقاء</option>
               <option value="أخرى">أخرى</option>
             </select>
-            <div className="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="absolute left-6 top-1/2 -translate-y-1/2 pointer-events-none text-primary">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
               </svg>
             </div>
@@ -102,7 +106,7 @@ export default function WaitlistForm() {
         </div>
 
         {status === 'error' && (
-          <div className="p-4 bg-red-50 rounded-xl text-red-600 text-sm font-medium border border-red-100">
+          <div className="p-4 bg-red-50 rounded-2xl text-red-600 text-sm font-bold border border-red-100 text-center">
             {message}
           </div>
         )}
@@ -110,17 +114,17 @@ export default function WaitlistForm() {
         <button
           type="submit"
           disabled={status === 'loading'}
-          className="w-full py-5 bg-gold hover:bg-luxury-black text-white font-bold rounded-2xl shadow-xl shadow-gold/20 transition-all transform hover:-translate-y-1 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-lg"
+          className="w-full py-6 bg-primary hover:bg-primary-light text-white font-black rounded-2xl shadow-2xl shadow-primary/30 transition-all transform hover:-translate-y-1 active:scale-[0.97] disabled:opacity-70 disabled:cursor-not-allowed text-xl"
         >
           {status === 'loading' ? (
             <span className="flex items-center justify-center">
-              <svg className="animate-spin h-5 w-5 ml-3 text-white" viewBox="0 0 24 24">
+              <svg className="animate-spin h-6 w-6 ml-3 text-white" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
               جاري التسجيل...
             </span>
-          ) : 'سجّل اهتمامك'}
+          ) : 'اشترك الآن'}
         </button>
       </form>
     </div>
