@@ -17,13 +17,17 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "شهد — اشترِ الحين، ادفع على راحتك",
   description: "اشترِ الحين، ادفع على راحتك — 4 أقساط بدون فوائد. كن من الأوائل في الأردن.",
-  viewport: "width=device-width, initial-scale=1",
   openGraph: {
     title: "شهد — اشترِ الحين، ادفع على راحتك",
     description: "اشترِ الحين، ادفع على راحتك — 4 أقساط بدون فوائد. كن من الأوائل في الأردن.",
     locale: "ar_JO",
     type: "website",
   },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
