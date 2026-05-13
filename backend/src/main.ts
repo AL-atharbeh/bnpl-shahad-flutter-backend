@@ -57,7 +57,7 @@ async function bootstrap() {
   httpAdapter.get('/', (req, res) => {
     res.json({
       message: 'Welcome to BNPL API',
-      version: '1.0.2 (Vercel Fix)',
+      version: '1.0.3 (Limit Fix)',
       documentation: '/api/docs',
       apiPrefix: `/${apiPrefix}`,
     });
