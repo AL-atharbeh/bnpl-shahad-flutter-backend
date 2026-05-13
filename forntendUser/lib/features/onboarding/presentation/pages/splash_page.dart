@@ -132,24 +132,31 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     try {
       final bannerService = BannerService();
       final response = await bannerService.getSplashBanner();
-      if (response['success'] && response['data'] != null) {
-        final backendBody = response['data'];
-        final configData = backendBody['data'];
-        if (configData != null) {
-          final String? newUrl = configData['splashImageUrl'];
-          if (newUrl != null && newUrl.isNotEmpty) {
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('cached_splash_url', newUrl);
+      
+      // The backend returns { "success": true, "data": { "splashImageUrl": "..." } }
+      if (response['success'] == true && response['data'] != null) {
+        final configData = response['data'];
+        final String? newUrl = configData['splashImageUrl'];
+        
+        if (newUrl != null && newUrl.isNotEmpty) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('cached_splash_url', newUrl);
+          
             if (mounted && newUrl != _splashImageUrl) {
               setState(() {
                 _splashImageUrl = newUrl;
                 _isNetworkImage = newUrl.startsWith('http');
               });
+              // Precache the new image to show it smoothly if still on splash
+              if (_isNetworkImage) {
+                precacheImage(NetworkImage(newUrl), context).catchError((_) => null);
+              }
             }
-          }
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('Error fetching splash: $e');
+    }
   }
 
   Future<void> _navigateNext() async {
