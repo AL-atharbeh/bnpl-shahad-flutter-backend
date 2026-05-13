@@ -149,23 +149,23 @@ export default function BannerModal({ isOpen, onClose, onSuccess, editBanner }: 
                 <div className="relative h-48 w-full overflow-hidden rounded-lg border border-slate-700 bg-slate-800 shadow-inner">
                   <img src={formData.imageUrl} alt="Preview" className="h-full w-full object-cover" />
                   <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                     <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, imageUrl: "" })}
-                        className="rounded-full bg-red-500 p-2 text-white shadow-lg hover:bg-red-400"
-                      >
-                        حذف الصورة
-                      </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, imageUrl: "" })}
+                      className="rounded-full bg-red-500 p-2 text-white shadow-lg hover:bg-red-400"
+                    >
+                      حذف الصورة
+                    </button>
                   </div>
                 </div>
               )}
-              
+
               {!formData.imageUrl && (
                 <label className="flex h-48 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-700 bg-slate-900/40 transition-all hover:border-emerald-500/50 hover:bg-slate-900/60 group">
                   <div className="flex flex-col items-center justify-center pb-6 pt-5">
                     <div className="mb-3 rounded-full bg-slate-800 p-3 group-hover:bg-slate-700 group-hover:text-emerald-400 transition-colors">
                       <svg className="h-8 w-8 text-slate-400 group-hover:text-emerald-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
                       </svg>
                     </div>
                     <p className="mb-2 text-sm text-slate-400 text-center px-4">
@@ -180,7 +180,7 @@ export default function BannerModal({ isOpen, onClose, onSuccess, editBanner }: 
                         </>
                       )}
                     </p>
-                    <p className="text-xs text-slate-500">PNG, JPG, JPEG or WEBP (الحد الأقصى 20MB) - التحقق من الرفع</p>
+                    <p className="text-xs text-slate-500">PNG, JPG, JPEG or WEBP (الحد الأقصى 20MB) -  من الرفع</p>
                   </div>
                   <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} disabled={uploadLoading} />
                 </label>
