@@ -36,10 +36,10 @@ open ios/Runner.xcworkspace
    - اختر `Runner` target (في الـ Navigator الأيسر)
    - اذهب إلى `General` tab
    - تحقق من `Bundle Identifier`
-   - يجب أن يكون: `com.shifracode.shahad`
+   - يجب أن يكون: `com.shifracode.shahed`
 
 2. إذا كان مختلفاً:
-   - غيّره إلى `com.shifracode.shahad`
+   - غيّره إلى `com.shifracode.shahed`
    - تأكد من تطابقه مع `GoogleService-Info.plist`
 
 ### الخطوة 4: Clean و Build
@@ -71,8 +71,8 @@ open ios/Runner.xcworkspace
 1. ✅ `GoogleService-Info.plist` موجود في `ios/Runner/`
 2. ✅ الملف مضاف في Xcode project (يظهر في قائمة الملفات)
 3. ✅ الملف مضاف إلى Target "Runner" (تحقق من File Inspector)
-4. ✅ Bundle ID في Xcode = `com.shifracode.shahad`
-5. ✅ Bundle ID في `GoogleService-Info.plist` = `com.shifracode.shahad`
+4. ✅ Bundle ID في Xcode = `com.shifracode.shahed`
+5. ✅ Bundle ID في `GoogleService-Info.plist` = `com.shifracode.shahed`
 
 ### طريقة التحقق من Target:
 1. اختر `GoogleService-Info.plist` في Xcode

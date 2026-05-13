@@ -76,7 +76,7 @@ curl -X POST http://localhost:3000/api/v1/notifications/send \
 
 1. **iOS Simulator**: FCM قد لا يعمل بشكل كامل على Simulator. الأفضل اختبار على جهاز فعلي.
 
-2. **Bundle ID**: تم تحديثه من `com.example.bnpl` إلى `com.shifracode.shahad` - يجب أن يطابق `GoogleService-Info.plist`
+2. **Bundle ID**: تم تحديثه من `com.example.bnpl` إلى `com.shifracode.shahed` - يجب أن يطابق `GoogleService-Info.plist`
 
 3. **Firebase Setup**: تأكد من أن `GoogleService-Info.plist` موجود في `ios/Runner/` ومضاف إلى Xcode project
 
@@ -97,7 +97,7 @@ curl -X POST http://localhost:3000/api/v1/notifications/send \
 3. تحقق من Bundle ID في Xcode:
    - افتح `Runner` target
    - General → Bundle Identifier
-   - يجب أن يكون: `com.shifracode.shahad`
+   - يجب أن يكون: `com.shifracode.shahed`
 
 ## اختبار على جهاز فعلي
 

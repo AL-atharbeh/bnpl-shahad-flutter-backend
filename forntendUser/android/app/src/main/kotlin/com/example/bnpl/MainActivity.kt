@@ -1,4 +1,4 @@
-package com.shifracode.shahad
+package com.shifracode.shahed
 
 import io.flutter.embedding.android.FlutterActivity
 

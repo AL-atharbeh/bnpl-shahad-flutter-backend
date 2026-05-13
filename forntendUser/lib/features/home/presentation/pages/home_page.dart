@@ -3225,7 +3225,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
             filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
             child: Container(
               key: _navBarKey,
-              height: 65, // Slimmer more elegant bar
+              height: 75, // Increased from 65 for better icon presence
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(35),
@@ -3254,7 +3254,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                     ),
                     child: Container(
                       width: MediaQuery.of(context).size.width * 0.15, // Slimmer pill
-                      height: 48, // Reduced height for elegance
+                      height: 56, // Increased from 48 to accommodate larger icons
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           begin: Alignment.topLeft,
@@ -3264,7 +3264,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                             Color(0xFF059669),
                           ],
                         ),
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(28),
                         boxShadow: [
                           BoxShadow(
                             color: const Color(0xFF10B981).withValues(alpha: 0.4),
@@ -3326,15 +3326,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 scale: scale,
                 child: Icon(
                   icon,
-                  size: 24, // Optimized icon size
+                  size: 30, // Increased from 24 for better visibility
                   color: iconColor,
                 ),
               ),
-              const SizedBox(height: 3),
+              const SizedBox(height: 5),
               // Subtler dot
               Container(
-                width: 3 * proximity,
-                height: 3 * proximity,
+                width: 4 * proximity,
+                height: 4 * proximity,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: proximity * 0.8),
                   shape: BoxShape.circle,

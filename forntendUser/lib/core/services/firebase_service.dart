@@ -5,12 +5,15 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/env/env_dev.dart';
+import '../../firebase_options.dart';
 
 /// Background message handler
 /// Must be a top-level function
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   if (kDebugMode) {
     print('Handling background message: ${message.messageId}');
     print('Title: ${message.notification?.title}');
@@ -39,7 +42,9 @@ class FirebaseService {
       if (kDebugMode) {
         print('🔥 Step 1: Initializing Firebase Core...');
       }
-      await Firebase.initializeApp();
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
       if (kDebugMode) {
         print('✅ Firebase Core initialized successfully');
       }

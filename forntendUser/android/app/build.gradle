@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com.shifracode.shahad"
+    namespace = "com.shifracode.shahed"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
@@ -23,7 +23,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.shifracode.shahad"
+        applicationId = "com.shifracode.shahed"
         minSdkVersion = 21
         targetSdk = 36
 

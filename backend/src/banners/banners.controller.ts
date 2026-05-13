@@ -150,7 +150,7 @@ export class BannersController {
       cb(null, true);
     },
     limits: {
-      fileSize: 5 * 1024 * 1024, // 5MB limit
+      fileSize: 20 * 1024 * 1024, // 20MB limit
     },
   }))
   async uploadBanner(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
@@ -206,7 +206,14 @@ export class BannersController {
         };
       }
     } catch (error) {
-      throw new BadRequestException(`Failed to upload image: ${error.message}`);
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      // Handle Multer size limit error specifically
+      if (error.code === 'LIMIT_FILE_SIZE') {
+        throw new BadRequestException('حجم الملف كبير جداً. الحد الأقصى هو 20 ميجابايت.');
+      }
+      throw new BadRequestException(`فشل في رفع الصورة: ${error.message}`);
     }
   }
 

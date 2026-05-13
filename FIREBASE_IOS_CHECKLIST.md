@@ -32,7 +32,7 @@ try {
 
 ### 5. ⚠️ GoogleService-Info.plist
 - الملف موجود في `ios/Runner/` ✅
-- Bundle ID = `com.shifracode.shahad` ✅
+- Bundle ID = `com.shifracode.shahed` ✅
 - **المشكلة:** الملف غير مضاف بشكل صحيح في Xcode project ❌
 
 ## 🔧 الحل
@@ -97,5 +97,5 @@ flutter run
 
 - **iOS Simulator:** FCM قد لا يعمل بشكل كامل على Simulator
 - **جهاز فعلي:** يجب أن يعمل بشكل طبيعي
-- **Bundle ID:** يجب أن يطابق `com.shifracode.shahad` في كل مكان
+- **Bundle ID:** يجب أن يطابق `com.shifracode.shahed` في كل مكان
 
