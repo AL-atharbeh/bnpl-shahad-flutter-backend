@@ -180,7 +180,7 @@ export default function BannerModal({ isOpen, onClose, onSuccess, editBanner }: 
                         </>
                       )}
                     </p>
-                    <p className="text-xs text-slate-500">PNG, JPG, JPEG or WEBP (يفضل 1200x600)</p>
+                    <p className="text-xs text-slate-500">PNG, JPG, JPEG or WEBP (الحد الأقصى 20MB) - التحقق من الرفع</p>
                   </div>
                   <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} disabled={uploadLoading} />
                 </label>
