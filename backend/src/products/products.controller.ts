@@ -61,7 +61,6 @@ export class ProductsController {
           }
         };
       } else {
-        // Fallback to local storage
         const fs = require('fs');
         const path = require('path');
         const uploadDir = path.join(process.cwd(), 'uploads/products');
@@ -73,11 +72,13 @@ export class ProductsController {
         const filePath = path.join(uploadDir, filename);
         fs.writeFileSync(filePath, file.buffer);
         
-        // Construct absolute URL
-        const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
-        const host = req.headers['host'];
+        // Improve URL construction to handle proxies (like Nginx)
+        const protocol = req.headers['x-forwarded-proto'] || (req.headers['host']?.includes('localhost') ? req.protocol : 'https');
+        const host = req.headers['x-forwarded-host'] || req.headers['host'];
         const apiPrefix = process.env.API_PREFIX || 'api/v1';
-        const absoluteUrl = `${protocol}://${host}/${apiPrefix}/products/uploads/${filename}`;
+        
+        const cleanPrefix = apiPrefix.startsWith('/') ? apiPrefix.substring(1) : apiPrefix;
+        const absoluteUrl = `${protocol}://${host}/${cleanPrefix}/products/uploads/${filename}`;
 
         return {
           success: true,

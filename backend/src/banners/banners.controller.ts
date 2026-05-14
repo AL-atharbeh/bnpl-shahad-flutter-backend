@@ -190,11 +190,15 @@ export class BannersController {
         const filePath = path.join(uploadDir, filename);
         fs.writeFileSync(filePath, file.buffer);
         
-        // Construct absolute URL
-        const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
-        const host = req.headers['host'];
+        // Improve URL construction to handle proxies (like Nginx)
+        // Prefer https in production or when forwarded
+        const protocol = req.headers['x-forwarded-proto'] || (req.headers['host']?.includes('localhost') ? req.protocol : 'https');
+        const host = req.headers['x-forwarded-host'] || req.headers['host'];
         const apiPrefix = process.env.API_PREFIX || 'api/v1';
-        const absoluteUrl = `${protocol}://${host}/${apiPrefix}/banners/uploads/${filename}`;
+        
+        // Ensure we don't have double slashes and correct prefix handling
+        const cleanPrefix = apiPrefix.startsWith('/') ? apiPrefix.substring(1) : apiPrefix;
+        const absoluteUrl = `${protocol}://${host}/${cleanPrefix}/banners/uploads/${filename}`;
         
         return {
           success: true,
