@@ -39,8 +39,8 @@ export default function LoginPage() {
       <div className="w-full max-w-sm rounded-3xl bg-[#071f2e] border border-slate-800 px-7 py-8 shadow-[0_26px_60px_rgba(0,0,0,0.75)]">
         <div className="mb-8 space-y-2 text-center">
           <div className="inline-flex items-center gap-2 mb-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-[11px] font-semibold text-slate-950">
-              BN
+            <div className="flex h-7 w-7 items-center justify-center rounded-full overflow-hidden">
+              <img src="/images/logo.png" alt="BNPL Logo" className="h-full w-full object-contain" />
             </div>
             <span className="text-[13px] font-medium tracking-tight">
               لوحة تحكم BNPL

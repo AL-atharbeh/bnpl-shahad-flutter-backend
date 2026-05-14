@@ -33,8 +33,8 @@ export default function Sidebar({ onLogout }: { onLogout?: () => void }) {
         <div className={`flex h-full w-64 flex-col bg-[#011f18] shadow-xl ${language === "ar" ? "border-l" : "border-r"} border-emerald-900/30`}>
             <div className="flex h-20 items-center justify-center border-b border-emerald-900/30 px-6">
                 <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-                        <Store className="h-5 w-5 text-[#01160e]" />
+                    <div className="h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center">
+                        <img src="/images/logo.png" alt="Logo" className="h-full w-full object-contain" />
                     </div>
                     <span className="text-xl font-bold text-white tracking-tight">{t("partnersPortal")}</span>
                 </div>

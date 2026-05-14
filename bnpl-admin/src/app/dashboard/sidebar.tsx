@@ -28,8 +28,8 @@ export function Sidebar() {
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-slate-800 bg-[#021f2a] px-4 py-4">
       <div className="flex items-center gap-2 px-2 pb-6">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500 text-slate-950 font-semibold shadow-sm shadow-emerald-700/40">
-          BN
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl overflow-hidden shadow-sm shadow-emerald-700/40">
+          <img src="/images/logo.png" alt="BNPL Logo" className="h-full w-full object-contain" />
         </div>
         <div>
           <p className="text-sm font-semibold text-slate-50">لوحة تحكم BNPL</p>
