@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
 import '../config/env/env_dev.dart';
+import '../main.dart';
+import '../routing/app_router.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -169,6 +172,11 @@ class ApiService {
         };
       }
     } else {
+      // Check for 401 Unauthorized
+      if (response.statusCode == 401) {
+        _handleSessionExpired(response);
+      }
+
       try {
         final errorData = jsonDecode(response.body);
         // استخدام message إذا كان موجوداً، وإلا error، وإلا رسالة افتراضية
@@ -212,5 +220,56 @@ class ApiService {
   // Remove authentication token from headers
   void clearAuthToken() {
     _headers.remove('Authorization');
+  }
+
+  // Handle Session Expiration
+  void _handleSessionExpired(http.Response response) async {
+    final urlString = response.request?.url.toString() ?? '';
+    
+    // Don't trigger logout if the 401 came from an authentication endpoint
+    if (urlString.contains('/auth/')) {
+      return;
+    }
+
+    if (EnvDev.enableLogging) {
+      print('⚠️ Session Expired (401). Logging out user...');
+    }
+    
+    bool previouslyLoggedIn = false;
+    // Clear tokens
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      previouslyLoggedIn = prefs.getBool('is_logged_in') ?? false;
+      
+      await prefs.setBool('is_logged_in', false);
+      await prefs.remove('user_token');
+      await prefs.remove('user_id');
+      clearAuthToken();
+    } catch (e) {
+      if (EnvDev.enableLogging) print('Error clearing session: $e');
+    }
+
+    // Only show "Session Expired" snackbar and redirect if they were actually logged in
+    if (previouslyLoggedIn) {
+      final context = navigatorKey.currentContext;
+      if (context != null) {
+        // Need to schedule the navigation and snackbar to avoid build-phase conflicts
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى', textDirection: TextDirection.rtl),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 4),
+            ),
+          );
+          
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            AppRouter.phoneInput,
+            (route) => false,
+          );
+        });
+      }
+    }
   }
 }
