@@ -33,10 +33,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
     _loadNotifications();
   }
 
-  Future<void> _loadNotifications() async {
-    setState(() => _isLoading = true);
+  Future<void> _loadNotifications({bool force = false}) async {
+    if (!force) {
+      setState(() => _isLoading = true);
+    }
     try {
-      final notifications = await _notificationService.getInAppNotifications();
+      final notifications = await _notificationService.getInAppNotifications(forceRefresh: force);
       setState(() {
         _all = notifications;
         _isLoading = false;
@@ -79,9 +81,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        leading: IconButton(
-          icon: Icon(isRTL ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
-              color: const Color(0xFF111827)),
+        automaticallyImplyLeading: false,
+        leading: isRTL ? null : IconButton(
+          icon: const Icon(Icons.arrow_back_ios, textDirection: TextDirection.ltr, color: Color(0xFF111827)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -92,6 +94,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
           ),
         ),
         actions: [
+          if (isRTL)
+            IconButton(
+              icon: const Icon(Icons.arrow_back_ios, textDirection: TextDirection.ltr, color: Color(0xFF111827)),
+              onPressed: () => Navigator.pop(context),
+            ),
           IconButton(
             tooltip: l10n.markAllAsRead,
             icon: const Icon(Icons.mark_email_read_outlined, color: Color(0xFF111827)),
@@ -118,7 +125,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 : data.isEmpty
                     ? const _EmptyState()
                     : RefreshIndicator(
-                        onRefresh: _loadNotifications,
+                        onRefresh: () => _loadNotifications(force: true),
                         child: ListView.builder(
                           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                           itemCount: grouped.length,

@@ -82,18 +82,18 @@ class _ContactUsPageState extends State<ContactUsPage> {
       } else {
         // استخدام القيم الافتراضية إذا فشل جلب الإعدادات
         setState(() {
-          _contactEmail = 'athatbehahmed99@gmail.com';
-          _contactPhone = '+962792380449';
-          _whatsappNumber = '962792380449';
+          _contactEmail = 'support@shahedapp.com';
+          _contactPhone = '+962776719225';
+          _whatsappNumber = '962776719225';
           _isLoading = false;
         });
       }
     } catch (e) {
       // استخدام القيم الافتراضية في حالة الخطأ
       setState(() {
-        _contactEmail = 'athatbehahmed99@gmail.com';
-        _contactPhone = '+962792380449';
-        _whatsappNumber = '962792380449';
+        _contactEmail = 'support@shahedapp.com';
+        _contactPhone = '+962776719225';
+        _whatsappNumber = '962776719225';
         _isLoading = false;
       });
     }
@@ -140,10 +140,17 @@ class _ContactUsPageState extends State<ContactUsPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(isRTL ? Icons.arrow_forward_ios : Icons.arrow_back_ios, color: const Color(0xFF111827)),
+        automaticallyImplyLeading: false,
+        leading: isRTL ? null : IconButton(
+          icon: const Icon(Icons.arrow_back_ios, textDirection: TextDirection.ltr, color: Color(0xFF111827)),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: isRTL ? [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios, textDirection: TextDirection.ltr, color: Color(0xFF111827)),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ] : null,
         centerTitle: true,
         title: Text(
           l10n.contactUs,
@@ -158,9 +165,9 @@ class _ContactUsPageState extends State<ContactUsPage> {
               children: [
           // بطاقة معلومات مختصرة + أزرار سريعة
           _ContactHeader(
-            contactPhone: _contactPhone ?? '+962792380449',
-            contactEmail: _contactEmail ?? 'athatbehahmed99@gmail.com',
-            whatsappNumber: _whatsappNumber ?? '962792380449',
+            contactPhone: _contactPhone ?? '+962776719225',
+            contactEmail: _contactEmail ?? 'support@shahedapp.com',
+            whatsappNumber: _whatsappNumber ?? '962776719225',
             onCall: _callHotline,
             onEmail: _sendEmail,
             onWhatsApp: _openWhatsApp,
@@ -343,7 +350,7 @@ class _ContactUsPageState extends State<ContactUsPage> {
 
   Future<void> _openWhatsApp() async {
     final l10n = AppLocalizations.of(context)!;
-    final phone = _whatsappNumber ?? '962792380449';
+    final phone = _whatsappNumber ?? '962776719225';
     final msg = Uri.encodeComponent('مرحبًا، أحتاج مساعدة.');
     final uri = Uri.parse('https://wa.me/$phone?text=$msg');
     if (await canLaunchUrl(uri)) {
@@ -355,7 +362,7 @@ class _ContactUsPageState extends State<ContactUsPage> {
 
   Future<void> _callHotline() async {
     final l10n = AppLocalizations.of(context)!;
-    final phone = _contactPhone ?? '+962792380449';
+    final phone = _contactPhone ?? '+962776719225';
     final uri = Uri.parse('tel:$phone');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
@@ -366,7 +373,7 @@ class _ContactUsPageState extends State<ContactUsPage> {
 
   Future<void> _sendEmail() async {
     final l10n = AppLocalizations.of(context)!;
-    final email = _contactEmail ?? 'athatbehahmed99@gmail.com';
+    final email = _contactEmail ?? 'support@shahedapp.com';
     final uri = Uri.parse('mailto:$email?subject=Support&body=');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);

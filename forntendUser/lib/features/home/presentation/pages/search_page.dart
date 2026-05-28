@@ -111,19 +111,50 @@ class _SearchPageState extends State<SearchPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(_isRTL ? Icons.arrow_forward : Icons.arrow_back, color: Colors.black),
+          icon: Icon(_isRTL ? Icons.arrow_forward_ios_rounded : Icons.arrow_back_ios_new_rounded, color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: TextField(
-          controller: _searchController,
-          focusNode: _focusNode,
-          onChanged: _onSearchChanged,
-          decoration: InputDecoration(
-            hintText: l10n.searchProductOrBrand,
-            border: InputBorder.none,
-            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 16),
+        title: Container(
+          height: 44,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFF1F5F9), width: 1),
           ),
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.search_rounded,
+                color: Color(0xFF94A3B8),
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  focusNode: _focusNode,
+                  onChanged: _onSearchChanged,
+                  decoration: InputDecoration(
+                    hintText: l10n.searchProductOrBrand,
+                    border: InputBorder.none,
+                    hintStyle: const TextStyle(
+                      color: Color(0xFF94A3B8),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           if (_searchController.text.isNotEmpty)

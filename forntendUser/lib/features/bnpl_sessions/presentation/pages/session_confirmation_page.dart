@@ -241,7 +241,7 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
 
   Future<bool> _verifyWithOTP() async {
     final prefs = await SharedPreferences.getInstance();
-    final phoneNumber = prefs.getString('user_phone') ?? '+962792380449';
+    final phoneNumber = prefs.getString('user_phone') ?? '+962 7 7671 9225';
 
     final result = await showDialog<bool>(
       context: context,

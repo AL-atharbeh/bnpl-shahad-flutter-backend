@@ -8,9 +8,17 @@ class InAppNotificationService {
   InAppNotificationService._internal();
 
   final ApiService _apiService = ApiService();
+  
+  // Cache for notifications
+  List<InAppNotification> _cachedNotifications = [];
+  bool _isCacheLoaded = false;
 
   /// Get all in-app notifications for current user
-  Future<List<InAppNotification>> getInAppNotifications() async {
+  Future<List<InAppNotification>> getInAppNotifications({bool forceRefresh = false}) async {
+    if (!forceRefresh && _isCacheLoaded) {
+      return _cachedNotifications;
+    }
+    
     try {
       final response = await _apiService.get(ApiPaths.inAppNotifications);
       
@@ -18,16 +26,19 @@ class InAppNotificationService {
         final data = response['data'] as Map<String, dynamic>;
         final notificationsList = data['data'] as List<dynamic>? ?? data as List<dynamic>;
         
-        return notificationsList
+        _cachedNotifications = notificationsList
             .map((item) => InAppNotification.fromJson(item as Map<String, dynamic>))
             .toList();
+        _isCacheLoaded = true;
+        
+        return _cachedNotifications;
       } else {
         print('❌ Failed to get in-app notifications: ${response['error']}');
-        return [];
+        return _cachedNotifications; // Return cache if available even on error
       }
     } catch (e) {
       print('❌ Error getting in-app notifications: $e');
-      return [];
+      return _cachedNotifications;
     }
   }
 

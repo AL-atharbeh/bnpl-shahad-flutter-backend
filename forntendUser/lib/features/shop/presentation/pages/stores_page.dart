@@ -216,6 +216,7 @@ class _CategoryBrowsePageState extends State<CategoryBrowsePage> {
         elevation: 0,
         backgroundColor: const Color(0xFFF6F7FB),
         centerTitle: true,
+        automaticallyImplyLeading: false,
         title: Text(
           widget.title,
           style: const TextStyle(
@@ -224,14 +225,16 @@ class _CategoryBrowsePageState extends State<CategoryBrowsePage> {
             fontSize: 20,
           ),
         ),
-        leading: IconButton(
-          icon: Icon(
-            isRTL ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
-            color: const Color(0xFF0F172A),
-            size: 20,
-          ),
+        leading: isRTL ? null : IconButton(
+          icon: const Icon(Icons.arrow_back_ios, textDirection: TextDirection.ltr, color: Color(0xFF0F172A), size: 20),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: isRTL ? [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios, textDirection: TextDirection.ltr, color: Color(0xFF0F172A), size: 20),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ] : null,
       ),
       body: Column(
         children: [
@@ -246,29 +249,41 @@ class _CategoryBrowsePageState extends State<CategoryBrowsePage> {
                 ),
                 Expanded(
                   child: Container(
-                    height: 48,
+                    height: 52,
+                    padding: const EdgeInsets.only(left: 16, right: 8),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFF1F5F9), width: 1),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [
+                        const Icon(Icons.search_rounded, color: Color(0xFF00A66A), size: 24),
                         const SizedBox(width: 12),
-                        const Icon(Icons.search, color: Color(0xFF94A3B8), size: 20),
-                        const SizedBox(width: 8),
                         Expanded(
                           child: TextField(
                             controller: _search,
                             style: const TextStyle(color: Color(0xFF0F172A)),
                             decoration: InputDecoration(
                               hintText: l10n.whatAreYouLookingFor,
-                              hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+                              hintStyle: const TextStyle(
+                                color: Color(0xFF94A3B8),
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                              ),
                               border: InputBorder.none,
                             ),
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.arrow_forward, color: Color(0xFF0F172A)),
+                          icon: const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF0F172A), size: 20),
                           onPressed: () {},
                         ),
                       ],

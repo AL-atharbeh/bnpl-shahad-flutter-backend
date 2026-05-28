@@ -45,9 +45,14 @@ class _AllStoresPageState extends State<AllStoresPage> {
   final StoreService _storeService = StoreService();
   final CategoryService _categoryService = CategoryService();
   
-  List<StoreItem> _stores = [];
-  List<Map<String, dynamic>> _categories = [];
-  bool _isLoading = true;
+  // ذاكرة مؤقتة استاتيكية لتحميل الصفحة فورياً
+  static List<StoreItem> _cachedStores = [];
+  static List<Map<String, dynamic>> _cachedCategories = [];
+  static bool _hasLoadedOnce = false;
+
+  List<StoreItem> _stores = _cachedStores;
+  List<Map<String, dynamic>> _categories = _cachedCategories;
+  bool _isLoading = !_hasLoadedOnce;
   String _q = '';
   String _filter = '';
   int? _selectedCategoryId;
@@ -82,14 +87,16 @@ class _AllStoresPageState extends State<AllStoresPage> {
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+    if (!_hasLoadedOnce) {
+      setState(() => _isLoading = true);
+    }
     
     try {
       // Load categories
       await _loadCategories();
       
       // Load stores
-      await _loadStores();
+      await _loadStores(categoryId: _selectedCategoryId, searchQuery: _q);
     } catch (e) {
       if (EnvDev.enableLogging) {
         print('❌ Error loading data: $e');
@@ -112,6 +119,7 @@ class _AllStoresPageState extends State<AllStoresPage> {
         if (categoriesData is List) {
           setState(() {
             _categories = categoriesData.cast<Map<String, dynamic>>();
+            _cachedCategories = _categories;
           });
           
           if (EnvDev.enableLogging) {
@@ -159,23 +167,29 @@ class _AllStoresPageState extends State<AllStoresPage> {
           final languageService = Provider.of<LanguageService>(context, listen: false);
           final isArabic = languageService.isArabic;
           
+          final loadedStores = storesData.map<StoreItem>((store) {
+            final category = store['categoryRelation'] ?? {};
+            final categoryName = category['name'] ?? category['nameAr'] ?? store['category'] ?? '';
+            final categoryNameAr = category['nameAr'] ?? category['name'] ?? '';
+            
+            return StoreItem(
+              id: store['id'] ?? 0,
+              name: store['name'] ?? '',
+              nameAr: store['nameAr'] ?? store['name'] ?? '',
+              logo: store['logoUrl'] ?? 'assets/images/zara.jpg',
+              category: isArabic 
+                  ? (categoryNameAr.isNotEmpty ? categoryNameAr : categoryName)
+                  : (categoryName.isNotEmpty ? categoryName : 'General'),
+              categoryId: store['categoryId'] ?? category['id'],
+            );
+          }).toList();
+
           setState(() {
-            _stores = storesData.map<StoreItem>((store) {
-              final category = store['categoryRelation'] ?? {};
-              final categoryName = category['name'] ?? category['nameAr'] ?? store['category'] ?? '';
-              final categoryNameAr = category['nameAr'] ?? category['name'] ?? '';
-              
-              return StoreItem(
-                id: store['id'] ?? 0,
-                name: store['name'] ?? '',
-                nameAr: store['nameAr'] ?? store['name'] ?? '',
-                logo: store['logoUrl'] ?? 'assets/images/zara.jpg',
-                category: isArabic 
-                    ? (categoryNameAr.isNotEmpty ? categoryNameAr : categoryName)
-                    : (categoryName.isNotEmpty ? categoryName : 'General'),
-                categoryId: store['categoryId'] ?? category['id'],
-              );
-            }).toList();
+            _stores = loadedStores;
+            if (categoryId == null && (searchQuery == null || searchQuery.isEmpty)) {
+              _cachedStores = loadedStores;
+              _hasLoadedOnce = true;
+            }
           });
           
           if (EnvDev.enableLogging) {
@@ -267,7 +281,7 @@ class _AllStoresPageState extends State<AllStoresPage> {
             title: Text(l10n.allStores,
                 style: const TextStyle(fontSize: 22,fontWeight: FontWeight.w800,color: _C.text)),
             leading: IconButton(
-              icon: Icon(_isRTL ? Icons.arrow_forward : Icons.arrow_back, color: _C.text),
+              icon: const Icon(Icons.chevron_right_rounded, color: _C.text, size: 30),
               onPressed: () => Navigator.pop(context),
             ),
             bottom: PreferredSize(
@@ -349,40 +363,34 @@ class _AllStoresPageState extends State<AllStoresPage> {
                           ),
                         ),
                       )
-                    : SliverLayoutBuilder(
-                        builder: (context, constraints) {
-                          final w = constraints.crossAxisExtent;
-                          final cols = w > 900 ? 6 : w > 700 ? 5 : w > 500 ? 4 : 3;
-
-                          return SliverGrid(
-                            delegate: SliverChildBuilderDelegate(
-                              (context, i){
-                                final s = data[i];
-                                return _LogoOnly(
-                                  name: isArabic ? s.nameAr : s.name,
-                                  logo: s.logo,
+                    : SliverGrid(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, i){
+                            final s = data[i];
+                            return _StoreCard(
+                              name: isArabic ? s.nameAr : s.name,
+                              logo: s.logo,
+                              category: s.category,
+                              storeId: s.id,
+                              onTap: (){
+                                AppRouter.navigateToStoreDetails(
+                                  context,
                                   storeId: s.id,
-                                  onTap: (){
-                                    AppRouter.navigateToStoreDetails(
-                                      context,
-                                      storeId: s.id,
-                                      storeName: isArabic ? s.nameAr : s.name,
-                                      storeLogo: s.logo,
-                                      storeBanner: s.logo,
-                                    );
-                                  },
+                                  storeName: isArabic ? s.nameAr : s.name,
+                                  storeLogo: s.logo,
+                                  storeBanner: s.logo,
                                 );
                               },
-                              childCount: data.length,
-                            ),
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: cols,
-                              mainAxisSpacing: 6,
-                              crossAxisSpacing: 6,
-                              childAspectRatio: .82,
-                            ),
-                          );
-                        },
+                            );
+                          },
+                          childCount: data.length,
+                        ),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3, // عرض 3 متاجر في الصف الدائري الأنيق مثل الانستقرام ستوري
+                          mainAxisSpacing: 20,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 0.75, // نسبة العرض للارتفاع للدائرة والنصوص أدناها
+                        ),
                       ),
           ),
         ],
@@ -391,7 +399,7 @@ class _AllStoresPageState extends State<AllStoresPage> {
   }
 }
 
-/// شريط بحث زجاجي بسيط
+/// شريط بحث بتصميم ناعم ونظيف
 class _SearchBar extends StatelessWidget {
   final String hint;
   final ValueChanged<String>? onChanged;
@@ -399,47 +407,70 @@ class _SearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Container(
-          height: 48,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(.9),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: _C.stroke),
+    return Container(
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          child: Row(
-            children: [
-              const SizedBox(width: 12),
-              const Icon(Icons.search_rounded, color: _C.sub),
-              const SizedBox(width: 6),
-              Expanded(
-                child: TextField(
-                  onChanged: onChanged,
-                  decoration: InputDecoration(
-                    hintText: hint,
-                    hintStyle: const TextStyle(color: _C.sub, fontSize: 14),
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
-            ],
+        ],
+        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+      ),
+      child: TextField(
+        onChanged: onChanged,
+        style: const TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.w600),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.white,
+          hintText: hint,
+          hintStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF94A3B8),
           ),
+          prefixIcon: const Icon(
+            Icons.search_rounded,
+            color: _C.primary,
+            size: 22,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 14),
         ),
       ),
     );
   }
 }
 
-/// عنصر شبكة "شعار فقط" بدون أي إطار
-class _LogoOnly extends StatelessWidget {
+/// كرت المتجر بتصميم دائري فاخر ومبتكر كلياً
+class _StoreCard extends StatelessWidget {
   final String name;
   final String logo;
+  final String category;
   final int? storeId;
   final VoidCallback? onTap;
-  const _LogoOnly({required this.name,required this.logo,this.storeId,this.onTap});
+  const _StoreCard({
+    required this.name,
+    required this.logo,
+    required this.category,
+    this.storeId,
+    this.onTap,
+  });
 
   Widget _buildStoreImage(String imageUrl) {
     return ImageHelper.buildImage(
@@ -447,42 +478,79 @@ class _LogoOnly extends StatelessWidget {
       fit: BoxFit.cover,
       errorWidget: Container(
         color: const Color(0xFFF1F5F9),
-        child: const Icon(Icons.store_rounded, color: _C.text, size: 30),
+        child: const Icon(Icons.store_rounded, color: Color(0xFF94A3B8), size: 24),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(14),
+    return GestureDetector(
       onTap: onTap,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // دائرة الشعار مع ظل خفييف جدًا
+          // 1. دائرة المتجر الفاخرة المزدوجة الحدود (Luxury Double Ring)
           Container(
-            width: 74, height: 74,
+            width: 80,
+            height: 80,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              boxShadow: const [
-                BoxShadow(color: Color(0x14000000), blurRadius: 10, offset: Offset(0,6)),
+              color: Colors.white,
+              border: Border.all(
+                color: const Color(0xFF00A66A).withOpacity(0.15), // حلقة خضراء ناعمة جداً
+                width: 2.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
               ],
             ),
-            child: ClipOval(
-              child: _buildStoreImage(logo),
+            child: Padding(
+              padding: const EdgeInsets.all(2), // مباعدة للحلقة الداخلية
+              child: Container(
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                ),
+                child: ClipOval(
+                  child: _buildStoreImage(logo),
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 8),
-          SizedBox(
-            width: 90,
+          
+          // 2. اسم المتجر بخط داكن عريض وممركز
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
               name,
-              maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 12.5, fontWeight: FontWeight.w700, color: _C.text,
-                height: 1.1,
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF0F172A),
               ),
+            ),
+          ),
+          const SizedBox(height: 2),
+          
+          // 3. الفئة بخط ناعم جداً ولون أخضر هادئ
+          Text(
+            category,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF00A66A),
             ),
           ),
         ],

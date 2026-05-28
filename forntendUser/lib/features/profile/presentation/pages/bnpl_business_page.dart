@@ -41,10 +41,17 @@ class _BNPLBusinessPageState extends State<BNPLBusinessPage> {
         title: Text(l10n.bnplForBusiness),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(isRTL ? Icons.arrow_forward_ios : Icons.arrow_back_ios),
+        automaticallyImplyLeading: false,
+        leading: isRTL ? null : IconButton(
+          icon: const Icon(Icons.arrow_back_ios, textDirection: TextDirection.ltr),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: isRTL ? [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios, textDirection: TextDirection.ltr),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ] : null,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -285,8 +292,8 @@ class _BNPLBusinessPageState extends State<BNPLBusinessPage> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  _buildContactInfo('البريد الإلكتروني', 'business@bnpl.com'),
-                  _buildContactInfo('الهاتف', '+962 79 123 4567'),
+                  _buildContactInfo('البريد الإلكتروني', 'support@shahedapp.com'),
+                  _buildContactInfo('الهاتف', '+962 7 7671 9225'),
                   _buildContactInfo('ساعات العمل', 'الأحد - الخميس: 9:00 ص - 6:00 م'),
                 ],
               ),
@@ -408,6 +415,7 @@ class _BNPLBusinessPageState extends State<BNPLBusinessPage> {
           ),
           Text(
             value,
+            textDirection: TextDirection.ltr,
             style: TextStyle(
               color: Colors.grey[600],
             ),

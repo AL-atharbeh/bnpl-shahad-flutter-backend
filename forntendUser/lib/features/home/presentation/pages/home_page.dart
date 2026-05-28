@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
 import '../../../../utils/image_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -965,18 +966,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   }
 
   Widget _getCurrentPageContent() {
-    switch (_currentNavIndex) {
-      case 0:
-        return _buildHomePage();
-      case 1:
-        return const ShoppingPage();
-      case 2:
-        return const PaymentsPage();
-      case 3:
-        return _buildProfilePage();
-      default:
-        return _buildHomePage();
-    }
+    return IndexedStack(
+      index: _currentNavIndex,
+      children: [
+        _buildHomePage(),
+        const ShoppingPage(),
+        const PaymentsPage(),
+        _buildProfilePage(),
+      ],
+    );
   }
 
 
@@ -1252,96 +1250,38 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 20),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.25),
-                    Colors.white.withValues(alpha: 0.15),
-                  ],
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFF1F5F9), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.search_rounded,
+              color: AppColors.primary,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                l10n.searchPlaceholder,
+                style: GoogleFonts.tajawal(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF94A3B8),
                 ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                    spreadRadius: 0,
-                  ),
-                  BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    blurRadius: 0,
-                    offset: const Offset(0, 1),
-                    spreadRadius: 0,
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.white.withValues(alpha: 0.4),
-                          Colors.white.withValues(alpha: 0.2),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        width: 1,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.search_rounded,
-                      color: Color(0xFF64748B),
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          l10n.searchPlaceholder,
-                          style: GoogleFonts.mada(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1E293B),
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          l10n.searchSubtitle,
-                          style: GoogleFonts.mada(
-                            fontSize: 13,
-                            color: const Color(0xFF94A3B8),
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -1369,38 +1309,66 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               children: [
                 Text(
                   l10n.pendingPayments,
-                  style: AppTextStyles.changaH5,
+                  style: GoogleFonts.tajawal(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1E293B),
+                  ),
                 ),
-                TextButton(
-                  onPressed: () {
-                    // Navigate to payments page
-                    Navigator.of(context).pushNamed('/payments');
-                  },
-                  child: Text(
-                    l10n.viewAllPayments,
-                    style: GoogleFonts.mada(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pushNamed('/payments'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l10n.viewAllPayments,
+                          style: GoogleFonts.tajawal(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 11,
+                          color: AppColors.primary,
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           _isLoadingPendingPayments
-              ? const SizedBox(
-                  height: 100,
-                  child: Center(child: CircularProgressIndicator()),
+              ? SizedBox(
+                  height: 110,
+                  child: Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: AppColors.primary.withOpacity(0.5),
+                      ),
+                    ),
+                  ),
                 )
               : _pendingPayments.isEmpty
                   ? SizedBox(
-                      height: 100,
+                      height: 80,
                       child: Center(
                         child: Text(
                           l10n.noPaymentsFound,
-                          style: GoogleFonts.mada(
+                          style: GoogleFonts.tajawal(
                             fontSize: 14,
                             color: const Color(0xFF94A3B8),
                           ),
@@ -1408,12 +1376,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                       ),
                     )
                   : SizedBox(
-                      height: 100,
+                      height: 110,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        // Reverse should be false for standard RTL handling in horizontal ListView
-                        reverse: false, 
+                        reverse: false,
                         itemCount: _pendingPayments.length,
                         itemBuilder: (context, index) {
                           final payment = _pendingPayments[index];
@@ -1427,8 +1394,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   }
 
   Widget _buildPaymentCard(Map<String, dynamic> payment, bool isRTL) {
-    final l10n = AppLocalizations.of(context)!;
-    
     // Extract data from payment (from database)
     final storeName = isRTL 
         ? (payment['storeNameAr']?.toString() ?? payment['merchantName']?.toString() ?? payment['storeName']?.toString() ?? payment['store']?['nameAr']?.toString() ?? payment['store']?['name']?.toString() ?? 'متجر')
@@ -1442,12 +1407,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     
     // Calculate days left
     final dueDateStr = payment['dueDate']?.toString();
+    int daysLeft = 30;
     String daysLeftText = '';
+    bool isOverdue = false;
     if (dueDateStr != null) {
       try {
         final dueDate = DateTime.parse(dueDateStr);
         final now = DateTime.now();
         final difference = dueDate.difference(now).inDays;
+        daysLeft = difference;
+        isOverdue = difference < 0;
         
         if (difference < 0) {
           daysLeftText = isRTL ? 'متأخر' : 'Overdue';
@@ -1456,7 +1425,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         } else if (difference == 1) {
           daysLeftText = isRTL ? 'غداً' : 'Tomorrow';
         } else {
-          daysLeftText = isRTL ? '$difference أيام' : '$difference days';
+          daysLeftText = isRTL ? '$difference يوم' : '$difference days';
         }
       } catch (e) {
         daysLeftText = isRTL ? 'تاريخ غير صحيح' : 'Invalid date';
@@ -1465,290 +1434,620 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     
     final installmentNumber = payment['installmentNumber'] as int? ?? 1;
     final installmentsCount = payment['installmentsCount'] as int? ?? 1;
-    final installmentText = isRTL 
-        ? 'القسط $installmentNumber من $installmentsCount'
-        : 'Payment $installmentNumber of $installmentsCount';
+    
+    // Progress calculation
+    final progress = installmentsCount > 0 ? installmentNumber / installmentsCount : 0.0;
+    
+    // Accent color based on urgency
+    final accentColor = isOverdue 
+        ? const Color(0xFFEF4444) 
+        : (daysLeft <= 3 ? const Color(0xFFF59E0B) : AppColors.primary);
     
     return GestureDetector(
-      onTap: () {
-        // Navigate to payments page instead of showing modal
-        Navigator.of(context).pushNamed('/payments');
-      },
+      onTap: () => Navigator.of(context).pushNamed('/payments'),
       child: Container(
-        width: 320,
-        height: 80,
-        margin: const EdgeInsetsDirectional.only(end: 16),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.3),
-                    Colors.white.withValues(alpha: 0.2),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.4),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 15,
-                    offset: const Offset(0, 6),
-                    spreadRadius: 0,
-                  ),
-                  BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.3),
-                    blurRadius: 0,
-                    offset: const Offset(0, 1),
-                    spreadRadius: 0,
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Row(
-                  children: [
-                    // Left Side - Icon
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.white.withValues(alpha: 0.5),
-                            Colors.white.withValues(alpha: 0.3),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.6),
-                          width: 1,
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.store_rounded,
-                        color: AppColors.primary,
-                        size: 24,
-                      ),
-                    ),
-                    
-                    const SizedBox(width: 16),
-                    
-                    // Middle Section - Amount and Details
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Amount
-                          Text(
-                            amountText,
-                            style: AppTextStyles.changaH5,
-                          ),
-                          
-                          const SizedBox(height: 4),
-                          
-                          // Due date and store name
-                          Text(
-                            isRTL 
-                              ? '$daysLeftText · $storeName · $installmentText'
-                              : '$daysLeftText · $storeName · $installmentText',
-                            style: GoogleFonts.mada(
-                              fontSize: 13,
-                              color: const Color(0xFF64748B),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    
-                    // End Side - Arrow
-                    Icon(
-                      isRTL ? Icons.chevron_left : Icons.chevron_right,
-                      color: const Color(0xFF1E293B),
-                      size: 20,
-                    ),
-                  ],
-                ),
-              ),
-            ),
+        width: 280,
+        margin: const EdgeInsetsDirectional.only(end: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: accentColor.withOpacity(0.12),
+            width: 1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Top Row: Store name + Amount
+            Row(
+              children: [
+                // Store icon
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: accentColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.store_rounded,
+                    color: accentColor,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // Store name
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        storeName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.tajawal(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF334155),
+                        ),
+                      ),
+                      Text(
+                        isRTL ? 'القسط $installmentNumber من $installmentsCount' : 'Payment $installmentNumber of $installmentsCount',
+                        style: GoogleFonts.tajawal(
+                          fontSize: 11,
+                          color: const Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Amount
+                Text(
+                  amountText,
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // Bottom: Progress bar + Days left
+            Row(
+              children: [
+                // Progress bar
+                Expanded(
+                  child: Container(
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: accentColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: FractionallySizedBox(
+                      alignment: isRTL ? Alignment.centerRight : Alignment.centerLeft,
+                      widthFactor: progress.clamp(0.0, 1.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              accentColor.withOpacity(0.6),
+                              accentColor,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // Days left badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: accentColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    daysLeftText,
+                    style: GoogleFonts.tajawal(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: accentColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildModernBanner() {
-    final l10n = AppLocalizations.of(context)!;
+    final languageService = Provider.of<LanguageService>(context);
+    final isArabic = languageService.isArabic;
     
     // Use database banners if available, otherwise use fallback
     List<Map<String, dynamic>> allBanners = _banners.isNotEmpty 
         ? _banners 
         : _fallbackBannerImages.map((img) => {'imageUrl': img}).toList();
-        
-    // Use all available banners from database or fallback assets
-    final bannersToShow = allBanners;
     
+    final bannersToShow = allBanners;
     final bannersCount = bannersToShow.length;
     
     if (_isLoadingBanners && _banners.isEmpty) {
-      // Show loading placeholder
-      return Container(
-        margin: const EdgeInsets.only(top: 24),
-        height: 180,
-        child: const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return _buildBannerShimmer();
     }
     
     if (bannersCount == 0) {
-      // No banners available
       return const SizedBox.shrink();
     }
     
     return Container(
-      margin: const EdgeInsets.only(top: 24),
-      height: 180,
-      child: Stack(
+      margin: const EdgeInsets.only(top: 20),
+      child: Column(
         children: [
-          // Image Carousel
-          GestureDetector(
-            onTap: () {
-              if (_banners.isNotEmpty && _currentBannerIndex < _banners.length) {
-                _handleBannerTap(_banners[_currentBannerIndex]);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(l10n.specialOffer),
-                    duration: const Duration(seconds: 2),
-                    backgroundColor: AppColors.primary,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                );
-              }
-            },
+          // ── Main Carousel ──
+          SizedBox(
+            height: 200,
             child: PageView.builder(
               controller: _bannerPageController,
+              padEnds: true,
               onPageChanged: (index) {
-                setState(() {
-                  _currentBannerIndex = index;
-                });
+                setState(() => _currentBannerIndex = index);
+                // Reset auto-scroll timer on manual swipe
+                _bannerAnimationController.reset();
+                _bannerAnimationController.forward();
               },
               itemCount: bannersCount,
               itemBuilder: (context, index) {
                 final banner = bannersToShow[index];
-                final imageUrl = banner['imageUrl'] ?? '';
-                
-                return Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(0),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(0),
-                    child: ImageHelper.buildImage(
-                      imageUrl: imageUrl,
-                      fit: BoxFit.cover,
-                      placeholder: Container(
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              AppColors.primary,
-                              AppColors.primary,
-                            ],
-                          ),
-                        ),
-                        child: const Center(
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      errorWidget: _buildFallbackBanner(index),
-                    ),
-                  ),
-                );
+                return _buildBannerCard(banner, index, bannersCount);
               },
             ),
           ),
           
-          // Page Indicator
-          Positioned(
-            bottom: 16,
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                bannersCount,
-                (index) => Container(
-                  width: 8,
-                  height: 8,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _currentBannerIndex == index
-                        ? Colors.white
-                        : Colors.white.withValues(alpha: 0.5),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          const SizedBox(height: 14),
+          
+          // ── Indicator Row ──
+          _buildBannerIndicator(bannersCount),
         ],
       ),
     );
   }
   
-  Widget _buildFallbackBanner(int index) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary,
-            AppColors.primary,
-          ],
+  /// A single banner card with glassmorphism overlay and parallax image
+  Widget _buildBannerCard(Map<String, dynamic> banner, int index, int totalCount) {
+    final languageService = Provider.of<LanguageService>(context, listen: false);
+    final isArabic = languageService.isArabic;
+    final imageUrl = banner['imageUrl'] ?? '';
+    final title = isArabic 
+        ? (banner['title'] ?? banner['titleEn'] ?? '') 
+        : (banner['titleEn'] ?? banner['title'] ?? '');
+    final description = isArabic 
+        ? (banner['description'] ?? banner['descriptionEn'] ?? '') 
+        : (banner['descriptionEn'] ?? banner['description'] ?? '');
+    
+    return GestureDetector(
+      onTap: () {
+        if (_banners.isNotEmpty && index < _banners.length) {
+          _handleBannerTap(_banners[index]);
+        }
+      },
+      child: AnimatedBuilder(
+        animation: _bannerPageController,
+        builder: (context, child) {
+          double pageOffset = 0;
+          try {
+            if (_bannerPageController.hasClients && 
+                _bannerPageController.position.hasContentDimensions) {
+              pageOffset = _bannerPageController.page! - index;
+            }
+          } catch (_) {}
+          
+          // Smooth scale: center = 1.0, sides = 0.92
+          final scale = (1 - (pageOffset.abs() * 0.08)).clamp(0.92, 1.0);
+          // Smooth opacity: center = 1.0, sides fade
+          final opacity = (1 - (pageOffset.abs() * 0.4)).clamp(0.6, 1.0);
+          
+          return Transform.scale(
+            scale: scale,
+            child: Opacity(
+              opacity: opacity,
+              child: child,
+            ),
+          );
+        },
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.18),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
+                spreadRadius: 0,
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // ── Background Image ──
+                ImageHelper.buildImage(
+                  imageUrl: imageUrl,
+                  fit: BoxFit.cover,
+                  placeholder: _buildBannerPlaceholder(),
+                  errorWidget: _buildFallbackBanner(index),
+                ),
+                
+                // ── Cinematic Gradient Overlay ──
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      stops: const [0.0, 0.35, 0.65, 1.0],
+                      colors: [
+                        Colors.black.withOpacity(0.10),
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.15),
+                        Colors.black.withOpacity(0.55),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                // ── Side Gradient (left edge) ──
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: isArabic ? Alignment.centerRight : Alignment.centerLeft,
+                        end: isArabic ? Alignment.centerLeft : Alignment.centerRight,
+                        stops: const [0.0, 0.4],
+                        colors: [
+                          Colors.black.withOpacity(0.20),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                
+                // ── Glassmorphism Info Chip (bottom-left) ──
+                if (title.isNotEmpty || description.isNotEmpty)
+                  Positioned(
+                    bottom: 14,
+                    left: isArabic ? null : 14,
+                    right: isArabic ? 14 : null,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.55,
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.18),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.25),
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: isArabic ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (title.isNotEmpty)
+                                Text(
+                                  title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.tajawal(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                    height: 1.2,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black.withOpacity(0.3),
+                                        blurRadius: 4,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              if (description.isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  description,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.tajawal(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w400,
+                                    color: Colors.white.withOpacity(0.85),
+                                    height: 1.3,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                
+                // ── Page Counter Badge (top-right) ──
+                Positioned(
+                  top: 12,
+                  right: isArabic ? null : 12,
+                  left: isArabic ? 12 : null,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.15),
+                          ),
+                        ),
+                        child: Text(
+                          '${index + 1} / $totalCount',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white.withOpacity(0.9),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.image,
-              size: 50,
-              color: Colors.white.withValues(alpha: 0.7),
+    );
+  }
+  
+  /// Animated indicator with gradient progress line and dots
+  Widget _buildBannerIndicator(int count) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(count, (index) {
+          final isActive = _currentBannerIndex == index;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOutCubic,
+            margin: const EdgeInsets.symmetric(horizontal: 3.5),
+            width: isActive ? 28 : 7,
+            height: 7,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              gradient: isActive
+                  ? const LinearGradient(
+                      colors: [
+                        AppColors.primaryLight,
+                        AppColors.primary,
+                      ],
+                    )
+                  : null,
+              color: isActive ? null : Colors.grey.shade300,
+              boxShadow: isActive
+                  ? [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.35),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : null,
             ),
-            const SizedBox(height: 6),
-            Text(
-              'صورة ${index + 1}',
-              style: GoogleFonts.changa(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+          );
+        }),
+      ),
+    );
+  }
+  
+  /// Shimmer loading placeholder for banner
+  Widget _buildBannerShimmer() {
+    return Container(
+      margin: const EdgeInsets.only(top: 20),
+      height: 200,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          color: Colors.grey.shade100,
+        ),
+        child: Stack(
+          children: [
+            // Shimmer sweep
+            Positioned.fill(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: -1.0, end: 2.0),
+                  duration: const Duration(milliseconds: 1500),
+                  builder: (context, value, _) {
+                    return ShaderMask(
+                      shaderCallback: (bounds) {
+                        return LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            Colors.grey.shade200,
+                            Colors.grey.shade100,
+                            Colors.grey.shade200,
+                          ],
+                          stops: [
+                            (value - 0.3).clamp(0.0, 1.0),
+                            value.clamp(0.0, 1.0),
+                            (value + 0.3).clamp(0.0, 1.0),
+                          ],
+                        ).createShader(bounds);
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    );
+                  },
+                  onEnd: () {},
+                ),
+              ),
+            ),
+            // Placeholder icon
+            Center(
+              child: Icon(
+                Icons.panorama_rounded,
+                size: 42,
+                color: Colors.grey.shade300,
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+  
+  /// Loading placeholder shown while images are loading
+  Widget _buildBannerPlaceholder() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withOpacity(0.7),
+            AppColors.primaryDark,
+          ],
+        ),
+      ),
+      child: Center(
+        child: SizedBox(
+          width: 28,
+          height: 28,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.5,
+            color: Colors.white.withOpacity(0.8),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildFallbackBanner(int index) {
+    // Gradient mesh pattern fallback
+    final gradients = [
+      [const Color(0xFF065F46), const Color(0xFF10B981), const Color(0xFF34D399)],
+      [const Color(0xFF064E3B), const Color(0xFF047857), const Color(0xFF10B981)],
+      [const Color(0xFF065F46), const Color(0xFF059669), const Color(0xFF6EE7B7)],
+    ];
+    final colors = gradients[index % gradients.length];
+    
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: colors,
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Decorative circles
+          Positioned(
+            top: -30,
+            right: -20,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.08),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -40,
+            left: -30,
+            child: Container(
+              width: 160,
+              height: 160,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.05),
+              ),
+            ),
+          ),
+          // Content
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.campaign_rounded,
+                    size: 32,
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'عرض خاص',
+                  style: GoogleFonts.tajawal(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1757,35 +2056,31 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     final languageService = Provider.of<LanguageService>(context);
     final isRTL = languageService.isArabic;
     
-    return Container(
-      margin: const EdgeInsets.only(top: 24, left: 20, right: 20),
+    return Padding(
+      padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
       child: Row(
         children: [
-          // All Stores Card
+          // All Stores Button
           Expanded(
-            child: _buildStoreCard(
+            child: _buildActionButton(
               title: isRTL ? 'جميع المتاجر' : 'All Stores',
-              subtitle: isRTL ? 'اكتشف المتاجر الجديدة' : 'Discover new stores',
-              icon: Icons.store,
-              color: AppColors.primary,
-              onTap: () {
-                AppRouter.navigateToAllStores(context);
-              },
+              subtitle: isRTL ? 'اكتشف المتاجر' : 'Explore stores',
+              icon: Icons.storefront_rounded,
+              gradientColors: [const Color(0xFF065F46), const Color(0xFF10B981)],
+              onTap: () => AppRouter.navigateToAllStores(context),
             ),
           ),
           
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           
-          // Deals Card
+          // Deals Button
           Expanded(
-            child: _buildStoreCard(
+            child: _buildActionButton(
               title: isRTL ? 'العروض' : 'Deals',
-              subtitle: isRTL ? 'أفضل العروض والخصومات' : 'Best offers & discounts',
-              icon: Icons.local_offer,
-              color: AppColors.primary,
-              onTap: () {
-                AppRouter.navigateToOffers(context);
-              },
+              subtitle: isRTL ? 'خصومات حصرية' : 'Exclusive offers',
+              icon: Icons.local_offer_rounded,
+              gradientColors: [const Color(0xFF047857), const Color(0xFF34D399)],
+              onTap: () => AppRouter.navigateToOffers(context),
             ),
           ),
         ],
@@ -1793,124 +2088,103 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     );
   }
 
-  Widget _buildStoreCard({
+  Widget _buildActionButton({
     required String title,
     required String subtitle,
     required IconData icon,
-    required Color color,
+    required List<Color> gradientColors,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 160,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.3),
-                    Colors.white.withValues(alpha: 0.2),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.4),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 25,
-                    offset: const Offset(0, 10),
-                    spreadRadius: 0,
-                  ),
-                  BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.3),
-                    blurRadius: 0,
-                    offset: const Offset(0, 1),
-                    spreadRadius: 0,
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Icon with enhanced design
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.white.withValues(alpha: 0.5),
-                            Colors.white.withValues(alpha: 0.3),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.6),
-                          width: 1,
-                        ),
-                      ),
-                      child: Icon(
-                        icon,
-                        color: color,
-                        size: 24,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    // Title with enhanced typography
-                    Text(
-                      title,
-                      style: AppTextStyles.changaH6,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    
-                    const SizedBox(height: 4),
-                    
-                    // Subtitle with improved styling
-                    Text(
-                      subtitle,
-                      style: GoogleFonts.mada(
-                        fontSize: 12,
-                        color: const Color(0xFF64748B),
-                        fontWeight: FontWeight.w500,
-                        height: 1.2,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    
-                    const SizedBox(height: 6),
-                    
-                    // Subtle indicator
-                    Container(
-                      width: 20,
-                      height: 2,
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(1),
-                      ),
-                    ),
-                  ],
+        height: 80,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: gradientColors,
+          ),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: gradientColors[0].withOpacity(0.25),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Subtle decorative circle
+            Positioned(
+              top: -15,
+              right: -10,
+              child: Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.08),
                 ),
               ),
             ),
-          ),
+            // Content
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  // Icon
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.18),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      icon,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Text
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          title,
+                          style: GoogleFonts.tajawal(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: GoogleFonts.tajawal(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white.withOpacity(0.75),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Arrow
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: Colors.white.withOpacity(0.6),
+                    size: 14,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -2278,7 +2552,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               itemCount: categoriesToShow.length,
               itemBuilder: (context, index) {
                 final category = categoriesToShow[index];
-                return _buildCategoryCard(category, isRTL);
+                return CategoryCard(category: category, isRTL: isRTL);
               },
             ),
           ),
@@ -2287,146 +2561,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     );
   }
 
-  Widget _buildCategoryCard(Map<String, dynamic> category, bool isRTL) {
-    return GestureDetector(
-      onTap: () {
-        final categoryId = category['id'] as int?;
-        final categoryName = isRTL ? category['titleAr'] : category['titleEn'];
-        
-        if (EnvDev.enableLogging) {
-          print('🔍 Navigating to category: $categoryName (ID: $categoryId)');
-        }
-        
-        AppRouter.navigateToCategoryBrowse(
-          context,
-          categoryName: categoryName,
-          categoryId: categoryId,
-        );
-      },
-      child: Container(
-        width: 120,
-        height: 160,
-        margin: const EdgeInsetsDirectional.only(end: 12),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.3),
-                    Colors.white.withValues(alpha: 0.2),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.4),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                    spreadRadius: 0,
-                  ),
-                  BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.3),
-                    blurRadius: 0,
-                    offset: const Offset(0, 1),
-                    spreadRadius: 0,
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  // Image Container inside the card with its own rounded corners
-                  Container(
-                    width: double.infinity,
-                    height: 110,
-                    decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(24),
-                        topRight: Radius.circular(24),
-                      ),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: ImageHelper.buildImage(
-                        imageUrl: category['image'],
-                        fit: BoxFit.cover,
-                        errorWidget: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                category['color'].withValues(alpha: 0.8),
-                                category['color'].withValues(alpha: 0.6),
-                              ],
-                            ),
-                          ),
-                          child: Icon(
-                            category['icon'],
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  
-                  // Text Container
-                  Expanded(
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Title
-                          Text(
-                            isRTL ? category['titleAr'] : category['titleEn'],
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.changa(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF1E293B),
-                            ),
-                          ),
-                          
-                          const SizedBox(height: 1),
-                          
-                          // Subtitle
-                          Text(
-                            isRTL ? category['subtitleAr'] : category['subtitleEn'],
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.mada(
-                              fontSize: 8,
-                              color: const Color(0xFF64748B),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-  
+
   Widget _buildStoreLogoImage(String logoUrl, Color fallbackColor, String storeName) {
     final fallback = Container(
       decoration: BoxDecoration(
@@ -2462,10 +2597,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     final isRTL = languageService.isArabic;
     
     return Container(
-      margin: const EdgeInsets.only(top: 32),
+      margin: const EdgeInsets.only(top: 28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Section Header
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
@@ -2473,18 +2609,38 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               children: [
                 Text(
                   l10n.bestOffers,
-                  style: AppTextStyles.changaH4,
+                  style: GoogleFonts.tajawal(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1E293B),
+                  ),
                 ),
-                TextButton(
-                  onPressed: () {
-                    AppRouter.navigateToOffers(context);
-                  },
-                  child: Text(
-                    l10n.viewAllOffers,
-                    style: GoogleFonts.mada(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
+                GestureDetector(
+                  onTap: () => AppRouter.navigateToOffers(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l10n.viewAllOffers,
+                          style: GoogleFonts.tajawal(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 11,
+                          color: AppColors.primary,
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -2493,17 +2649,29 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           ),
           const SizedBox(height: 16),
           (_isLoadingOffers && _bestOffers.isEmpty)
-              ? const SizedBox(
-                  height: 300,
-                  child: Center(child: CircularProgressIndicator()),
+              ? SizedBox(
+                  height: 220,
+                  child: Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: AppColors.primary.withOpacity(0.5),
+                      ),
+                    ),
+                  ),
                 )
               : _bestOffers.isEmpty
                   ? SizedBox(
-                      height: 300,
+                      height: 120,
                       child: Center(
                         child: Text(
                           l10n.noOffersFound,
-                          style: const TextStyle(color: Color(0xFF6B7280)),
+                          style: GoogleFonts.tajawal(
+                            fontSize: 14,
+                            color: const Color(0xFF94A3B8),
+                          ),
                         ),
                       ),
                     )
@@ -2525,13 +2693,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     );
   }
 
-    Widget _buildOfferCard(Map<String, dynamic> offer, bool isRTL) {
+  Widget _buildOfferCard(Map<String, dynamic> offer, bool isRTL) {
     final l10n = AppLocalizations.of(context)!;
-    const double cardWidth = 360;
-    const double cardHeight = 280;
-    const double radius = 24;
     
-    // Handle image - can be network or asset
+    // Handle image
     final imageUrl = offer['image']?.toString() ?? '';
     final isNetworkImage = imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
     
@@ -2539,7 +2704,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     final storeUrlValue = offer['storeUrl'];
     final storeUrl = (storeUrlValue?.toString().trim()) ?? '';
     
-    Future<void> _openStoreUrl() async {
+    Future<void> openStoreUrl() async {
       if (storeUrl.isEmpty) {
         if (EnvDev.enableLogging) {
           print('❌ No store URL available for offer');
@@ -2563,261 +2728,217 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         }
       }
     }
+    
+    final storeName = isRTL 
+        ? (offer['storeNameAr']?.toString() ?? '') 
+        : (offer['storeNameEn']?.toString() ?? '');
+    final descriptionText = isRTL 
+        ? (offer['descriptionAr']?.toString() ?? '') 
+        : (offer['descriptionEn']?.toString() ?? '');
 
     return GestureDetector(
-      onTap: _openStoreUrl,
+      onTap: openStoreUrl,
       child: Container(
-        margin: const EdgeInsetsDirectional.only(end: 16),
-        child: SizedBox(
-          width: cardWidth,
-          height: cardHeight,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(radius),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white.withValues(alpha: 0.3),
-                      Colors.white.withValues(alpha: 0.2),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(radius),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.4),
-                    width: 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 25,
-                      offset: const Offset(0, 10),
-                      spreadRadius: 0,
-                    ),
-                    BoxShadow(
-                      color: Colors.white.withValues(alpha: 0.3),
-                      blurRadius: 0,
-                      offset: const Offset(0, 1),
-                      spreadRadius: 0,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    // الجزء العلوي (الصورة + الشارة + نص الخصم)
-                    SizedBox(
-                    height: 200, // جزء الصورة بالضبط (16:9 تقريبًا لهذا العرض)
-                    width: double.infinity,
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: isNetworkImage
-                                ? Image.network(
-                                    imageUrl,
-                                    fit: BoxFit.cover,
-                                    loadingBuilder: (context, child, loadingProgress) {
-                                      if (loadingProgress == null) return child;
-                                      return Container(
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.centerLeft,
-                                            end: Alignment.centerRight,
-                                            colors: [
-                                              AppColors.primary,
-                                              AppColors.primary,
-                                              AppColors.primary,
-                                            ],
-                                          ),
-                                        ),
-                                        child: const Center(
-                                          child: CircularProgressIndicator(strokeWidth: 2),
-                                        ),
-                                      );
-                                    },
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.centerLeft,
-                                            end: Alignment.centerRight,
-                                            colors: [
-                                              AppColors.primary,
-                                              AppColors.primary,
-                                              AppColors.primary,
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  )
-                                : Image.asset(
-                                    imageUrl.isNotEmpty ? imageUrl : 'assets/images/photo.jpg',
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.centerLeft,
-                                            end: Alignment.centerRight,
-                                            colors: [
-                                              AppColors.primary,
-                                              AppColors.primary,
-                                              AppColors.primary,
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
+        width: 200,
+        margin: const EdgeInsetsDirectional.only(end: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: const Color(0xFFF1F5F9),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image Section
+            SizedBox(
+              height: 200,
+              width: double.infinity,
+              child: Stack(
+                children: [
+                  // Image
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(17),
+                        topRight: Radius.circular(17),
+                      ),
+                      child: isNetworkImage
+                          ? Image.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                              loadingBuilder: (context, child, progress) {
+                                if (progress == null) return child;
+                                return Container(
+                                  color: AppColors.primary.withOpacity(0.05),
+                                  child: Center(
+                                    child: SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.primary.withOpacity(0.3),
+                                      ),
+                                    ),
                                   ),
-                          ),
-                        ),
-                        // الشارة
-                        Positioned(
-                          top: 12,
-                          right: isRTL ? 12 : null,
-                          left: isRTL ? null : 12,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Colors.white.withValues(alpha: 0.4),
-                                  Colors.white.withValues(alpha: 0.2),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.5),
-                                width: 1,
-                              ),
-                            ),
-                            child: Text(
-                              isRTL ? offer['descriptionAr'] : offer['descriptionEn'],
-                              style: const TextStyle(
-                                color: AppColors.primary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ),
-                        // نص الخصم
-                        Positioned(
-                          right: isRTL ? 16 : null,
-                          left: isRTL ? null : 16,
-                          bottom: 12,
-                          child: Text(
-                            '${offer['discount']} خصم',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 32,
-                              fontWeight: FontWeight.w800,
-                              height: 1,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black26,
-                                  offset: Offset(0, 2),
-                                  blurRadius: 6,
+                                );
+                              },
+                              errorBuilder: (_, __, ___) => Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [AppColors.primary.withOpacity(0.7), AppColors.primaryDark],
+                                  ),
                                 ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                    // فاصل بسيط لضمان نفس الإحساس بالهوامش
-                    const SizedBox(height: 8),
-
-                    // القسم السفلي (لوجو + اسم المتجر + زر)
-                    Padding(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: Row(
-                      children: [
-                        // شعار المتجر
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Colors.white.withValues(alpha: 0.5),
-                                Colors.white.withValues(alpha: 0.3),
-                              ],
-                            ),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.6),
-                              width: 1,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                                color: Colors.black.withValues(alpha: 0.1),
+                                child: Icon(Icons.local_offer_rounded, color: Colors.white.withOpacity(0.4), size: 36),
                               ),
-                            ],
+                            )
+                          : Image.asset(
+                              imageUrl.isNotEmpty ? imageUrl : 'assets/images/photo.jpg',
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [AppColors.primary.withOpacity(0.7), AppColors.primaryDark],
+                                  ),
+                                ),
+                              ),
+                            ),
+                    ),
+                  ),
+                  // Bottom gradient
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: 40,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.3),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Discount badge
+                  Positioned(
+                    bottom: 8,
+                    left: isRTL ? null : 10,
+                    right: isRTL ? 10 : null,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
                           ),
-                          child: _buildStoreLogoImage(
-                            offer['logo']?.toString() ?? '', 
-                            offer['storeColor'] as Color? ?? AppColors.primary, 
-                            isRTL ? (offer['storeNameAr']?.toString() ?? '') : (offer['storeNameEn']?.toString() ?? ''),
+                        ],
+                      ),
+                      child: Text(
+                        '${offer['discount']}',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Info Section
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Store info row
+                    Row(
+                      children: [
+                        // Store logo
+                        SizedBox(
+                          width: 26,
+                          height: 26,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(7),
+                            child: _buildStoreLogoImage(
+                              offer['logo']?.toString() ?? '',
+                              offer['storeColor'] as Color? ?? AppColors.primary,
+                              storeName,
+                            ),
                           ),
                         ),
-                        
-                        const SizedBox(width: 12),
-
-                        // اسم المتجر
-                        Text(
-                          isRTL ? offer['storeNameAr'] : offer['storeNameEn'],
-                          style: const TextStyle(
-                            color: Color(0xFF6B7280),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-
-                        const Spacer(),
-
-                        // زر المتجر
-                        ElevatedButton(
-                          onPressed: _openStoreUrl,
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            backgroundColor: AppColors.primary,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                            textStyle: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            storeName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.tajawal(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF334155),
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            elevation: 0,
                           ),
-                          child: Text(l10n.visitStore),
                         ),
                       ],
                     ),
-                  ),
+                    const SizedBox(height: 4),
+                    // Description
+                    if (descriptionText.isNotEmpty)
+                      Text(
+                        descriptionText,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.tajawal(
+                          fontSize: 11,
+                          color: const Color(0xFF94A3B8),
+                          height: 1.3,
+                        ),
+                      ),
+                    const Spacer(),
+                    // Visit store link
+                    Row(
+                      children: [
+                        Text(
+                          l10n.visitStore,
+                          style: GoogleFonts.tajawal(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 3),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 10,
+                          color: AppColors.primary,
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -3341,6 +3462,202 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class CategoryCard extends StatefulWidget {
+  final Map<String, dynamic> category;
+  final bool isRTL;
+
+  const CategoryCard({super.key, required this.category, required this.isRTL});
+
+  @override
+  State<CategoryCard> createState() => _CategoryCardState();
+}
+
+class _CategoryCardState extends State<CategoryCard> {
+  Uint8List? _imageBytes;
+  bool _isBase64 = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initImage();
+  }
+
+  @override
+  void didUpdateWidget(CategoryCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.category['image'] != oldWidget.category['image']) {
+      _initImage();
+    }
+  }
+
+  void _initImage() {
+    final imageUrl = widget.category['image'] ?? '';
+    if (ImageHelper.isBase64DataUrl(imageUrl)) {
+      _isBase64 = true;
+      _imageBytes = ImageHelper.decodeBase64DataUrl(imageUrl);
+    } else {
+      _isBase64 = false;
+      _imageBytes = null;
+    }
+  }
+
+  Widget _buildFallback() {
+    final category = widget.category;
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            category['color'].withValues(alpha: 0.8),
+            category['color'].withValues(alpha: 0.6),
+          ],
+        ),
+      ),
+      child: Icon(
+        category['icon'],
+        color: Colors.white,
+        size: 28,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final category = widget.category;
+    final isRTL = widget.isRTL;
+
+    return GestureDetector(
+      onTap: () {
+        final categoryId = category['id'] as int?;
+        final categoryName = isRTL ? category['titleAr'] : category['titleEn'];
+        
+        if (EnvDev.enableLogging) {
+          print('🔍 Navigating to category: $categoryName (ID: $categoryId)');
+        }
+        
+        AppRouter.navigateToCategoryBrowse(
+          context,
+          categoryName: categoryName,
+          categoryId: categoryId,
+        );
+      },
+      child: Container(
+        key: ValueKey(category['id'] ?? category['titleEn']),
+        width: 120,
+        height: 160,
+        margin: const EdgeInsetsDirectional.only(end: 12),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.3),
+                    Colors.white.withValues(alpha: 0.2),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                    spreadRadius: 0,
+                  ),
+                  BoxShadow(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    blurRadius: 0,
+                    offset: const Offset(0, 1),
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  // Image Container inside the card with its own rounded corners
+                  Container(
+                    width: double.infinity,
+                    height: 110,
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(24),
+                        topRight: Radius.circular(24),
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: _isBase64 && _imageBytes != null
+                          ? Image.memory(
+                              _imageBytes!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => _buildFallback(),
+                            )
+                          : ImageHelper.buildImage(
+                              imageUrl: category['image'],
+                              fit: BoxFit.cover,
+                              errorWidget: _buildFallback(),
+                            ),
+                    ),
+                  ),
+                  
+                  // Text Container
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Title
+                          Text(
+                            isRTL ? category['titleAr'] : category['titleEn'],
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.changa(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF1E293B),
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 1),
+                          
+                          // Subtitle
+                          Text(
+                            isRTL ? category['subtitleAr'] : category['subtitleEn'],
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.mada(
+                              fontSize: 8,
+                              color: const Color(0xFF64748B),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

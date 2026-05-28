@@ -23,12 +23,17 @@ import { UsersModule } from '../users/users.module';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get('JWT_SECRET', 'your-secret-key'),
-        signOptions: {
-          expiresIn: configService.get('JWT_EXPIRES_IN', configService.get('JWT_EXPIRATION_TIME', '3650d')),
-        },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const expiresIn = configService.get<string>('JWT_EXPIRES_IN') || 
+                          configService.get<string>('JWT_EXPIRATION_TIME') || 
+                          '3650d';
+        return {
+          secret: configService.get('JWT_SECRET', 'your-secret-key'),
+          signOptions: {
+            expiresIn,
+          },
+        };
+      },
       inject: [ConfigService],
     }),
     UsersModule,

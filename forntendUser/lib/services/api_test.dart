@@ -26,7 +26,7 @@ class ApiTest {
   /// اختبار تسجيل الدخول
   static Future<bool> testLogin() async {
     try {
-      final response = await _apiService.post(ApiEndpoints.login, {
+      final response = await _apiService.post('/auth/login', {
         'email': 'ahmed@example.com',
         'password': 'password123'
       });
@@ -57,7 +57,7 @@ class ApiTest {
   /// اختبار التسجيل
   static Future<bool> testRegister() async {
     try {
-      final response = await _apiService.post(ApiEndpoints.register, {
+      final response = await _apiService.post('/auth/register', {
         'name': 'Test User',
         'email': 'test@example.com',
         'password': 'password123',
@@ -114,7 +114,7 @@ class ApiTest {
   /// اختبار جلب المنتجات
   static Future<bool> testGetProducts() async {
     try {
-      final response = await _apiService.get(ApiEndpoints.products);
+      final response = await _apiService.get(ApiEndpoints.productsAll);
 
       if (response['success']) {
         final products = response['data']['data'] as List;
@@ -141,7 +141,7 @@ class ApiTest {
   /// اختبار إنشاء جلسة دفع
   static Future<bool> testCreatePaymentSession() async {
     try {
-      final response = await _apiService.post(ApiEndpoints.createPaymentSession, {
+      final response = await _apiService.post('/payments/session', {
         'storeId': 1,
         'orderId': 'test_order_${DateTime.now().millisecondsSinceEpoch}',
         'amount': 150.00,

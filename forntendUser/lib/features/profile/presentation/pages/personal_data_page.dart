@@ -110,13 +110,17 @@ class _PersonalDataPageState extends State<PersonalDataPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            isRTL ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
-            color: const Color(0xFF111827),
-          ),
+        automaticallyImplyLeading: false,
+        leading: isRTL ? null : IconButton(
+          icon: const Icon(Icons.arrow_back_ios, textDirection: TextDirection.ltr, color: Color(0xFF111827)),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: isRTL ? [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios, textDirection: TextDirection.ltr, color: Color(0xFF111827)),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ] : null,
         centerTitle: true,
         title: Text(
           l10n.personalData,

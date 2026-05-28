@@ -90,10 +90,17 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        leading: IconButton(
-          icon: Icon(isRTL ? Icons.arrow_forward_ios : Icons.arrow_back_ios, color: const Color(0xFF111827)),
+        automaticallyImplyLeading: false,
+        leading: isRTL ? null : IconButton(
+          icon: const Icon(Icons.arrow_back_ios, textDirection: TextDirection.ltr, color: Color(0xFF111827)),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: isRTL ? [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios, textDirection: TextDirection.ltr, color: Color(0xFF111827)),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ] : null,
         title: Text(
           l10n.privacyAndSecurity,
           style: const TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.w800),

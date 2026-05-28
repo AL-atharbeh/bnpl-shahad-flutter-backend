@@ -517,34 +517,39 @@ class _SmartSearchBar extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: () => AppRouter.navigateToSearch(context),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(22),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: Container(
-            height: 56,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: ShopColors.stroke),
-              boxShadow: const [
-                BoxShadow(color: Color(0x14000000), blurRadius: 14, offset: Offset(0, 6)),
-              ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFF1F5F9), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-            child: Row(
-              children: [
-                const SizedBox(width: 12),
-                const Icon(Icons.search_rounded, color: ShopColors.subtext),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    l10n.searchProductOrBrand,
-                    style: const TextStyle(color: ShopColors.subtext, fontSize: 16),
-                  ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.search_rounded,
+              color: AppColors.primary,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                l10n.searchProductOrBrand,
+                style: GoogleFonts.tajawal(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF94A3B8),
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -906,7 +911,7 @@ class _DealCard extends StatelessWidget {
                                 ),
                               ),
                               child: Icon(
-                                isRTL ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
+                                Icons.arrow_forward_ios_rounded,
                                 color: Colors.white,
                                 size: 18,
                               ),

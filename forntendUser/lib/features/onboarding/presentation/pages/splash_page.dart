@@ -24,7 +24,8 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   // ─── Animation Controllers ───
   late AnimationController _logoController;
   late AnimationController _stageTransitionController;
-  late AnimationController _progressController; // For the shimmering progress bar
+  late AnimationController
+      _progressController; // For the shimmering progress bar
   late AnimationController _exitController;
 
   // ─── Animations ───
@@ -49,13 +50,13 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     // 1. Stage 1: Logo Animations
     _logoController = AnimationController(
         duration: const Duration(milliseconds: 1500), vsync: this);
-    
+
     _logoOpacity = TweenSequence([
       TweenSequenceItem(tween: Tween<double>(begin: 0.0, end: 1.0), weight: 30),
       TweenSequenceItem(tween: ConstantTween<double>(1.0), weight: 50),
       TweenSequenceItem(tween: Tween<double>(begin: 1.0, end: 0.0), weight: 20),
     ]).animate(_logoController);
-    
+
     _logoScale = Tween<double>(begin: 0.95, end: 1.05).animate(
       CurvedAnimation(parent: _logoController, curve: Curves.easeOutCubic),
     );
@@ -100,8 +101,8 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     }
 
     // Fetch new splash in background
-    _fetchNewSplash(); 
-    
+    _fetchNewSplash();
+
     // Wait for progress to finish
     await Future.delayed(const Duration(milliseconds: 3200));
 
@@ -122,7 +123,8 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
           _isNetworkImage = cachedUrl.startsWith('http');
         });
         if (_isNetworkImage) {
-          precacheImage(NetworkImage(cachedUrl), context).catchError((_) => null);
+          precacheImage(NetworkImage(cachedUrl), context)
+              .catchError((_) => null);
         }
       }
     }
@@ -132,26 +134,31 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     try {
       final bannerService = BannerService();
       final response = await bannerService.getSplashBanner();
-      
+
       // The backend returns { "success": true, "data": { "splashImageUrl": "..." } }
       if (response['success'] == true && response['data'] != null) {
         final configData = response['data'];
-        final String? newUrl = configData['splashImageUrl'];
-        
+        final innerData = (configData is Map && configData.containsKey('data'))
+            ? configData['data']
+            : configData;
+        final String? newUrl =
+            innerData['splashImageUrl'] ?? configData['splashImageUrl'];
+
         if (newUrl != null && newUrl.isNotEmpty) {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('cached_splash_url', newUrl);
-          
-            if (mounted && newUrl != _splashImageUrl) {
-              setState(() {
-                _splashImageUrl = newUrl;
-                _isNetworkImage = newUrl.startsWith('http');
-              });
-              // Precache the new image to show it smoothly if still on splash
-              if (_isNetworkImage) {
-                precacheImage(NetworkImage(newUrl), context).catchError((_) => null);
-              }
+
+          if (mounted && newUrl != _splashImageUrl) {
+            setState(() {
+              _splashImageUrl = newUrl;
+              _isNetworkImage = newUrl.startsWith('http');
+            });
+            // Precache the new image to show it smoothly if still on splash
+            if (_isNetworkImage) {
+              precacheImage(NetworkImage(newUrl), context)
+                  .catchError((_) => null);
             }
+          }
         }
       }
     } catch (e) {
@@ -177,7 +184,8 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
           authService.setAuthToken(token);
           try {
             final securityService = SecurityService();
-            final settingsResponse = await securityService.getSecuritySettings();
+            final settingsResponse =
+                await securityService.getSecuritySettings();
             if (!mounted) return;
             if (settingsResponse['success']) {
               final backendData = settingsResponse['data'];
@@ -217,7 +225,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFC8E6C9),
       body: AnimatedBuilder(
         animation: _exitController,
         builder: (context, child) {
@@ -235,14 +243,14 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
             // ── Stage 1: Brand Introduction ──
             if (_currentStage == SplashStage.logo)
               Container(
-                color: Colors.white,
+                color: const Color(0xFFC8E6C9),
                 child: Center(
                   child: FadeTransition(
                     opacity: _logoOpacity,
                     child: ScaleTransition(
                       scale: _logoScale,
                       child: Image.asset(
-                        'assets/images/logoshah.png',
+                        'assets/images/logosplash.png',
                         width: 200,
                         height: 200,
                         fit: BoxFit.contain,
@@ -261,14 +269,17 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                   children: [
                     // Dynamic Image with Fallback
                     _buildDynamicImage(),
-                    
+
                     // Dark Overlay
                     Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [Colors.transparent, Colors.black.withOpacity(0.5)],
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.5)
+                          ],
                         ),
                       ),
                     ),
@@ -349,7 +360,11 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF042F1F), Color(0xFF10A37F), Colors.white],
+                      colors: [
+                        Color(0xFF042F1F),
+                        Color(0xFF10A37F),
+                        Colors.white
+                      ],
                       stops: [0.0, 0.7, 1.0],
                     ),
                     boxShadow: [
@@ -382,7 +397,11 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.white.withOpacity(0), Colors.white.withOpacity(0.3), Colors.white.withOpacity(0)],
+                  colors: [
+                    Colors.white.withOpacity(0),
+                    Colors.white.withOpacity(0.3),
+                    Colors.white.withOpacity(0)
+                  ],
                   stops: const [0.3, 0.5, 0.7],
                 ),
               ),
@@ -390,7 +409,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
           ),
         );
       },
-      onEnd: () {}, 
+      onEnd: () {},
     );
   }
 }
