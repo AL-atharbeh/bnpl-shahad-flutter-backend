@@ -48,7 +48,11 @@ class _PhoneInputPageState extends State<PhoneInputPage> with SingleTickerProvid
 
     setState(() => _isLoading = true);
 
-    final phoneNumber = '+962${_phoneController.text.trim()}';
+    String inputPhone = _phoneController.text.trim();
+    if (inputPhone.startsWith('0')) {
+      inputPhone = inputPhone.substring(1);
+    }
+    final phoneNumber = '+962$inputPhone';
     final authService = Provider.of<AuthService>(context, listen: false);
 
     try {
@@ -72,36 +76,50 @@ class _PhoneInputPageState extends State<PhoneInputPage> with SingleTickerProvid
 
       final userExists = checkResult['exists'] ?? false;
 
-      // 2. إرسال OTP
-      final otpResult = await authService.sendOTPToPhone(phoneNumber);
-      
-      if (!otpResult['success']) {
+      if (userExists) {
+        // 2. إرسال OTP لمستخدم موجود
+        final otpResult = await authService.sendOTPToPhone(phoneNumber);
+        
+        if (!otpResult['success']) {
+          if (mounted) {
+            setState(() => _isLoading = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(otpResult['error'] ?? 'فشل إرسال رمز التحقق'),
+                backgroundColor: Colors.red.shade400,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            );
+          }
+          return;
+        }
+
         if (mounted) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(otpResult['error'] ?? 'فشل إرسال رمز التحقق'),
-              backgroundColor: Colors.red.shade400,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
+          
+          // 3. الانتقال إلى صفحة التحقق من OTP
+          Navigator.pushNamed(
+            context,
+            AppRouter.otpVerification,
+            arguments: {
+              'phoneNumber': phoneNumber,
+              'userExists': true,
+            },
           );
         }
-        return;
-      }
-
-      if (mounted) {
-        setState(() => _isLoading = false);
-        
-        // 3. الانتقال إلى صفحة التحقق من OTP
-        Navigator.pushNamed(
-          context,
-          AppRouter.otpVerification,
-          arguments: {
-            'phoneNumber': phoneNumber,
-            'userExists': userExists,
-          },
-        );
+      } else {
+        // مستخدم جديد - الانتقال مباشرة إلى صفحة تصوير الهوية المدنية
+        if (mounted) {
+          setState(() => _isLoading = false);
+          Navigator.pushNamed(
+            context,
+            AppRouter.civilIdCapture,
+            arguments: {
+              'phoneNumber': phoneNumber,
+            },
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -329,7 +347,7 @@ class _PhoneInputPageState extends State<PhoneInputPage> with SingleTickerProvid
                           ),
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(9),
+                            LengthLimitingTextInputFormatter(10),
                           ],
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -337,7 +355,11 @@ class _PhoneInputPageState extends State<PhoneInputPage> with SingleTickerProvid
                                   ? 'الرجاء إدخال رقم الهاتف'
                                   : 'Please enter phone number';
                             }
-                            if (value.length != 9) {
+                            String normalized = value;
+                            if (normalized.startsWith('0')) {
+                              normalized = normalized.substring(1);
+                            }
+                            if (normalized.length != 9) {
                               return isRTL
                                   ? 'رقم الهاتف يجب أن يكون 9 أرقام'
                                   : 'Phone number must be 9 digits';

@@ -34,10 +34,37 @@ export class AuthService {
   ) { }
 
   /**
+   * Normalize Jordanian phone numbers to +962XXXXXXXXX
+   */
+  private normalizePhone(phone: string): string {
+    if (!phone) return phone;
+    let clean = phone.trim();
+    // Remove any spaces or dashes
+    clean = clean.replace(/[\s-]/g, '');
+    
+    if (clean.startsWith('+9620')) {
+      clean = '+962' + clean.substring(5);
+    } else if (clean.startsWith('9620')) {
+      clean = '+962' + clean.substring(4);
+    } else if (clean.startsWith('009620')) {
+      clean = '+962' + clean.substring(6);
+    } else if (clean.startsWith('00962')) {
+      clean = '+962' + clean.substring(5);
+    } else if (clean.startsWith('962')) {
+      clean = '+962' + clean.substring(3);
+    } else if (clean.startsWith('07')) {
+      clean = '+962' + clean.substring(1);
+    } else if (clean.startsWith('7') && clean.length === 9) {
+      clean = '+962' + clean;
+    }
+    return clean;
+  }
+
+  /**
    * Check if phone number exists in database
    */
   async checkPhone(checkPhoneDto: CheckPhoneDto) {
-    const { phone } = checkPhoneDto;
+    const phone = this.normalizePhone(checkPhoneDto.phone);
     const user = await this.userRepository.findOne({ where: { phone } });
 
     if (user) {
@@ -59,7 +86,7 @@ export class AuthService {
       message: 'مستخدم جديد',
       data: {
         phone,
-        requiresOtp: true,
+        requiresOtp: false,
         requiresRegistration: true,
       },
     };
@@ -69,7 +96,7 @@ export class AuthService {
    * Send OTP to phone
    */
   async sendOtp(sendOtpDto: SendOtpDto) {
-    const { phone } = sendOtpDto;
+    const phone = this.normalizePhone(sendOtpDto.phone);
     const result = await this.otpService.sendOtp(phone);
 
     return {
@@ -86,7 +113,8 @@ export class AuthService {
    * Verify OTP code
    */
   async verifyOtp(verifyOtpDto: VerifyOtpDto) {
-    const { phone, code } = verifyOtpDto;
+    const phone = this.normalizePhone(verifyOtpDto.phone);
+    const { code } = verifyOtpDto;
 
     // Verify OTP (this will set isPhoneVerified = true and clear OTP if valid)
     const isValid = await this.otpService.verifyOtp(phone, code);
@@ -134,7 +162,8 @@ export class AuthService {
    * Create new account with profile data
    */
   async createAccount(createAccountDto: CreateAccountDto) {
-    const { phone, fullName, civilIdNumber, email, ...profileData } =
+    const phone = this.normalizePhone(createAccountDto.phone);
+    const { fullName, civilIdNumber, email, ...profileData } =
       createAccountDto;
 
     // Check if phone already exists and has complete profile
@@ -162,13 +191,11 @@ export class AuthService {
       }
     }
 
-    // Verify that phone number was verified via OTP
-    const userToCheck = existingUser || await this.userRepository.findOne({
-      where: { phone },
-    });
-
-    if (!userToCheck || !userToCheck.isPhoneVerified) {
-      throw new BadRequestException('يجب التحقق من رقم الهاتف أولاً عبر OTP');
+    // Verify that phone number was verified via OTP (only for existing incomplete users)
+    if (existingUser) {
+      if (!existingUser.isPhoneVerified) {
+        throw new BadRequestException('يجب التحقق من رقم الهاتف أولاً عبر OTP');
+      }
     }
 
     // Create temporary password (user will use OTP for login)
@@ -194,7 +221,7 @@ export class AuthService {
         civilIdNumber,
         email: email || null,
         passwordHash,
-        isPhoneVerified: true, // Already verified via OTP
+        isPhoneVerified: true, // Auto-verified upon successful registration
         otp: null, // Clear OTP after account creation
         ...profileData,
       });
