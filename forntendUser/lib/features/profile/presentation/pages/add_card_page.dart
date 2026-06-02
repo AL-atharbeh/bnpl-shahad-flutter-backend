@@ -108,7 +108,7 @@ class _AddCardPageState extends State<AddCardPage> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
           l10n.addNewCard,
@@ -194,7 +194,7 @@ class _AddCardPageState extends State<AddCardPage> {
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _handleSaveCard,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF111827),
+                  backgroundColor: const Color(0xFF10B981),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),

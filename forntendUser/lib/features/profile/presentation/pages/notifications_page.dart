@@ -76,7 +76,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
     final grouped = _groupByDate(data, isRTL);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -307,7 +307,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                             }
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: isPaymentRequest ? const Color(0xFF111827) : meta.color,
+                            backgroundColor: isPaymentRequest ? const Color(0xFF10B981) : meta.color,
                             foregroundColor: Colors.white,
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -354,7 +354,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   void _toast(String msg, {bool danger = false}) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
-      backgroundColor: danger ? Colors.red : const Color(0xFF111827),
+      backgroundColor: danger ? Colors.red : const Color(0xFF10B981),
     ));
   }
 
@@ -447,13 +447,13 @@ class _FilterChipsBar extends StatelessWidget {
       final isActive = active == id;
       return ChoiceChip(
         labelPadding: const EdgeInsets.symmetric(horizontal: 8),
-        avatar: Icon(icon, size: 18, color: isActive ? Colors.white : const Color(0xFF111827)),
+        avatar: Icon(icon, size: 18, color: isActive ? Colors.white : const Color(0xFF10B981)),
         label: Text(label),
         selected: isActive,
         onSelected: (_) => onChanged(id),
-        selectedColor: const Color(0xFF111827),
+        selectedColor: const Color(0xFF10B981),
         labelStyle: TextStyle(
-          color: isActive ? Colors.white : const Color(0xFF111827),
+          color: isActive ? Colors.white : const Color(0xFF10B981),
           fontWeight: FontWeight.w700,
         ),
         backgroundColor: Colors.white,

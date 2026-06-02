@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -28,15 +25,9 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -50,19 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCXHs0Og9HvKsVt3XU19XWhHcs6owiuyl4',
-    appId: '1:1027281252822:android:1afe04898581e69ca07477',
-    messagingSenderId: '1027281252822',
-    projectId: 'bnpl-shahad',
-    storageBucket: 'bnpl-shahad.firebasestorage.app',
+    apiKey: 'AIzaSyCirAuivVMeGGvc_8w_7tt1w4JMM5-TR9w',
+    appId: '1:166828864195:android:6537ed22c32eb14102a876',
+    messagingSenderId: '166828864195',
+    projectId: 'shahedapp',
+    storageBucket: 'shahedapp.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAkVDYiK_GNHvr7VUImwtkMuszxMAel31w',
-    appId: '1:1027281252822:ios:f5430aa367014ff4a07477',
-    messagingSenderId: '1027281252822',
-    projectId: 'bnpl-shahad',
-    storageBucket: 'bnpl-shahad.firebasestorage.app',
+    apiKey: 'AIzaSyDVkxQcooQWB_6WPvbavz6UN-heRmJmTkg',
+    appId: '1:166828864195:ios:e00fa55b919b59b402a876',
+    messagingSenderId: '166828864195',
+    projectId: 'shahedapp',
+    storageBucket: 'shahedapp.firebasestorage.app',
     iosBundleId: 'com.shifracode.shahed',
   );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyAbxNBtP9SywK2nniBqRbqR4_-vTHnF3-c',
+    appId: '1:166828864195:web:15d4afd8426d1c9702a876',
+    messagingSenderId: '166828864195',
+    projectId: 'shahedapp',
+    authDomain: 'shahedapp.firebaseapp.com',
+    storageBucket: 'shahedapp.firebasestorage.app',
+    measurementId: 'G-GV2JEBQK9Y',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyDVkxQcooQWB_6WPvbavz6UN-heRmJmTkg',
+    appId: '1:166828864195:ios:bf775d0b189ab78802a876',
+    messagingSenderId: '166828864195',
+    projectId: 'shahedapp',
+    storageBucket: 'shahedapp.firebasestorage.app',
+    iosBundleId: 'com.example.bnpl',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyAbxNBtP9SywK2nniBqRbqR4_-vTHnF3-c',
+    appId: '1:166828864195:web:73c4d4b7c262ff7902a876',
+    messagingSenderId: '166828864195',
+    projectId: 'shahedapp',
+    authDomain: 'shahedapp.firebaseapp.com',
+    storageBucket: 'shahedapp.firebasestorage.app',
+    measurementId: 'G-Z9WRHK0B8Q',
+  );
+
 }

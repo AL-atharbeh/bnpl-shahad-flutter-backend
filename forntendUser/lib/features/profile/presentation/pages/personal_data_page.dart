@@ -106,7 +106,7 @@ class _PersonalDataPageState extends State<PersonalDataPage> {
     final isRTL = context.watch<LanguageService>().isArabic;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -264,9 +264,10 @@ class _PersonalDataPageState extends State<PersonalDataPage> {
               style: const TextStyle(fontWeight: FontWeight.w800),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF111827),
+              backgroundColor: const Color(0xFF10B981),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              elevation: 0,
             ),
           ),
         ),
@@ -527,7 +528,7 @@ class _HeaderCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
                     padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(color: Color(0xFF111827), shape: BoxShape.circle),
+                    decoration: const BoxDecoration(color: Color(0xFF10B981), shape: BoxShape.circle),
                     child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
                   ),
                 ),
@@ -538,7 +539,7 @@ class _HeaderCard extends StatelessWidget {
                      Expanded(
              child: Text(
                l10n.updateYourData,
-               style: const TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.w800),
+                style: const TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.w800),
              ),
            ),
           TextButton.icon(
@@ -546,7 +547,7 @@ class _HeaderCard extends StatelessWidget {
             icon: const Icon(Icons.edit_outlined, size: 18),
                          label: Text(l10n.edit),
             style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF111827),
+              foregroundColor: const Color(0xFF10B981),
               backgroundColor: const Color(0xFFF2F4F7),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -653,7 +654,7 @@ class _LabeledField extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF111827), width: 1.8),
+            borderSide: const BorderSide(color: Color(0xFF10B981), width: 1.8),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),

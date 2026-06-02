@@ -37,18 +37,19 @@ class _BNPLBusinessPageState extends State<BNPLBusinessPage> {
     final isRTL = languageService.isArabic;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(l10n.bnplForBusiness),
         backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
         leading: isRTL ? null : IconButton(
-          icon: const Icon(Icons.arrow_back_ios, textDirection: TextDirection.ltr),
+          icon: const Icon(Icons.arrow_back_ios, textDirection: TextDirection.ltr, color: Color(0xFF111827)),
           onPressed: () => Navigator.pop(context),
         ),
         actions: isRTL ? [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios, textDirection: TextDirection.ltr),
+            icon: const Icon(Icons.arrow_back_ios, textDirection: TextDirection.ltr, color: Color(0xFF111827)),
             onPressed: () => Navigator.pop(context),
           ),
         ] : null,
@@ -66,32 +67,41 @@ class _BNPLBusinessPageState extends State<BNPLBusinessPage> {
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF111827), Color(0xFF374151)],
+                  colors: [Color(0xFF10B981), Color(0xFF047857)],
                 ),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF10B981).withOpacity(0.2),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
                   const Icon(
-                    Icons.business,
+                    Icons.business_center_rounded,
                     color: Colors.white,
-                    size: 48,
+                    size: 52,
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    'BNPL للأعمال',
-                    style: const TextStyle(
+                  const Text(
+                    'شهد للأعمال',
+                    style: TextStyle(
+                      fontFamily: 'Changa',
                       color: Colors.white,
-                      fontSize: 24,
+                      fontSize: 26,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    'انضم إلينا وقدم لعملائك تجربة دفع مرنة ومتطورة',
-                    style: const TextStyle(
+                  const Text(
+                    'انضم إلى شهد للأعمال وقدم لعملائك تجربة دفع مرنة، مبتكرة وسلسة للغاية',
+                    style: TextStyle(
+                      fontFamily: 'Mada',
                       color: Colors.white70,
-                      fontSize: 16,
+                      fontSize: 15,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -102,54 +112,56 @@ class _BNPLBusinessPageState extends State<BNPLBusinessPage> {
 
             // Benefits Section
             Text(
-              'مزايا الانضمام',
+              'مزايا الانضمام لشهد للأعمال',
               style: TextStyle(
-                fontSize: 20,
+                fontFamily: 'Changa',
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                color: Colors.grey[850],
               ),
             ),
             const SizedBox(height: 16),
 
             _buildBenefitCard(
-              icon: Icons.trending_up,
-              title: 'زيادة المبيعات',
-              description: 'زيادة معدل التحويل بنسبة تصل إلى 40%',
-              color: Colors.green,
+              icon: Icons.trending_up_rounded,
+              title: 'زيادة المبيعات والنمو',
+              description: 'حقق نمواً في مبيعاتك بنسبة تصل إلى 40% من خلال تمكين عملائك من الشراء الفوري والتقسيط المريح.',
+              color: const Color(0xFF10B981),
             ),
             const SizedBox(height: 12),
 
             _buildBenefitCard(
-              icon: Icons.payment,
-              title: 'دفع مرن',
-              description: 'امنح عملائك خيارات دفع متعددة',
+              icon: Icons.payment_rounded,
+              title: 'تقسيط مرن وبدون فوائد',
+              description: 'امنح عملائك تجربة تقسيط مرنة ومريحة على دفعات ميسرة تماماً دون أي فوائد أو رسوم إضافية مخفية.',
               color: Colors.blue,
             ),
             const SizedBox(height: 12),
 
             _buildBenefitCard(
-              icon: Icons.security,
-              title: 'أمان عالي',
-              description: 'حماية متقدمة للمعاملات والبيانات',
+              icon: Icons.security_rounded,
+              title: 'تحصيل آمن وتسوية فورية',
+              description: 'احصل على كامل قيمة مبيعاتك فورياً، بينما نتولى نحن إدارة وتحصيل الأقساط المستقبلية بشكل آمن بالكامل.',
               color: Colors.orange,
             ),
             const SizedBox(height: 12),
 
             _buildBenefitCard(
-              icon: Icons.analytics,
-              title: 'تقارير مفصلة',
-              description: 'احصل على رؤى شاملة عن أداء مبيعاتك',
+              icon: Icons.analytics_rounded,
+              title: 'تحليلات ذكية ولوحة تحكم',
+              description: 'تابع نمو أعمالك لحظياً من خلال لوحة تحكم ذكية وشاملة توفر رؤى تفصيلية حول المبيعات وسلوك العملاء.',
               color: Colors.purple,
             ),
             const SizedBox(height: 32),
 
             // Registration Form
             Text(
-              'سجل شركتك',
+              'سجل شركتك الآن',
               style: TextStyle(
-                fontSize: 20,
+                fontFamily: 'Changa',
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                color: Colors.grey[850],
               ),
             ),
             const SizedBox(height: 16),
@@ -160,8 +172,8 @@ class _BNPLBusinessPageState extends State<BNPLBusinessPage> {
                 children: [
                   _buildTextField(
                     controller: _companyNameController,
-                    label: 'اسم الشركة',
-                    icon: Icons.business,
+                    label: 'اسم الشركة / العلامة التجارية',
+                    icon: Icons.business_rounded,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'أدخل اسم الشركة';
@@ -173,8 +185,8 @@ class _BNPLBusinessPageState extends State<BNPLBusinessPage> {
 
                   _buildTextField(
                     controller: _contactPersonController,
-                    label: 'الشخص المسؤول',
-                    icon: Icons.person,
+                    label: 'اسم الشخص المسؤول عن التواصل',
+                    icon: Icons.person_rounded,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'أدخل اسم الشخص المسؤول';
@@ -186,8 +198,8 @@ class _BNPLBusinessPageState extends State<BNPLBusinessPage> {
 
                   _buildTextField(
                     controller: _emailController,
-                    label: 'البريد الإلكتروني',
-                    icon: Icons.email,
+                    label: 'البريد الإلكتروني للعمل',
+                    icon: Icons.email_rounded,
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -203,8 +215,8 @@ class _BNPLBusinessPageState extends State<BNPLBusinessPage> {
 
                   _buildTextField(
                     controller: _phoneController,
-                    label: 'رقم الهاتف',
-                    icon: Icons.phone,
+                    label: 'رقم الهاتف للتواصل',
+                    icon: Icons.phone_rounded,
                     keyboardType: TextInputType.phone,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -217,47 +229,63 @@ class _BNPLBusinessPageState extends State<BNPLBusinessPage> {
 
                   _buildTextField(
                     controller: _websiteController,
-                    label: 'الموقع الإلكتروني (اختياري)',
-                    icon: Icons.language,
+                    label: 'الموقع الإلكتروني أو صفحة السوشيال ميديا (اختياري)',
+                    icon: Icons.language_rounded,
                     keyboardType: TextInputType.url,
                   ),
                   const SizedBox(height: 16),
 
                   _buildTextField(
                     controller: _descriptionController,
-                    label: 'وصف النشاط التجاري',
-                    icon: Icons.description,
+                    label: 'وصف مختصر لنشاطكم التجاري',
+                    icon: Icons.description_rounded,
                     maxLines: 3,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'أدخل وصف النشاط التجاري';
                       }
                       if (value.length < 20) {
-                        return 'الوصف قصير جداً';
+                        return 'الوصف قصير جداً (أدخل 20 حرفاً على الأقل)';
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 32),
 
-                  // Submit Button
-                  SizedBox(
+                  // Submit Button - Emerald Gradient
+                  Container(
                     width: double.infinity,
-                    height: 50,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF10B981), Color(0xFF059669)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF10B981).withOpacity(0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
                     child: ElevatedButton(
                       onPressed: _submitApplication,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF111827),
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
                       child: const Text(
-                        'إرسال الطلب',
+                        'تقديم طلب الانضمام',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
@@ -389,7 +417,7 @@ class _BNPLBusinessPageState extends State<BNPLBusinessPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF111827), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF10B981), width: 1.8),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

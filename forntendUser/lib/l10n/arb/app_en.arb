@@ -1381,9 +1381,9 @@
     "description": "Language option in profile"
   },
 
-  "bnplForBusiness": "BNPL for Business",
+  "bnplForBusiness": "Shahad for Business",
   "@bnplForBusiness": {
-    "description": "BNPL for business option in profile"
+    "description": "Shahad for business option in profile"
   },
 
   "chooseLanguage": "Choose Language",

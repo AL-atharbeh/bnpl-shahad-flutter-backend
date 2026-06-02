@@ -85,7 +85,7 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
     final isRTL = context.watch<LanguageService>().isArabic;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -241,10 +241,10 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFF111827), width: 2.5),
+                    border: Border.all(color: const Color(0xFF10B981), width: 2.5),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF111827).withOpacity(0.1),
+                        color: const Color(0xFF10B981).withOpacity(0.1),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -405,10 +405,10 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFF111827), width: 2.5),
+                    border: Border.all(color: const Color(0xFF10B981), width: 2.5),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF111827).withOpacity(0.1),
+                        color: const Color(0xFF10B981).withOpacity(0.1),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -702,7 +702,7 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
       backgroundColor:
-          success == null ? const Color(0xFF111827) : (success ? Colors.green : Colors.red),
+          success == null ? const Color(0xFF10B981) : (success ? Colors.green : Colors.red),
     ));
   }
 }
@@ -725,7 +725,7 @@ class _SectionHeader extends StatelessWidget {
             color: const Color(0xFFF2F4F7),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: const Color(0xFF111827)),
+          child: Icon(icon, color: const Color(0xFF10B981)),
         ),
         const SizedBox(width: 10),
         Text(title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Color(0xFF111827))),

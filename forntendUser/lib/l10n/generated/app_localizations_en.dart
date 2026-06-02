@@ -799,7 +799,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacyAndSecurity => 'Privacy & Security';
 
   @override
-  String get bnplForBusiness => 'BNPL for Business';
+  String get bnplForBusiness => 'Shahad for Business';
 
   @override
   String get chooseLanguage => 'Choose Language';

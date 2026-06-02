@@ -145,7 +145,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final l10n = AppLocalizations.of(context)!;
     
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

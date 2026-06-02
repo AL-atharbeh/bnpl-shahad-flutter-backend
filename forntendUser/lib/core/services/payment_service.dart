@@ -9,7 +9,7 @@ class PaymentService {
   Future<String?> initiatePayment(double amount, {String currency = 'KWD'}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
+      final token = prefs.getString('auth_token') ?? prefs.getString('user_token');
 
       if (token == null) {
         throw Exception('User not logged in');

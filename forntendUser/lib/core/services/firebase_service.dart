@@ -178,7 +178,7 @@ class FirebaseService {
   Future<void> _updateTokenOnServer(String token) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final authToken = prefs.getString('auth_token');
+      final authToken = prefs.getString('auth_token') ?? prefs.getString('user_token');
 
       if (kDebugMode) {
         print('🔐 Checking auth token...');

@@ -136,7 +136,7 @@ class _ContactUsPageState extends State<ContactUsPage> {
     final isRTL = context.watch<LanguageService>().isArabic;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -187,11 +187,11 @@ class _ContactUsPageState extends State<ContactUsPage> {
                     c,
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: selected ? Colors.white : const Color(0xFF111827),
+                      color: selected ? Colors.white : const Color(0xFF10B981),
                     ),
                   ),
                   selected: selected,
-                  selectedColor: const Color(0xFF111827),
+                  selectedColor: const Color(0xFF10B981),
                   backgroundColor: const Color(0xFFF2F4F7),
                   onSelected: (_) => setState(() => _selectedCategory = c),
                 );
@@ -276,9 +276,10 @@ class _ContactUsPageState extends State<ContactUsPage> {
                 style: const TextStyle(fontWeight: FontWeight.w800),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF111827),
+                backgroundColor: const Color(0xFF10B981),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
               ),
             ),
           ),
@@ -562,7 +563,7 @@ class _Field extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        prefixIcon: Icon(icon, color: const Color(0xFF111827)),
+        prefixIcon: Icon(icon, color: const Color(0xFF10B981)),
         filled: true,
         fillColor: const Color(0xFFF9FAFB),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
@@ -576,7 +577,7 @@ class _Field extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF111827), width: 1.8),
+          borderSide: const BorderSide(color: Color(0xFF10B981), width: 1.8),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

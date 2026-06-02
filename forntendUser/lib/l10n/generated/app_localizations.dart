@@ -1610,10 +1610,10 @@ abstract class AppLocalizations {
   /// **'Privacy & Security'**
   String get privacyAndSecurity;
 
-  /// BNPL for business option in profile
+  /// Shahad for business option in profile
   ///
   /// In en, this message translates to:
-  /// **'BNPL for Business'**
+  /// **'Shahad for Business'**
   String get bnplForBusiness;
 
   /// Choose language dialog title

@@ -3326,8 +3326,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     final bool isArabic = languageService.isArabic;
     
     return Positioned(
-      left: 40, // Increased from 25 to 50 for a more compact hub look
-      right: 40,
+      left: 50, // Slightly wider margin for a more balanced layout
+      right: 50,
       bottom: 30,
       child: GestureDetector(
         onHorizontalDragUpdate: _onNavDragUpdate,
@@ -3346,19 +3346,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
             filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
             child: Container(
               key: _navBarKey,
-              height: 75, // Increased from 65 for better icon presence
+              height: 70, // Sleeker, more compact height
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.8),
+                color: Colors.white.withValues(alpha: 0.82), // Beautiful frosted white background
                 borderRadius: BorderRadius.circular(35),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.12),
+                  color: Colors.white.withValues(alpha: 0.85), // Clean hairline border
                   width: 1.0,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 40,
-                    offset: const Offset(0, 15),
+                    color: Colors.black.withValues(alpha: 0.05), // Extremely soft, calm shadow
+                    blurRadius: 25,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
@@ -3424,7 +3424,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     
     final double scale = 0.85 + (proximity * 0.2); // More subtle scale
     final Color iconColor = Color.lerp(
-      Colors.grey[500]!.withValues(alpha: 0.6),
+      const Color(0xFF64748B), // Soft slate grey for a calm, professional look
       Colors.white,
       Curves.easeIn.transform(proximity),
     )!;
@@ -3457,7 +3457,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 width: 4 * proximity,
                 height: 4 * proximity,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: proximity * 0.8),
+                  color: const Color(0xFF10B981).withValues(alpha: proximity * 0.8), // Branded active green dot
                   shape: BoxShape.circle,
                 ),
               ),

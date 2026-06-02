@@ -19,7 +19,7 @@ class _LanguagePageState extends State<LanguagePage> {
     final isRTL = lang.isArabic;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -124,7 +124,7 @@ class _SectionHeader extends StatelessWidget {
             color: const Color(0xFFF2F4F7),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: const Color(0xFF111827)),
+          child: Icon(icon, color: const Color(0xFF10B981)),
         ),
         const SizedBox(width: 10),
         Text(
@@ -150,10 +150,18 @@ class _CurrentLanguageCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
       decoration: BoxDecoration(
-        color: const Color(0xFF111827),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(color: Color(0x19000000), blurRadius: 14, offset: Offset(0, 8)),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF10B981), Color(0xFF047857)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF10B981).withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
         ],
       ),
       child: Column(
@@ -193,7 +201,7 @@ class _LanguageOptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = selected ? const Color(0xFF111827) : const Color(0xFFE6ECF3);
+    final borderColor = selected ? const Color(0xFF10B981) : const Color(0xFFE6ECF3);
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(14),
@@ -212,7 +220,7 @@ class _LanguageOptionTile extends StatelessWidget {
               title,
               style: TextStyle(
                 fontWeight: FontWeight.w800,
-                color: selected ? const Color(0xFF111827) : Colors.black,
+                color: selected ? const Color(0xFF10B981) : Colors.black,
               ),
             ),
             subtitle: Text(subtitle, style: const TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
@@ -222,7 +230,7 @@ class _LanguageOptionTile extends StatelessWidget {
               height: 26,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: selected ? const Color(0xFF111827) : Colors.transparent,
+                color: selected ? const Color(0xFF10B981) : Colors.transparent,
                 border: Border.all(color: const Color(0xFF9CA3AF)),
               ),
               child: selected

@@ -795,7 +795,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get privacyAndSecurity => 'الخصوصية والأمان';
 
   @override
-  String get bnplForBusiness => 'BNPL للأعمال';
+  String get bnplForBusiness => 'شهد للأعمال';
 
   @override
   String get chooseLanguage => 'اختر اللغة';

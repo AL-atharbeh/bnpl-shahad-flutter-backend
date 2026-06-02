@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "1027281252822",
-    "project_id": "bnpl-shahad",
-    "storage_bucket": "bnpl-shahad.firebasestorage.app"
+    "project_number": "166828864195",
+    "project_id": "shahedapp",
+    "storage_bucket": "shahedapp.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1027281252822:android:1afe04898581e69ca07477",
+        "mobilesdk_app_id": "1:166828864195:android:6537ed22c32eb14102a876",
         "android_client_info": {
           "package_name": "com.shifracode.shahed"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCXHs0Og9HvKsVt3XU19XWhHcs6owiuyl4"
+          "current_key": "AIzaSyCirAuivVMeGGvc_8w_7tt1w4JMM5-TR9w"
         }
       ],
       "services": {

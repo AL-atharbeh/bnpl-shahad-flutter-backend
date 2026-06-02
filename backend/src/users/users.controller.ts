@@ -90,6 +90,20 @@ export class UsersController {
     };
   }
 
+  @Put('fcm-token')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update FCM token for push notifications' })
+  async updateFcmToken(@Request() req, @Body('token') token: string) {
+    await this.usersService.updateProfile(req.user.id, {
+      fcmToken: token,
+    });
+    return {
+      success: true,
+      message: 'تم تحديث رمز الإشعارات بنجاح',
+    };
+  }
+
   @Put(':id')
   @ApiOperation({ summary: 'Update user (Admin)' })
   async updateUser(@Param('id') id: string, @Body() updateData: any) {
@@ -129,19 +143,6 @@ export class UsersController {
     };
   }
 
-  @Put('fcm-token')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update FCM token for push notifications' })
-  async updateFcmToken(@Request() req, @Body('token') token: string) {
-    await this.usersService.updateProfile(req.user.id, {
-      fcmToken: token,
-    });
-    return {
-      success: true,
-      message: 'تم تحديث رمز الإشعارات بنجاح',
-    };
-  }
 
   @Get('find-by-phone')
   @ApiOperation({ summary: 'Find user by phone (for POS)' })
