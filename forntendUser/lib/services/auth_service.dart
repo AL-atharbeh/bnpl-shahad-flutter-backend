@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'api_service.dart';
 import 'api_endpoints.dart';
 
@@ -373,5 +374,130 @@ class AuthService {
     
     print('✅ Auto login successful');
     return true;
+  }
+
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  String? _verificationId;
+
+  // Send OTP to phone number using Firebase Auth
+  Future<void> sendFirebaseOTP({
+    required String phoneNumber,
+    required Function(String verificationId) onCodeSent,
+    required Function(dynamic error) onError,
+  }) async {
+    try {
+      print('🔥 Starting Firebase Phone Auth for: $phoneNumber');
+      
+      await _firebaseAuth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          // Auto-resolution (often only on real Android devices)
+          print('🔥 verificationCompleted: Auto-verification successful');
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          print('❌ Firebase verifyPhoneNumber failed: ${e.message} (code: ${e.code})');
+          onError(e);
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          print('🔥 codeSent: Verification ID: $verificationId');
+          _verificationId = verificationId;
+          onCodeSent(verificationId);
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          print('🔥 codeAutoRetrievalTimeout: $verificationId');
+          _verificationId = verificationId;
+        },
+        timeout: const Duration(seconds: 60),
+      );
+    } catch (e) {
+      print('❌ Error in sendFirebaseOTP: $e');
+      onError(e);
+    }
+  }
+
+  // Verify SMS OTP using Firebase Auth and log in / register on backend
+  Future<Map<String, dynamic>> verifyFirebaseOTP(String smsCode) async {
+    try {
+      if (_verificationId == null) {
+        return {
+          'success': false,
+          'error': 'انتهت صلاحية الجلسة، يرجى إعادة إرسال الرمز',
+        };
+      }
+
+      print('🔥 Verifying Firebase SMS Code: $smsCode');
+      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: _verificationId!,
+        smsCode: smsCode,
+      );
+
+      // Sign in to Firebase Auth
+      UserCredential userCredential = await _firebaseAuth.signInWithCredential(credential);
+      final firebaseUser = userCredential.user;
+
+      if (firebaseUser == null) {
+        return {
+          'success': false,
+          'error': 'فشل التحقق من رمز التحقق',
+        };
+      }
+
+      // Get Firebase ID Token
+      final idToken = await firebaseUser.getIdToken();
+      
+      if (idToken == null) {
+        return {
+          'success': false,
+          'error': 'فشل استخراج رمز توثيق Firebase',
+        };
+      }
+
+      print('🔥 Firebase authenticated successfully. Sending token to NestJS...');
+
+      // Send Firebase ID Token to NestJS backend
+      final response = await _apiService.post('/auth/verify-firebase-token', {
+        'token': idToken,
+      });
+
+      if (response['success']) {
+        final backendResponse = response['data'];
+        final innerData = backendResponse?['data'] ?? backendResponse;
+        
+        // If user already has a complete profile, sign them in
+        if (innerData['userExists'] == true && innerData['token'] != null) {
+          final token = innerData['token'].toString();
+          final userId = innerData['user']?['id']?.toString() ?? '';
+          
+          _apiService.setAuthToken(token);
+          await saveLoginState(token, userId);
+        }
+
+        return {
+          'success': true,
+          'userExists': innerData['userExists'] ?? false,
+          'token': innerData['token'],
+          'user': innerData['user'],
+          'requiresProfileCompletion': innerData['requiresProfileCompletion'] ?? false,
+          'data': innerData,
+        };
+      }
+
+      return {
+        'success': false,
+        'error': response['error'] ?? 'فشل توثيق الجلسة في السيرفر',
+      };
+    } catch (e) {
+      print('❌ Error in verifyFirebaseOTP: $e');
+      String errorMsg = 'رمز التحقق المدخل غير صحيح';
+      if (e.toString().contains('invalid-verification-code')) {
+        errorMsg = 'رمز التحقق غير صحيح، يرجى المحاولة مرة أخرى';
+      } else if (e.toString().contains('session-expired')) {
+        errorMsg = 'انتهت صلاحية الرمز، يرجى طلب رمز جديد';
+      }
+      return {
+        'success': false,
+        'error': errorMsg,
+      };
+    }
   }
 }

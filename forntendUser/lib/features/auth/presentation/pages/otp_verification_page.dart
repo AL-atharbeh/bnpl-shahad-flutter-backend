@@ -151,8 +151,8 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
     final authService = Provider.of<AuthService>(context, listen: false);
 
     try {
-      // التحقق من OTP
-      final verifyResult = await authService.verifyOTPCode(widget.phoneNumber, otp);
+      // التحقق من OTP عبر Firebase Auth
+      final verifyResult = await authService.verifyFirebaseOTP(otp);
 
       if (!verifyResult['success']) {
         if (mounted) {

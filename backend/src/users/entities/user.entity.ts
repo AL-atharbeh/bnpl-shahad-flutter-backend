@@ -88,6 +88,9 @@ export class User {
   @Column({ name: 'stripe_customer_id', length: 100, nullable: true })
   stripeCustomerId: string;
 
+  @Column({ name: 'firebase_uid', length: 128, nullable: true, unique: true })
+  firebaseUid: string;
+
   @Column({ name: 'is_active', default: true })
   isActive: boolean;
 

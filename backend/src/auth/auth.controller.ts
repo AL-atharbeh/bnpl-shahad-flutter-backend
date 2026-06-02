@@ -62,6 +62,15 @@ export class AuthController {
     return this.authService.verifyOtp(verifyOtpDto);
   }
 
+  @Post('verify-firebase-token')
+  @ApiOperation({
+    summary: 'Verify Firebase ID token',
+    description: 'Verify Firebase ID token on server and log in / register',
+  })
+  async verifyFirebaseToken(@Body('token') token: string) {
+    return this.authService.verifyFirebaseToken(token);
+  }
+
   @Post('create-account')
   @ApiOperation({
     summary: 'Create new account',

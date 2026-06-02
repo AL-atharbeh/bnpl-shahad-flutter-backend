@@ -5,6 +5,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import * as admin from 'firebase-admin';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
@@ -413,6 +414,72 @@ export class AuthService {
     const apiKey = `sh_pk_${uuidv4().replace(/-/g, '').substring(0, 24)}`;
     const apiSecret = `sh_sk_${uuidv4().replace(/-/g, '')}${uuidv4().replace(/-/g, '')}`;
     return { apiKey, apiSecret };
+  }
+
+  /**
+   * Verify Firebase ID Token and sign in / create incomplete user
+   */
+  async verifyFirebaseToken(firebaseToken: string) {
+    try {
+      const decodedToken = await admin.auth().verifyIdToken(firebaseToken);
+      const phone = this.normalizePhone(decodedToken.phone_number);
+      const firebaseUid = decodedToken.uid;
+
+      if (!phone) {
+        throw new BadRequestException('رقم الهاتف غير موجود في رمز تحقق Firebase');
+      }
+
+      // Check if user already exists
+      let user = await this.userRepository.findOne({ where: { phone } });
+
+      if (!user) {
+        // Create incomplete user
+        // Generate temporary password
+        const tempPassword = Math.random().toString(36).slice(-10);
+        const passwordHash = await bcrypt.hash(tempPassword, 10);
+
+        user = this.userRepository.create({
+          phone,
+          passwordHash,
+          firebaseUid,
+          isPhoneVerified: true,
+          isActive: true,
+          role: 'user',
+        });
+        await this.userRepository.save(user);
+      } else {
+        // Update firebaseUid and isPhoneVerified if not set
+        let needsSave = false;
+        if (!user.firebaseUid) {
+          user.firebaseUid = firebaseUid;
+          needsSave = true;
+        }
+        if (!user.isPhoneVerified) {
+          user.isPhoneVerified = true;
+          needsSave = true;
+        }
+        if (needsSave) {
+          await this.userRepository.save(user);
+        }
+      }
+
+      // Check if user profile is complete (has name)
+      const userExists = user.name && user.name.trim() !== '';
+      const token = this.generateToken(user);
+
+      return {
+        success: true,
+        message: 'تم التحقق من رمز Firebase بنجاح',
+        data: {
+          userExists,
+          token,
+          user: this.sanitizeUser(user),
+          requiresProfileCompletion: !userExists,
+        },
+      };
+    } catch (error) {
+      throw new UnauthorizedException('فشل التحقق من رمز Firebase: ' + error.message);
+    }
   }
 }
 

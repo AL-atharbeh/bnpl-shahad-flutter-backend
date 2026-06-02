@@ -62,8 +62,9 @@ dependencies:
   # Biometric authentication (Face ID / Touch ID)
   local_auth: ^2.2.0
   
-  # Firebase for push notifications
+  # Firebase for push notifications and auth
   firebase_core: ^3.8.1
+  firebase_auth: ^5.3.1
   firebase_messaging: ^15.1.5
   flutter_local_notifications: ^18.0.1
   webview_flutter: ^4.7.0
