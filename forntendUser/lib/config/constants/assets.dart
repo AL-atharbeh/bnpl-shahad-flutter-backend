@@ -10,9 +10,9 @@ class Assets {
   static const String appIcon = '$_iconsPath/app_icon.png';
   
   // Onboarding images
-  static const String onboarding1 = '$_imagesPath/onboarding_1.png';
-  static const String onboarding2 = '$_imagesPath/onboarding_2.png';
-  static const String onboarding3 = '$_imagesPath/onboarding_3.png';
+  static const String onboarding1 = '$_imagesPath/pic2.png';
+  static const String onboarding2 = '$_imagesPath/shahad.png';
+  static const String onboarding3 = '$_imagesPath/shopshahed.png';
   
   // Authentication images
   static const String loginBg = '$_imagesPath/login_background.png';
