@@ -421,6 +421,25 @@ export class AuthService {
    */
   async verifyFirebaseToken(firebaseToken: string) {
     try {
+      // Ensure Firebase admin is initialized before verifying the token
+      if (admin.apps.length === 0) {
+        const projectId = process.env.FIREBASE_PROJECT_ID;
+        const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+        const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+        if (projectId && clientEmail && privateKey) {
+          admin.initializeApp({
+            credential: admin.credential.cert({
+              projectId,
+              privateKey,
+              clientEmail,
+            }),
+          });
+        } else {
+          throw new UnauthorizedException('إعدادات Firebase غير مكتملة في السيرفر');
+        }
+      }
+
       const decodedToken = await admin.auth().verifyIdToken(firebaseToken);
       const phone = this.normalizePhone(decodedToken.phone_number);
       const firebaseUid = decodedToken.uid;
