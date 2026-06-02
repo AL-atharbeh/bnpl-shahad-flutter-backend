@@ -425,7 +425,11 @@ export class AuthService {
       if (admin.apps.length === 0) {
         const projectId = process.env.FIREBASE_PROJECT_ID;
         const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-        const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+        let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+        if (privateKey) {
+          // If the key is double quoted or contains literal '\n', normalize it
+          privateKey = privateKey.replace(/\\n/g, '\n').replace(/"/g, '');
+        }
 
         if (projectId && clientEmail && privateKey) {
           admin.initializeApp({
