@@ -76,6 +76,8 @@ class DeepLinkService {
           _showError(context, 'رابط غير صالح: معرف الجلسة مفقود');
         }
       }
+    } else if (uri.scheme.startsWith('app-') || uri.host == 'firebaseauth') {
+      debugPrint('ℹ️ Silently ignoring Firebase Auth deep link callback in DeepLinkService.');
     } else {
       debugPrint('❌ Unknown deep link scheme: ${uri.scheme}');
     }

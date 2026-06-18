@@ -70,6 +70,17 @@ class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     debugPrint('🛣️ Generating route: ${settings.name}');
     
+    if (settings.name != null && 
+        (settings.name!.startsWith('/link') || 
+         settings.name!.contains('firebaseauth') || 
+         settings.name!.contains('recaptchaToken'))) {
+      debugPrint('ℹ️ Ignoring Firebase Auth callback routing to avoid interrupting UX: ${settings.name}');
+      return PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => const SizedBox.shrink(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) => child,
+      );
+    }
+    
     if (settings.name != null && settings.name!.startsWith('/?id=')) {
       final uri = Uri.parse(settings.name!);
       final sessionId = uri.queryParameters['id'];
@@ -138,6 +149,9 @@ class AppRouter {
             phoneNumber: args?['phoneNumber'] as String? ?? '',
             frontIdPath: args?['frontIdPath'] as String? ?? '',
             backIdPath: args?['backIdPath'] as String? ?? '',
+            extractedName: args?['extractedName'] as String?,
+            extractedCivilId: args?['extractedCivilId'] as String?,
+            extractedDob: args?['extractedDob'] as String?,
           ),
           settings: settings,
         );

@@ -76,51 +76,37 @@ class _PhoneInputPageState extends State<PhoneInputPage> with SingleTickerProvid
 
       final userExists = checkResult['exists'] ?? false;
 
-      if (userExists) {
-        // 2. إرسال OTP لمستخدم موجود عبر Firebase Auth
-        await authService.sendFirebaseOTP(
-          phoneNumber: phoneNumber,
-          onCodeSent: (verificationId) {
-            if (mounted) {
-              setState(() => _isLoading = false);
-              // 3. الانتقال إلى صفحة التحقق من OTP
-              Navigator.pushNamed(
-                context,
-                AppRouter.otpVerification,
-                arguments: {
-                  'phoneNumber': phoneNumber,
-                  'userExists': true,
-                },
-              );
-            }
-          },
-          onError: (error) {
-            if (mounted) {
-              setState(() => _isLoading = false);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('فشل إرسال رمز التحقق: $error'),
-                  backgroundColor: Colors.red.shade400,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              );
-            }
-          },
-        );
-      } else {
-        // مستخدم جديد - الانتقال مباشرة إلى صفحة تصوير الهوية المدنية
-        if (mounted) {
-          setState(() => _isLoading = false);
-          Navigator.pushNamed(
-            context,
-            AppRouter.civilIdCapture,
-            arguments: {
-              'phoneNumber': phoneNumber,
-            },
-          );
-        }
-      }
+      // إرسال OTP لكلا الحالتين (مستخدم موجود أو جديد) عبر Firebase Auth
+      await authService.sendFirebaseOTP(
+        phoneNumber: phoneNumber,
+        onCodeSent: (verificationId) {
+          if (mounted) {
+            setState(() => _isLoading = false);
+            // الانتقال إلى صفحة التحقق من OTP
+            Navigator.pushNamed(
+              context,
+              AppRouter.otpVerification,
+              arguments: {
+                'phoneNumber': phoneNumber,
+                'userExists': userExists,
+              },
+            );
+          }
+        },
+        onError: (error) {
+          if (mounted) {
+            setState(() => _isLoading = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('فشل إرسال رمز التحقق: $error'),
+                backgroundColor: Colors.red.shade400,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            );
+          }
+        },
+      );
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);

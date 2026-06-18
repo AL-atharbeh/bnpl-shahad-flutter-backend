@@ -12,12 +12,18 @@ class CompleteProfilePage extends StatefulWidget {
   final String phoneNumber;
   final String frontIdPath;
   final String backIdPath;
+  final String? extractedName;
+  final String? extractedCivilId;
+  final String? extractedDob;
 
   const CompleteProfilePage({
     super.key,
     required this.phoneNumber,
     required this.frontIdPath,
     required this.backIdPath,
+    this.extractedName,
+    this.extractedCivilId,
+    this.extractedDob,
   });
 
   @override
@@ -35,6 +41,29 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
 
   bool _isLoading = false;
   DateTime? _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _fullNameController.text = widget.extractedName ?? '';
+    _civilIdController.text = widget.extractedCivilId ?? '';
+    _dobController.text = widget.extractedDob ?? '';
+    
+    // تهيئة تاريخ الميلاد المختار إذا تم استخراجه بنجاح
+    if (widget.extractedDob != null && widget.extractedDob!.isNotEmpty) {
+      try {
+        final parts = widget.extractedDob!.split('/');
+        if (parts.length == 3) {
+          final day = int.parse(parts[0]);
+          final month = int.parse(parts[1]);
+          final year = int.parse(parts[2]);
+          _selectedDate = DateTime(year, month, day);
+        }
+      } catch (e) {
+        debugPrint('Failed to parse DOB for date picker: ${widget.extractedDob}');
+      }
+    }
+  }
 
   @override
   void dispose() {
