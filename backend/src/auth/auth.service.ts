@@ -427,8 +427,12 @@ export class AuthService {
         const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
         let privateKey = process.env.FIREBASE_PRIVATE_KEY;
         if (privateKey) {
-          // If the key is double quoted or contains literal '\n', normalize it
-          privateKey = privateKey.replace(/\\n/g, '\n').replace(/"/g, '').trim();
+          // Remove surrounding quotes if present
+          privateKey = privateKey.replace(/^["']|["']$/g, '');
+          // Replace all forms of escaped newlines with actual newlines
+          privateKey = privateKey.replace(/\\\\n/g, '\n');
+          privateKey = privateKey.replace(/\\n/g, '\n');
+          privateKey = privateKey.trim();
         }
 
         if (projectId && clientEmail && privateKey) {
