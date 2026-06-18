@@ -257,7 +257,7 @@ class _CivilIdScannerPageState extends State<CivilIdScannerPage> with WidgetsBin
                           fontWeight: FontWeight.bold,
                           shadows: [
                             Shadow(
-                              color: Colors.black50,
+                              color: Colors.black54,
                               blurRadius: 4,
                               offset: Offset(0, 2),
                             ),

@@ -20,8 +20,7 @@ class IdOcrResult {
 }
 
 class IdOcrService {
-  final TextRecognizer _latinRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
-  final TextRecognizer _arabicRecognizer = TextRecognizer(script: TextRecognitionScript.arabic);
+  final TextRecognizer _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
 
   /// مسح الهوية واستخراج البيانات من الوجهين الأمامي والخلفي
   Future<IdOcrResult> extractData({
@@ -36,7 +35,7 @@ class IdOcrService {
       // 1. معالجة الوجه الخلفي أولاً (لأن الـ MRZ يحتوي على بيانات دقيقة ومكتملة باللغة الإنجليزية)
       if (backImagePath.isNotEmpty) {
         final backInputImage = InputImage.fromFilePath(backImagePath);
-        final backRecognizedText = await _latinRecognizer.processImage(backInputImage);
+        final backRecognizedText = await _textRecognizer.processImage(backInputImage);
         
         debugPrint('--- OCR Back Text Raw ---');
         debugPrint(backRecognizedText.text);
@@ -55,10 +54,10 @@ class IdOcrService {
         }
       }
 
-      // 2. معالجة الوجه الأمامي (بالمعالج العربي لاستخراج الاسم بالعربية أو ملء الحقول الناقصة)
+      // 2. معالجة الوجه الأمامي لاستخراج البيانات
       if (frontImagePath.isNotEmpty) {
         final frontInputImage = InputImage.fromFilePath(frontImagePath);
-        final frontRecognizedText = await _arabicRecognizer.processImage(frontInputImage);
+        final frontRecognizedText = await _textRecognizer.processImage(frontInputImage);
         
         debugPrint('--- OCR Front Text Raw ---');
         debugPrint(frontRecognizedText.text);
@@ -367,7 +366,6 @@ class IdOcrService {
   }
 
   void dispose() {
-    _latinRecognizer.close();
-    _arabicRecognizer.close();
+    _textRecognizer.close();
   }
 }
