@@ -14,11 +14,15 @@ export class FirebaseService implements OnModuleInit {
         try {
             // Initialize Firebase Admin SDK
             const projectId = this.configService.get<string>('FIREBASE_PROJECT_ID');
-            const privateKey = this.configService
-                .get<string>('FIREBASE_PRIVATE_KEY')
-                ?.replace(/\\n/g, '\n')
-                ?.replace(/"/g, '')
-                ?.trim();
+            let privateKey = this.configService.get<string>('FIREBASE_PRIVATE_KEY');
+            if (privateKey) {
+                // Remove surrounding quotes if present
+                privateKey = privateKey.replace(/^["']|["']$/g, '');
+                // Replace all forms of escaped newlines
+                privateKey = privateKey.replace(/\\\\n/g, '\n');
+                privateKey = privateKey.replace(/\\n/g, '\n');
+                privateKey = privateKey.trim();
+            }
             const clientEmail = this.configService.get<string>('FIREBASE_CLIENT_EMAIL');
 
             if (!projectId || !privateKey || !clientEmail) {
