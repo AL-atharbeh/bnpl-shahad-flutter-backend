@@ -175,7 +175,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
       final requiresProfileCompletion = verifyResult['requiresProfileCompletion'] ?? false;
 
       if (mounted) {
-        setState(() => _isLoading = false);ظ
+        setState(() => _isLoading = false);
 
         // إذا كان المستخدم موجود وله ملف كامل → تسجيل الدخول مباشرة
         if (userExists && !requiresProfileCompletion && verifyResult['token'] != null) {
