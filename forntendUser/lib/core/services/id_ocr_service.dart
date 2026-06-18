@@ -20,7 +20,8 @@ class IdOcrResult {
 }
 
 class IdOcrService {
-  final TextRecognizer _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+  final TextRecognizer _latinRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+  final TextRecognizer _arabicRecognizer = TextRecognizer(script: TextRecognitionScript.arabic);
 
   /// مسح الهوية واستخراج البيانات من الوجهين الأمامي والخلفي
   Future<IdOcrResult> extractData({
@@ -35,7 +36,7 @@ class IdOcrService {
       // 1. معالجة الوجه الخلفي أولاً (لأن الـ MRZ يحتوي على بيانات دقيقة ومكتملة باللغة الإنجليزية)
       if (backImagePath.isNotEmpty) {
         final backInputImage = InputImage.fromFilePath(backImagePath);
-        final backRecognizedText = await _textRecognizer.processImage(backInputImage);
+        final backRecognizedText = await _latinRecognizer.processImage(backInputImage);
         
         debugPrint('--- OCR Back Text Raw ---');
         debugPrint(backRecognizedText.text);
@@ -54,10 +55,10 @@ class IdOcrService {
         }
       }
 
-      // 2. معالجة الوجه الأمامي (لاستخراج الاسم بالعربية أو ملء الحقول الناقصة)
+      // 2. معالجة الوجه الأمامي (بالمعالج العربي لاستخراج الاسم بالعربية أو ملء الحقول الناقصة)
       if (frontImagePath.isNotEmpty) {
         final frontInputImage = InputImage.fromFilePath(frontImagePath);
-        final frontRecognizedText = await _textRecognizer.processImage(frontInputImage);
+        final frontRecognizedText = await _arabicRecognizer.processImage(frontInputImage);
         
         debugPrint('--- OCR Front Text Raw ---');
         debugPrint(frontRecognizedText.text);
@@ -71,12 +72,12 @@ class IdOcrService {
           fullName = _extractEnglishNameFromFront(frontRecognizedText.text);
         }
 
-        // ملء الرقم الوطني إذا لم يستخرج من الخلف
+        // ملء الرقم الوطني إذا لم يستخرج من الخلف (وهو أمر مهم جداً في الأردن حيث الرقم الوطني على وجه البطاقة)
         if (nationalId == null) {
           nationalId = _extractNationalId(frontRecognizedText.text);
         }
 
-        // ملء تاريخ الميلاد من الأمام (لأن تاريخ الميلاد موجود أيضاً في وجه الهوية الأردنية)
+        // ملء تاريخ الميلاد من الأمام (تاريخ الميلاد موجود في وجه الهوية الأردنية أيضاً)
         if (dateOfBirth == null) {
           dateOfBirth = _extractDateOfBirthFromFront(frontRecognizedText.text);
         }
@@ -92,10 +93,23 @@ class IdOcrService {
     );
   }
 
+  /// تحويل الأرقام الهندية/العربية (٠-٩) إلى أرقام غربية (0-9) لضمان صحة التحليل البرمجي
+  String _normalizeDigits(String text) {
+    const arabicIndic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    
+    String normalized = text;
+    for (int i = 0; i < 10; i++) {
+      normalized = normalized.replaceAll(arabicIndic[i], english[i]);
+    }
+    return normalized;
+  }
+
   /// تحليل الـ MRZ (Machine Readable Zone) من الوجه الخلفي للهوية
   IdOcrResult? _parseMrz(String text) {
+    final normalized = _normalizeDigits(text);
     // تقسيم النص إلى أسطر وتنظيف المسافات الفارغة
-    final lines = text.split('\n')
+    final lines = normalized.split('\n')
         .map((l) => l.trim().replaceAll(' ', ''))
         .where((l) => l.isNotEmpty)
         .toList();
@@ -103,14 +117,12 @@ class IdOcrService {
     // البحث عن 3 أسطر متتالية تمثل الـ MRZ للهوية (صيغة TD1 تتكون من 3 أسطر طول كل منها 30 حرفاً)
     List<String> mrzLines = [];
     for (var line in lines) {
-      // إزالة أي رموز غير مرغوبة والتأكد من الطول ووجود علامة '<'
       if (line.contains('<') && line.length >= 26 && line.length <= 34) {
         mrzLines.add(line);
       }
     }
 
     if (mrzLines.length < 3) {
-      // محاولة البحث عن الأسطر بشكل منفصل إذا لم تكن مرتبة
       mrzLines.clear();
       for (var line in lines) {
         if (line.contains('<<') || (line.contains('<') && RegExp(r'\d').hasMatch(line))) {
@@ -127,16 +139,14 @@ class IdOcrService {
         final line2 = mrzLines[1];
         final line3 = mrzLines[2];
 
-        // 1. استخراج الرقم الوطني من السطر الأول (في الهوية الأردنية يكون الرقم الوطني في الجزء الأخير)
+        // 1. استخراج الرقم الوطني من السطر الأول
         String? nationalId;
         final idMatch = RegExp(r'\d{10}').firstMatch(line1);
         if (idMatch != null) {
           nationalId = idMatch.group(0);
         } else {
-          // تنظيف الحروف والإبقاء على الأرقام فقط والبحث عن 10 أرقام متتالية
           final digits = line1.replaceAll(RegExp(r'[^\d]'), '');
           if (digits.length >= 10) {
-            // الرقم الوطني غالباً في النهاية
             nationalId = digits.substring(digits.length - 10);
           }
         }
@@ -185,30 +195,45 @@ class IdOcrService {
   /// استخراج الاسم العربي من وجه الهوية
   String? _extractArabicName(String text) {
     final lines = text.split('\n').map((l) => l.trim()).toList();
+    final nameRegex = RegExp(r'^[\u0600-\u06FF\s]+$');
     
-    // البحث عن سطر يحتوي على كلمة "الاسم" أو "الإسم" واستخراج الاسم من نفس السطر
-    for (var line in lines) {
-      if (line.contains('الاسم') || line.contains('الإسم')) {
+    // البحث عن سطر يحتوي على كلمة "الاسم" أو "الإسم" واستخراج الاسم من نفس السطر أو الأسطر التي تليه
+    for (int i = 0; i < lines.length; i++) {
+      final line = lines[i];
+      if (line.contains('الاسم') || line.contains('الإسم') || line.contains('الاسم الكامل') || line.contains('الاسم الأول')) {
         // إزالة الكلمة الدلالية والنقطتين
-        final content = line.replaceAll(RegExp(r'^.*?(?:الاسم|الإسم)\s*[:：]?\s*'), '');
-        // أخذ الأحرف العربية والمسافات فقط
-        final match = RegExp(r'^[\u0600-\u06FF\s]+').firstMatch(content);
-        if (match != null) {
-          final name = match.group(0)?.trim();
-          if (name != null && name.split(' ').where((w) => w.isNotEmpty).length >= 3) {
-            return name;
+        final content = line.replaceAll(RegExp(r'^.*?(?:الاسم|الإسم|الكامل|الأول)\s*[:：]?\s*'), '').trim();
+        if (content.isNotEmpty) {
+          final match = RegExp(r'^[\u0600-\u06FF\s]+').firstMatch(content);
+          if (match != null) {
+            final name = match.group(0)?.trim();
+            if (name != null && name.split(' ').where((w) => w.isNotEmpty).length >= 3) {
+              return name;
+            }
+          }
+        }
+        
+        // إذا كان فارغاً أو قصيراً، نفحص السطرين التاليين للبحث عن الاسم
+        for (int j = 1; j <= 2; j++) {
+          if (i + j < lines.length) {
+            final nextLine = lines[i + j];
+            if (nameRegex.hasMatch(nextLine)) {
+              final words = nextLine.split(' ').where((w) => w.isNotEmpty).toList();
+              if (words.length >= 3 && words.length <= 5) {
+                return nextLine;
+              }
+            }
           }
         }
       }
     }
 
-    // كخيار احتياطي، البحث عن سطر يحتوي على 3-4 كلمات عربية متتالية
-    final arabicRegExp = RegExp(r'^[\u0600-\u06FF\s]+$');
+    // كخيار احتياطي، البحث عن سطر يحتوي على 3-5 كلمات عربية متتالية
     for (var line in lines) {
-      if (line.contains('المملكة') || line.contains('الأردنية') || line.contains('الهاشمية') || line.contains('بطاقة') || line.contains('الأحوال')) {
+      if (line.contains('المملكة') || line.contains('الأردنية') || line.contains('الهاشمية') || line.contains('بطاقة') || line.contains('الأحوال') || line.contains('المدنية') || line.contains('شخصية') || line.contains('الرقم')) {
         continue;
       }
-      if (arabicRegExp.hasMatch(line)) {
+      if (nameRegex.hasMatch(line)) {
         final words = line.split(' ').where((w) => w.isNotEmpty).toList();
         if (words.length >= 3 && words.length <= 5) {
           return line;
@@ -238,22 +263,24 @@ class IdOcrService {
 
   /// استخراج الرقم الوطني (10 أرقام)
   String? _extractNationalId(String text) {
-    // البحث عن الرقم بعد كلمة "الرقم الوطني"
-    final idRegex = RegExp(r'(?:الرقم\s+الوطني|الوطني)\s*[:：]?\s*(\d{10})');
-    final idMatch = idRegex.firstMatch(text);
+    final normalizedText = _normalizeDigits(text);
+    
+    // البحث عن الرقم بعد كلمة "الرقم الوطني" أو "الوطني" أو "الهوية" أو "المدني"
+    final idRegex = RegExp(r'(?:الرقم\s+الوطني|الوطني|المدني|الهوية)\s*[:：]?\s*(\d{10})');
+    final idMatch = idRegex.firstMatch(normalizedText);
     if (idMatch != null) {
       return idMatch.group(1);
     }
 
     // البحث العام عن أي 10 أرقام متتالية
     final regExp = RegExp(r'\b\d{10}\b');
-    final match = regExp.firstMatch(text);
+    final match = regExp.firstMatch(normalizedText);
     if (match != null) {
       return match.group(0);
     }
     
-    // تنظيف كامل
-    final cleanText = text.replaceAll(RegExp(r'[^0-9]'), '');
+    // تنظيف كامل والبحث عن 10 أرقام متتالية
+    final cleanText = normalizedText.replaceAll(RegExp(r'[^0-9]'), '');
     final cleanRegExp = RegExp(r'\d{10}');
     final cleanMatch = cleanRegExp.firstMatch(cleanText);
     if (cleanMatch != null) {
@@ -268,22 +295,24 @@ class IdOcrService {
     return _findBirthDateInText(text);
   }
 
-  /// استخراج تاريخ الميلاد من وجه الهوية (لأن الهوية الأردنية تحتوي على تاريخ الميلاد في الوجه الأمامي أيضاً)
+  /// استخراج تاريخ الميلاد من وجه الهوية
   String? _extractDateOfBirthFromFront(String text) {
+    final normalizedText = _normalizeDigits(text);
     final dobRegex = RegExp(r'(?:تاريخ\s+الولادة|الولادة)\s*[:：]?\s*(\d{2}/\d{2}/\d{4})');
-    final match = dobRegex.firstMatch(text);
+    final match = dobRegex.firstMatch(normalizedText);
     if (match != null) {
       return match.group(1);
     }
-    return _findBirthDateInText(text);
+    return _findBirthDateInText(normalizedText);
   }
 
   String? _findBirthDateInText(String text) {
+    final normalizedText = _normalizeDigits(text);
     final dateRegExp = RegExp(
       r'\b(\d{2})[/\-.](\d{2})[/\-.](\d{4})\b|\b(\d{4})[/\-.](\d{2})[/\-.](\d{2})\b',
     );
     
-    final matches = dateRegExp.allMatches(text);
+    final matches = dateRegExp.allMatches(normalizedText);
     List<DateTime> foundDates = [];
 
     for (var match in matches) {
@@ -302,6 +331,7 @@ class IdOcrService {
 
     foundDates.sort((a, b) => a.compareTo(b));
     
+    // الأردنيون البالغون سن التسجيل
     final adultLimit = DateTime.now().subtract(const Duration(days: 365 * 12));
     for (var date in foundDates) {
       if (date.isBefore(adultLimit)) {
@@ -337,6 +367,7 @@ class IdOcrService {
   }
 
   void dispose() {
-    _textRecognizer.close();
+    _latinRecognizer.close();
+    _arabicRecognizer.close();
   }
 }

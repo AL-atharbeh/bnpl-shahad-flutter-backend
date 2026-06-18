@@ -41,6 +41,8 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
 
   bool _isLoading = false;
   DateTime? _selectedDate;
+  String _selectedEmployer = '';
+  String _selectedAddress = '';
 
   @override
   void initState() {
@@ -63,6 +65,8 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
         debugPrint('Failed to parse DOB for date picker: ${widget.extractedDob}');
       }
     }
+    _selectedEmployer = '';
+    _selectedAddress = '';
   }
 
   @override
@@ -359,17 +363,25 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
 
                     const SizedBox(height: 16),
 
-                    _CustomTextField(
-                      controller: _addressController,
+                    _CustomDropdownField(
+                      value: _selectedAddress,
+                      items: isRTL
+                          ? ['عمان', 'الزرقاء', 'إربد', 'العقبة', 'السلط', 'مأدبا', 'الكرك', 'معان', 'الطفيلة', 'جرش', 'عجلون', 'المفرق']
+                          : ['Amman', 'Zarqa', 'Irbid', 'Aqaba', 'Salt', 'Madaba', 'Karak', 'Ma\'an', 'Tafilah', 'Jerash', 'Ajloun', 'Mafraq'],
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedAddress = value ?? '';
+                          _addressController.text = _selectedAddress;
+                        });
+                      },
                       label: l10n.address,
-                      hint: isRTL ? 'العنوان' : 'Address',
+                      hint: isRTL ? 'اختر مكان الإقامة' : 'Select Residence',
                       icon: Icons.location_on_rounded,
-                      maxLines: 2,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return isRTL
-                              ? 'الرجاء إدخال العنوان'
-                              : 'Please enter address';
+                              ? 'الرجاء اختيار مكان الإقامة'
+                              : 'Please select residence';
                         }
                         return null;
                       },
@@ -399,16 +411,25 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
 
                     const SizedBox(height: 16),
 
-                    _CustomTextField(
-                      controller: _employerController,
+                    _CustomDropdownField(
+                      value: _selectedEmployer,
+                      items: isRTL
+                          ? ['عمل حكومي', 'عمل خاص']
+                          : ['Government', 'Private'],
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedEmployer = value ?? '';
+                          _employerController.text = _selectedEmployer;
+                        });
+                      },
                       label: l10n.employer,
-                      hint: isRTL ? 'جهة العمل' : 'Employer',
+                      hint: isRTL ? 'اختر جهة العمل' : 'Select Employer',
                       icon: Icons.business_rounded,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return isRTL
-                              ? 'الرجاء إدخال جهة العمل'
-                              : 'Please enter employer';
+                              ? 'الرجاء اختيار جهة العمل'
+                              : 'Please select employer';
                         }
                         return null;
                       },
@@ -636,6 +657,99 @@ class _ProgressLine extends StatelessWidget {
         height: 2,
         color: isCompleted ? AppColors.primary : Colors.grey.shade300,
       ),
+    );
+  }
+}
+
+class _CustomDropdownField extends StatelessWidget {
+  final String value;
+  final List<String> items;
+  final ValueChanged<String?> onChanged;
+  final String label;
+  final String hint;
+  final IconData icon;
+  final String? Function(String?)? validator;
+
+  const _CustomDropdownField({
+    required this.value,
+    required this.items,
+    required this.onChanged,
+    required this.label,
+    required this.hint,
+    required this.icon,
+    this.validator,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8, left: 4, right: 4),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ),
+        DropdownButtonFormField<String>(
+          value: value.isEmpty ? null : value,
+          items: items.map((item) => DropdownMenuItem<String>(
+            value: item,
+            child: Text(item),
+          )).toList(),
+          onChanged: onChanged,
+          validator: validator,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+          icon: Icon(Icons.arrow_drop_down_rounded, color: AppColors.primary, size: 24),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(
+              color: Colors.grey.shade400,
+              fontWeight: FontWeight.w500,
+            ),
+            prefixIcon: Icon(
+              icon,
+              color: AppColors.primary,
+              size: 20,
+            ),
+            filled: true,
+            fillColor: Colors.grey.shade50,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppColors.primary, width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red.shade400),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red.shade400, width: 2),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

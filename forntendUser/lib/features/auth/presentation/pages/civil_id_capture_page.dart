@@ -7,6 +7,7 @@ import '../../../../services/language_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/app_router.dart';
 import '../../../../core/services/id_ocr_service.dart';
+import 'civil_id_scanner_page.dart';
 
 class CivilIdCapturePage extends StatefulWidget {
   final String phoneNumber;
@@ -39,16 +40,21 @@ class _CivilIdCapturePageState extends State<CivilIdCapturePage> {
   }
 
   Future<void> _captureImage() async {
+    final isArabic = Provider.of<LanguageService>(context, listen: false).isArabic;
+    final instruction = isArabic 
+        ? 'ضع وجه الهوية الأمامي داخل الإطار للمسح' 
+        : 'Place the front of your ID inside the frame';
+
     try {
-      final XFile? image = await _picker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 95, // جودة أعلى لضمان دقة الـ OCR
-        maxWidth: 1920,
-        maxHeight: 1080,
-        preferredCameraDevice: CameraDevice.rear,
+      final String? imagePath = await Navigator.push<String>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CivilIdScannerPage(instruction: instruction),
+        ),
       );
 
-      if (image != null) {
+      if (imagePath != null) {
+        final image = XFile(imagePath);
         setState(() {
           if (_currentStep == 0) {
             _frontImage = image;
@@ -89,16 +95,21 @@ class _CivilIdCapturePageState extends State<CivilIdCapturePage> {
   }
 
   Future<void> _captureBackImage() async {
+    final isArabic = Provider.of<LanguageService>(context, listen: false).isArabic;
+    final instruction = isArabic 
+        ? 'ضع ظهر الهوية الخلفي داخل الإطار للمسح' 
+        : 'Place the back of your ID inside the frame';
+
     try {
-      final XFile? image = await _picker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 95, // جودة أعلى لضمان دقة الـ OCR
-        maxWidth: 1920,
-        maxHeight: 1080,
-        preferredCameraDevice: CameraDevice.rear,
+      final String? imagePath = await Navigator.push<String>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CivilIdScannerPage(instruction: instruction),
+        ),
       );
 
-      if (image != null) {
+      if (imagePath != null) {
+        final image = XFile(imagePath);
         setState(() {
           _backImage = image;
           _currentStep = 2; // الذهاب لصفحة المراجعة
