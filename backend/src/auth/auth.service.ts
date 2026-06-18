@@ -492,7 +492,7 @@ export class AuthService {
       }
 
       // Check if user profile is complete (has name)
-      const userExists = user.name && user.name.trim() !== '';
+      const userExists = !!(user.name && user.name.trim() !== '');
       const token = this.generateToken(user);
 
       return {
