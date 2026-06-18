@@ -42,7 +42,7 @@ export class AuthService {
     let clean = phone.trim();
     // Remove any spaces or dashes
     clean = clean.replace(/[\s-]/g, '');
-    
+
     if (clean.startsWith('+9620')) {
       clean = '+962' + clean.substring(5);
     } else if (clean.startsWith('9620')) {
