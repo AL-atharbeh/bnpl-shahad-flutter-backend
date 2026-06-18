@@ -466,6 +466,7 @@ export class AuthService {
         const passwordHash = await bcrypt.hash(tempPassword, 10);
 
         user = this.userRepository.create({
+          name: '',
           phone,
           passwordHash,
           firebaseUid,
