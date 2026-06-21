@@ -150,6 +150,24 @@ export class NotificationsService {
       }
     }
 
+    // Create in-app notifications automatically
+    if (this.inAppNotificationsService) {
+      for (const notification of notifications) {
+        try {
+          await this.inAppNotificationsService.createInAppNotification(
+            notification.id,
+            notification.userId,
+            {
+              priority: type === 'urgent' ? 'urgent' : 'medium',
+              category: type || 'system',
+            },
+          );
+        } catch (error) {
+          this.logger.error(`Failed to create in-app notification for user ${notification.userId}:`, error);
+        }
+      }
+    }
+
     return notifications;
   }
 
