@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import { notificationsService } from "@/services/notifications.service";
 import { usersService, User } from "@/services/users.service";
 import { getUpcomingPayments, sendPaymentReminder } from "@/services/api";
+import { bannersService } from "@/services/banners.service";
 
 type TabType = "logs" | "send" | "payments";
 
@@ -21,6 +22,7 @@ export default function NotificationsPage() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [uploadLoading, setUploadLoading] = useState(false);
 
   // Payments / Reminders State
   const [payments, setPayments] = useState<any[]>([]);
@@ -66,6 +68,27 @@ export default function NotificationsPage() {
       fetchUpcomingPayments();
     }
   }, [activeTab]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadLoading(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+    try {
+      const result = await bannersService.uploadImage(file);
+      if (result.success) {
+        setImageUrl(result.data.url);
+      }
+    } catch (err: any) {
+      console.error("Upload failed", err);
+      const errorMessage = err.response?.data?.message || err.message || "فشل في رفع الصورة";
+      setErrorMsg(`خطأ في رفع الصورة: ${errorMessage}`);
+    } finally {
+      setUploadLoading(false);
+    }
+  };
 
   const handleSendNotification = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -277,14 +300,49 @@ export default function NotificationsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 mb-1 font-medium">رابط الصورة (Image URL) - اختياري</label>
-                  <input
-                    type="url"
-                    placeholder="https://example.com/promo-image.jpg"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus:border-emerald-500/60 focus:outline-none"
-                  />
+                  <label className="block text-slate-400 mb-2 font-medium">صورة الإشعار - اختياري</label>
+                  <div className="flex flex-col gap-4">
+                    {imageUrl && (
+                      <div className="relative h-48 w-full overflow-hidden rounded-lg border border-slate-700 bg-slate-800 shadow-inner">
+                        <img src={imageUrl} alt="Preview" className="h-full w-full object-cover" />
+                        <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={() => setImageUrl("")}
+                            className="rounded-full bg-red-500 px-3 py-1.5 text-xs text-white shadow-lg hover:bg-red-400"
+                          >
+                            حذف الصورة
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {!imageUrl && (
+                      <label className="flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-700 bg-slate-900/40 transition-all hover:border-emerald-500/50 hover:bg-slate-900/60 group">
+                        <div className="flex flex-col items-center justify-center pb-4 pt-4">
+                          <div className="mb-2 rounded-full bg-slate-800 p-2 group-hover:bg-slate-700 group-hover:text-emerald-400 transition-colors">
+                            <svg className="h-6 w-6 text-slate-400 group-hover:text-emerald-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
+                            </svg>
+                          </div>
+                          <p className="mb-1 text-xs text-slate-400 text-center px-4">
+                            {uploadLoading ? (
+                              <span className="flex items-center gap-2">
+                                <span className="h-3 w-3 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent"></span>
+                                جاري الرفع...
+                              </span>
+                            ) : (
+                              <>
+                                <span className="font-semibold text-emerald-500">اضغط لرفع صورة الإشعار</span> أو اسحبها هنا
+                              </>
+                            )}
+                          </p>
+                          <p className="text-[10px] text-slate-500">PNG, JPG, JPEG or WEBP (الحد الأقصى 20MB)</p>
+                        </div>
+                        <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} disabled={uploadLoading} />
+                      </label>
+                    )}
+                  </div>
                   <p className="mt-1 text-[10px] text-slate-500">
                     * يتم تحميل وعرض الصورة كإشعار غني (Rich Notification) على الهواتف الذكية.
                   </p>
@@ -295,7 +353,7 @@ export default function NotificationsPage() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || uploadLoading}
                   className="w-full rounded-lg bg-emerald-500 py-3 text-sm font-semibold text-slate-950 hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/60 transition-colors disabled:opacity-50"
                 >
                   {loading ? "جاري الإرسال الآن..." : "🚀 إرسال الإشعار فوراً للموبايل"}
