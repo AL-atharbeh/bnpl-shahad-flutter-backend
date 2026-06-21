@@ -45,6 +45,20 @@ export class FirebaseService implements OnModuleInit {
         }
     }
 
+    private cleanImageUrl(urlStr?: string): string | undefined {
+        if (!urlStr) return undefined;
+        try {
+            const url = new URL(urlStr);
+            if (url.protocol === 'http:' || url.protocol === 'https:') {
+                return urlStr;
+            }
+        } catch {
+            // Ignore invalid URL format
+        }
+        this.logger.warn(`⚠️ Invalid imageUrl provided: "${urlStr}". Removing from FCM payload.`);
+        return undefined;
+    }
+
     /**
      * Send notification to a single device
      */
@@ -55,12 +69,13 @@ export class FirebaseService implements OnModuleInit {
         }
 
         try {
+            const cleanUrl = this.cleanImageUrl(notification.imageUrl);
             const message: Message = {
                 token,
                 notification: {
                     title: notification.title,
                     body: notification.body,
-                    imageUrl: notification.imageUrl,
+                    ...(cleanUrl ? { imageUrl: cleanUrl } : {}),
                 },
                 data: data || {},
                 android: {
@@ -103,12 +118,13 @@ export class FirebaseService implements OnModuleInit {
         }
 
         try {
+            const cleanUrl = this.cleanImageUrl(notification.imageUrl);
             const message: MulticastMessage = {
                 tokens,
                 notification: {
                     title: notification.title,
                     body: notification.body,
-                    imageUrl: notification.imageUrl,
+                    ...(cleanUrl ? { imageUrl: cleanUrl } : {}),
                 },
                 data: data || {},
                 android: {
@@ -149,12 +165,13 @@ export class FirebaseService implements OnModuleInit {
         }
 
         try {
+            const cleanUrl = this.cleanImageUrl(notification.imageUrl);
             const message: Message = {
                 topic,
                 notification: {
                     title: notification.title,
                     body: notification.body,
-                    imageUrl: notification.imageUrl,
+                    ...(cleanUrl ? { imageUrl: cleanUrl } : {}),
                 },
                 data: data || {},
                 android: {
