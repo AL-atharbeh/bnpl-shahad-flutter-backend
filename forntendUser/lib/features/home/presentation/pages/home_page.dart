@@ -2588,7 +2588,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           ),
           const SizedBox(height: 16),
           SizedBox(
-            height: 180,
+            height: 220,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -2609,7 +2609,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                     );
                   },
                   child: Container(
-                    width: 280,
+                    width: 155,
                     margin: EdgeInsets.only(
                       left: isRTL ? 0 : 16,
                       right: isRTL ? 16 : 0,
@@ -2641,38 +2641,38 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
                                   colors: [
-                                    Colors.black.withOpacity(0.1),
-                                    Colors.black.withOpacity(0.65),
+                                    Colors.black.withOpacity(0.05),
+                                    Colors.black.withOpacity(0.7),
                                   ],
-                                  stops: const [0.5, 1.0],
+                                  stops: const [0.4, 1.0],
                                 ),
                               ),
                             ),
                           ),
                           Positioned(
-                            top: 14,
-                            right: isRTL ? 14 : null,
-                            left: isRTL ? null : 14,
+                            top: 12,
+                            right: isRTL ? 12 : null,
+                            left: isRTL ? null : 12,
                             child: Container(
-                              width: 50,
-                              height: 50,
+                              width: 44,
+                              height: 44,
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.9),
-                                  width: 2.5,
+                                  color: Colors.white.withOpacity(0.95),
+                                  width: 2.0,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.12),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 3),
                                   ),
                                 ],
                               ),
                               child: ClipRRect(
-                                borderRadius: BorderRadius.circular(25),
+                                borderRadius: BorderRadius.circular(22),
                                 child: ImageHelper.buildImage(
                                   imageUrl: brand['logoUrl'],
                                   fit: BoxFit.cover,
@@ -2682,7 +2682,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                       style: TextStyle(
                                         color: AppColors.primary,
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 16,
+                                        fontSize: 14,
                                       ),
                                     ),
                                   ),
@@ -2691,9 +2691,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                             ),
                           ),
                           Positioned(
-                            bottom: 16,
-                            left: 18,
-                            right: 18,
+                            bottom: 12,
+                            left: 12,
+                            right: 12,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -2702,7 +2702,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: GoogleFonts.tajawal(
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),
@@ -2713,23 +2713,27 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                     Icon(
                                       Icons.star_rounded,
                                       color: Colors.amber,
-                                      size: 14,
+                                      size: 12,
                                     ),
-                                    const SizedBox(width: 4),
+                                    const SizedBox(width: 2),
                                     Text(
                                       brand['rating'].toStringAsFixed(1),
                                       style: GoogleFonts.mada(
-                                        fontSize: 12,
+                                        fontSize: 11,
                                         color: Colors.white.withOpacity(0.9),
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      isRTL ? brand['categoryAr'] : brand['categoryEn'],
-                                      style: GoogleFonts.mada(
-                                        fontSize: 12,
-                                        color: Colors.white.withOpacity(0.75),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        isRTL ? brand['categoryAr'] : brand['categoryEn'],
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.mada(
+                                          fontSize: 10,
+                                          color: Colors.white.withOpacity(0.75),
+                                        ),
                                       ),
                                     ),
                                   ],
