@@ -802,6 +802,95 @@ class _PaymentCardsCarouselState extends State<PaymentCardsCarousel> {
   }
 }
 
+class _CardChip extends StatelessWidget {
+  final bool isSilver;
+  const _CardChip({required this.isSilver});
+
+  @override
+  Widget build(BuildContext context) {
+    final baseColor = isSilver ? const Color(0xFFCBD5E1) : const Color(0xFFFCD34D); // silver or gold
+    final borderColor = isSilver ? const Color(0xFF94A3B8) : const Color(0xFFF59E0B);
+
+    return Container(
+      width: 36,
+      height: 26,
+      decoration: BoxDecoration(
+        color: baseColor,
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(color: borderColor, width: 0.5),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isSilver
+              ? [const Color(0xFFE2E8F0), const Color(0xFF94A3B8)]
+              : [const Color(0xFFFEF3C7), const Color(0xFFD97706)],
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Horizontal line inside chip
+          Center(
+            child: Container(
+              width: double.infinity,
+              height: 0.5,
+              color: borderColor.withOpacity(0.4),
+            ),
+          ),
+          // Vertical lines
+          Align(
+            alignment: const Alignment(-0.3, 0),
+            child: Container(
+              width: 0.5,
+              height: double.infinity,
+              color: borderColor.withOpacity(0.4),
+            ),
+          ),
+          Align(
+            alignment: const Alignment(0.3, 0),
+            child: Container(
+              width: 0.5,
+              height: double.infinity,
+              color: borderColor.withOpacity(0.4),
+            ),
+          ),
+          // Small inner core
+          Center(
+            child: Container(
+              width: 12,
+              height: 8,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(1.5),
+                border: Border.all(color: borderColor.withOpacity(0.6), width: 0.5),
+                color: Colors.transparent,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VisaLogo extends StatelessWidget {
+  final bool isDark;
+  const _VisaLogo({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'VISA',
+      style: TextStyle(
+        fontFamily: 'Montserrat',
+        fontSize: 18,
+        fontWeight: FontWeight.w900,
+        fontStyle: FontStyle.italic,
+        color: isDark ? Colors.white : const Color(0xFF1A1F71), // Classic Visa blue or white
+        letterSpacing: 0.5,
+      ),
+    );
+  }
+}
+
 const double _cardWidth = 330;
 
 class _PaymentCard extends StatelessWidget {
@@ -812,21 +901,52 @@ class _PaymentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isVisa = data.brand.toLowerCase() == 'visa';
+
+    // Premium White/Silver theme for Visa, Obsidian Dark for Mastercard/Others
+    final cardBgColors = isVisa 
+        ? [const Color(0xFFFFFFFF), const Color(0xFFF1F5F9)]
+        : [const Color(0xFF232629), const Color(0xFF1C1F22)];
+    
+    final cardBorderColor = isVisa
+        ? const Color(0xFFE2E8F0)
+        : const Color(0xFF334155).withOpacity(0.2);
+
+    final cardTextColor = isVisa ? const Color(0xFF0F172A) : Colors.white;
+    final cardSubtextColor = isVisa ? const Color(0xFF64748B) : const Color(0xFF9CA3AF);
+
+    final cardShadows = isVisa 
+        ? [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            )
+          ]
+        : [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.12),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
+            )
+          ];
+
     return Center(
       child: Container(
         width: _cardWidth,
         height: 190,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF232629), Color(0xFF1C1F22)],
+            colors: cardBgColors,
           ),
           border: Border.all(
-            color: const Color(0xFFE7EDF3),
-            width: 1,
+            color: cardBorderColor,
+            width: isVisa ? 1.5 : 1,
           ),
+          boxShadow: cardShadows,
         ),
         child: Stack(
           children: [
@@ -837,14 +957,8 @@ class _PaymentCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Text(
-                        l10n.currentBalance,
-                        style: const TextStyle(
-                          color: Color(0xFF9CA3AF),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      // Chip display
+                      _CardChip(isSilver: isVisa),
                       const Spacer(),
                       if (onDelete != null) ...[
                         GestureDetector(
@@ -852,7 +966,7 @@ class _PaymentCard extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.all(5),
                             decoration: BoxDecoration(
-                              color: Colors.red.withOpacity(0.12),
+                              color: Colors.red.withOpacity(isVisa ? 0.08 : 0.12),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -864,29 +978,26 @@ class _PaymentCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 10),
                       ],
-                      const _MastercardLogo(),
+                      // Brand Logo display
+                      isVisa 
+                          ? const _VisaLogo(isDark: false)
+                          : const _MastercardLogo(),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    data.balance,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 24),
+                  // Masked Card Number
                   Text(
                     data.masked,
-                    style: const TextStyle(
-                      color: Color(0xFFE5E7EB),
-                      fontSize: 16,
-                      letterSpacing: 1.4,
-                      fontFeatures: [FontFeature.tabularFigures()],
+                    style: TextStyle(
+                      color: cardTextColor,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.6,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                   const Spacer(),
+                  // Card Footer (Holder & Expiry)
                   Row(
                     children: [
                       Expanded(
@@ -895,9 +1006,9 @@ class _PaymentCard extends StatelessWidget {
                           children: [
                             Text(
                               l10n.cardholder,
-                              style: const TextStyle(
-                                color: Color(0xFF9CA3AF),
-                                fontSize: 11,
+                              style: TextStyle(
+                                color: cardSubtextColor,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -905,8 +1016,9 @@ class _PaymentCard extends StatelessWidget {
                             Text(
                               data.holder,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: cardTextColor,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
@@ -919,8 +1031,8 @@ class _PaymentCard extends StatelessWidget {
                         children: [
                           Text(
                             l10n.validThru,
-                            style: const TextStyle(
-                              color: Color(0xFF9CA3AF),
+                            style: TextStyle(
+                              color: cardSubtextColor,
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                             ),
@@ -928,8 +1040,9 @@ class _PaymentCard extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             data.validThru,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: cardTextColor,
+                              fontSize: 14,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
