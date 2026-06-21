@@ -3036,46 +3036,40 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                         topLeft: Radius.circular(17),
                         topRight: Radius.circular(17),
                       ),
-                      child: isNetworkImage
-                          ? Image.network(
-                              imageUrl,
-                              fit: BoxFit.cover,
-                              loadingBuilder: (context, child, progress) {
-                                if (progress == null) return child;
-                                return Container(
-                                  color: AppColors.primary.withOpacity(0.05),
-                                  child: Center(
-                                    child: SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: AppColors.primary.withOpacity(0.3),
-                                      ),
+                      child: Stack(
+                        children: [
+                          // Background Image with Blur (Cover Fit)
+                          Positioned.fill(
+                            child: ImageFiltered(
+                              imageFilter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                              child: ImageHelper.buildImage(
+                                imageUrl: imageUrl.isNotEmpty ? imageUrl : 'assets/images/photo.jpg',
+                                fit: BoxFit.cover,
+                                errorWidget: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [AppColors.primary.withOpacity(0.7), AppColors.primaryDark],
                                     ),
                                   ),
-                                );
-                              },
-                              errorBuilder: (_, __, ___) => Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [AppColors.primary.withOpacity(0.7), AppColors.primaryDark],
-                                  ),
-                                ),
-                                child: Icon(Icons.local_offer_rounded, color: Colors.white.withOpacity(0.4), size: 36),
-                              ),
-                            )
-                          : Image.asset(
-                              imageUrl.isNotEmpty ? imageUrl : 'assets/images/photo.jpg',
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [AppColors.primary.withOpacity(0.7), AppColors.primaryDark],
+                                  child: Icon(
+                                    Icons.local_offer_rounded,
+                                    color: Colors.white.withOpacity(0.4),
+                                    size: 36,
                                   ),
                                 ),
                               ),
                             ),
+                          ),
+                          // Foreground Image (Contain Fit) to display the image fully without cropping
+                          Positioned.fill(
+                            child: ImageHelper.buildImage(
+                              imageUrl: imageUrl.isNotEmpty ? imageUrl : 'assets/images/photo.jpg',
+                              fit: BoxFit.contain,
+                              errorWidget: const SizedBox.shrink(),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   // Bottom gradient
