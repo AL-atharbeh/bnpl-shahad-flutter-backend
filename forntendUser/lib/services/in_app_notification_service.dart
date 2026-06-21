@@ -89,6 +89,11 @@ class InAppNotificationService {
     }
   }
 
+  void invalidateCache() {
+    _isCacheLoaded = false;
+    _cachedNotifications = [];
+  }
+
   /// Mark notification as displayed
   Future<bool> markAsDisplayed(int id) async {
     try {
@@ -98,7 +103,11 @@ class InAppNotificationService {
       );
       final response = await _apiService.put(endpoint, {});
       
-      return response['success'] == true;
+      if (response['success'] == true) {
+        invalidateCache();
+        return true;
+      }
+      return false;
     } catch (e) {
       print('❌ Error marking notification as displayed: $e');
       return false;
@@ -114,7 +123,11 @@ class InAppNotificationService {
       );
       final response = await _apiService.put(endpoint, {});
       
-      return response['success'] == true;
+      if (response['success'] == true) {
+        invalidateCache();
+        return true;
+      }
+      return false;
     } catch (e) {
       print('❌ Error marking notification as clicked: $e');
       return false;
@@ -125,7 +138,11 @@ class InAppNotificationService {
   Future<bool> markAllAsRead() async {
     try {
       final response = await _apiService.put(ApiPaths.markAllInAppNotificationsRead, {});
-      return response['success'] == true;
+      if (response['success'] == true) {
+        invalidateCache();
+        return true;
+      }
+      return false;
     } catch (e) {
       print('❌ Error marking all notifications as read: $e');
       return false;
@@ -138,7 +155,11 @@ class InAppNotificationService {
       final endpoint = '${ApiPaths.inAppNotifications}/$id';
       final response = await _apiService.delete(endpoint);
       
-      return response['success'] == true;
+      if (response['success'] == true) {
+        invalidateCache();
+        return true;
+      }
+      return false;
     } catch (e) {
       print('❌ Error deleting notification: $e');
       return false;

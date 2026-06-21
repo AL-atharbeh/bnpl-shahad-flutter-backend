@@ -386,8 +386,8 @@ class AppRouter {
     Navigator.pushNamed(context, bnplBusiness);
   }
 
-  static void navigateToNotifications(BuildContext context) {
-    Navigator.pushNamed(context, notifications);
+  static Future<dynamic> navigateToNotifications(BuildContext context) {
+    return Navigator.pushNamed(context, notifications);
   }
 
   static void navigateToCategoryBrowse(BuildContext context, {required String categoryName, int? categoryId}) {

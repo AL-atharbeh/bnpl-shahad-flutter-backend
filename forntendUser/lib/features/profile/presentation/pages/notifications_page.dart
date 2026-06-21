@@ -166,7 +166,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
       // Mark as read in main notification via API
       final success = await _notificationService.markAsClicked(notification.id);
       if (success) {
-        _loadNotifications();
+        _loadNotifications(force: true);
       }
     }
   }
@@ -175,7 +175,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
     setState(() => _isLoading = true);
     final success = await _notificationService.markAllAsRead();
     if (success) {
-      await _loadNotifications();
+      await _loadNotifications(force: true);
       _toast(AppLocalizations.of(context)!.allNotificationsMarkedAsRead);
     } else {
       setState(() => _isLoading = false);
@@ -210,7 +210,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
     _showNotificationDetail(notification);
     
     // Reload notifications to update state in background
-    _loadNotifications();
+    _loadNotifications(force: true);
   }
 
   void _showNotificationDetail(InAppNotification n) {

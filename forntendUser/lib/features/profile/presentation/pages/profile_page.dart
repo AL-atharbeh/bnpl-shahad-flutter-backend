@@ -9,6 +9,7 @@ import '../../../../routing/app_router.dart';
 import '../../../../services/points_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../services/saved_cards_service.dart';
+import '../../../../services/in_app_notification_service.dart';
 
 /// صفحة البروفايل (للاستعراض)
 class ProfilePage extends StatefulWidget {
@@ -22,15 +23,30 @@ class _ProfilePageState extends State<ProfilePage> {
   Map<String, dynamic>? _userData;
   bool _isLoading = true;
   String? _error;
+  bool _hasUnreadNotifications = false;
 
   @override
   void initState() {
     super.initState();
     _loadUserProfile();
+    _checkUnreadNotifications();
     // تهيئة خدمة النقاط من السيرفر
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<PointsService>(context, listen: false).initialize();
     });
+  }
+
+  Future<void> _checkUnreadNotifications() async {
+    try {
+      final unread = await InAppNotificationService().getUnreadInAppNotifications();
+      if (mounted) {
+        setState(() {
+          _hasUnreadNotifications = unread.isNotEmpty;
+        });
+      }
+    } catch (e) {
+      print('❌ Error checking unread notifications: $e');
+    }
   }
 
   Future<void> _loadUserProfile() async {
@@ -38,6 +54,7 @@ class _ProfilePageState extends State<ProfilePage> {
       _isLoading = true;
       _error = null;
     });
+    _checkUnreadNotifications();
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
@@ -169,21 +186,25 @@ class _ProfilePageState extends State<ProfilePage> {
             clipBehavior: Clip.none,
             children: [
               IconButton(
-                onPressed: () => AppRouter.navigateToNotifications(context),
+                onPressed: () async {
+                  await AppRouter.navigateToNotifications(context);
+                  _checkUnreadNotifications();
+                },
                 icon: const Icon(Icons.notifications_none_rounded),
               ),
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE53935),
-                    shape: BoxShape.circle,
+              if (_hasUnreadNotifications)
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFE53935),
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ],
