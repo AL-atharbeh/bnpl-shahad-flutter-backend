@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SavedCard } from './entities/saved-card.entity';
 import { Payment } from '../payments/entities/payment.entity';
+import { AutoPaymentLog } from './entities/auto-payment-log.entity';
 import { StripeService } from '../payments/stripe.service';
 import { UsersService } from '../users/users.service';
 
@@ -13,6 +14,8 @@ export class SavedCardsService {
     private savedCardRepository: Repository<SavedCard>,
     @InjectRepository(Payment)
     private paymentRepository: Repository<Payment>,
+    @InjectRepository(AutoPaymentLog)
+    private autoPaymentLogRepository: Repository<AutoPaymentLog>,
     private stripeService: StripeService,
     private usersService: UsersService,
   ) { }
@@ -118,6 +121,16 @@ export class SavedCardsService {
       await this.stripeService.detachPaymentMethod(card.stripePaymentMethodId);
     } catch (stripeError) {
       console.warn(`⚠️ Failed to detach payment method from Stripe: ${stripeError.message}`);
+    }
+
+    // Set savedCardId to null in auto_payment_logs to prevent foreign key constraint violations
+    try {
+      await this.autoPaymentLogRepository.update(
+        { savedCardId: cardId },
+        { savedCardId: null }
+      );
+    } catch (dbError) {
+      console.warn(`⚠️ Failed to clear savedCardId in auto_payment_logs: ${dbError.message}`);
     }
 
     // Delete from DB or mark as inactive
