@@ -182,26 +182,29 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
         final token = await authService.getSavedToken();
         if (token != null) {
           authService.setAuthToken(token);
-          try {
-            final securityService = SecurityService();
-            final settingsResponse =
-                await securityService.getSecuritySettings();
-            if (!mounted) return;
-            if (settingsResponse['success']) {
-              final backendData = settingsResponse['data'];
-              final settingsData = backendData['data'] ?? backendData;
-              final pinEnabled = settingsData['pinEnabled'] ?? false;
-              if (pinEnabled) {
-                AppRouter.navigateToPinLoginCinematic(context);
+            try {
+              final securityService = SecurityService();
+              final settingsResponse =
+                  await securityService.getSecuritySettings();
+              if (!mounted) return;
+              if (settingsResponse['success']) {
+                final backendData = settingsResponse['data'];
+                final settingsData = backendData['data'] ?? backendData;
+                final pinEnabled = settingsData['pinEnabled'] ?? false;
+                final biometricEnabled = settingsData['biometricEnabled'] ?? false;
+                
+                // إذا كان PIN أو البصمة مُفعّلة، اذهب لصفحة PIN (التي ستُشغّل البصمة تلقائياً)
+                if (pinEnabled || biometricEnabled) {
+                  AppRouter.navigateToPinLoginCinematic(context);
+                } else {
+                  AppRouter.navigateToHomeCinematic(context);
+                }
               } else {
                 AppRouter.navigateToHomeCinematic(context);
               }
-            } else {
-              AppRouter.navigateToHomeCinematic(context);
+            } catch (e) {
+              if (mounted) AppRouter.navigateToHomeCinematic(context);
             }
-          } catch (e) {
-            if (mounted) AppRouter.navigateToHomeCinematic(context);
-          }
         } else {
           AppRouter.navigateToPhoneInputCinematic(context);
         }

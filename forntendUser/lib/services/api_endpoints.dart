@@ -67,6 +67,7 @@ class ApiEndpoints {
   // ==================== BANNERS ENDPOINTS ====================
   static const String banners = '/banners';
   static const String appConfigSplash = '/app-config/splash';
+  static const String featuredBrands = '/featured-brands';
 
   // ==================== DEALS ENDPOINTS ====================
   static const String deals = '/deals';

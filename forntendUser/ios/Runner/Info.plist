@@ -53,6 +53,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>نحتاج للوصول للكاميرا لتصوير البطاقة المدنية</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>يستخدم التطبيق بصمة الوجه لتأمين الدخول إلى حسابك بشكل أسرع وآمن</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>نحتاج لحفظ الصور في المعرض</string>
 	<key>NSPhotoLibraryUsageDescription</key>

@@ -9,11 +9,13 @@ import { Notification } from '../notifications/entities/notification.entity';
 import { Deal } from '../deals/entities/deal.entity';
 
 import { BannersModule } from '../banners/banners.module';
+import { FeaturedBrandsModule } from '../featured-brands/featured-brands.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Store, Product, Payment, Notification, Deal]),
     BannersModule,
+    FeaturedBrandsModule,
   ],
   controllers: [HomeController],
   providers: [HomeService],

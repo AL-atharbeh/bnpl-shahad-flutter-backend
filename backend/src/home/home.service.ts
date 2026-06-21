@@ -7,6 +7,7 @@ import { Payment } from '../payments/entities/payment.entity';
 import { Notification } from '../notifications/entities/notification.entity';
 import { Deal } from '../deals/entities/deal.entity';
 import { BannersService } from '../banners/banners.service';
+import { FeaturedBrandsService } from '../featured-brands/featured-brands.service';
 
 @Injectable()
 export class HomeService {
@@ -22,6 +23,7 @@ export class HomeService {
     @InjectRepository(Deal)
     private dealRepository: Repository<Deal>,
     private bannersService: BannersService,
+    private featuredBrandsService: FeaturedBrandsService,
   ) {}
 
   /**
@@ -187,8 +189,27 @@ export class HomeService {
       ];
     }
 
+    // Get active featured brands
+    let featuredBrands = [];
+    try {
+      const dbFeatured = await this.featuredBrandsService.findAllActive();
+      if (dbFeatured && dbFeatured.length > 0) {
+        featuredBrands = dbFeatured.map(b => ({
+          id: b.id,
+          storeId: b.storeId,
+          imageUrl: b.imageUrl,
+          storeName: b.store?.name || '',
+          storeNameAr: b.store?.nameAr || b.store?.name || '',
+          logoUrl: b.store?.logoUrl || '',
+        }));
+      }
+    } catch (error) {
+      console.error('[HomeService] Failed to load featured brands:', error);
+    }
+
     return {
       banners,
+      featuredBrands,
       categories,
       topStores: topStores.map((store) => this.formatStore(store)),
       bestOffers: bestDeals.map((deal) => this.formatDealOffer(deal)),

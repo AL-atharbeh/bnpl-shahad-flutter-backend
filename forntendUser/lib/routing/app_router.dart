@@ -7,6 +7,7 @@ import '../../features/auth/presentation/pages/otp_verification_page.dart';
 import '../../features/auth/presentation/pages/civil_id_capture_page.dart';
 import '../../features/auth/presentation/pages/complete_profile_page.dart';
 import '../../features/auth/presentation/pages/pin_login_page.dart';
+import '../../features/auth/presentation/pages/setup_security_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/personal_data_page.dart';
@@ -30,6 +31,7 @@ class AppRouter {
   static const String onboarding = '/onboarding';
   static const String phoneInput = '/phone-input';
   static const String pinLogin = '/pin-login';
+  static const String setupSecurity = '/setup-security';
   static const String otpVerification = '/otp-verification';
   static const String civilIdCapture = '/civil-id-capture';
   static const String completeProfile = '/complete-profile';
@@ -118,6 +120,12 @@ class AppRouter {
       case pinLogin:
         return MaterialPageRoute(
           builder: (_) => const PinLoginPage(),
+          settings: settings,
+        );
+
+      case setupSecurity:
+        return MaterialPageRoute(
+          builder: (_) => const SetupSecurityPage(),
           settings: settings,
         );
       
@@ -334,6 +342,14 @@ class AppRouter {
     Navigator.pushAndRemoveUntil(
       context,
       _createCinematicRoute(const PinLoginPage(), const RouteSettings(name: pinLogin)),
+      (route) => false,
+    );
+  }
+
+  static void navigateToSetupSecurity(BuildContext context) {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const SetupSecurityPage()),
       (route) => false,
     );
   }

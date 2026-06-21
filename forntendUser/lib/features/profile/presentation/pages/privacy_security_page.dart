@@ -24,7 +24,8 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
   bool _isLoading = true;
   bool _pinEnabled = false;
   bool _biometricEnabled = false;
-  bool _biometricAvailable = false;
+  bool _biometricAvailable = false;          // الجهاز يدعم البصمة فعلاً
+  List<BiometricType> _availableBiometrics = []; // أنواع البصمة المتاحة
 
   @override
   void initState() {
@@ -68,15 +69,40 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
 
   Future<void> _checkBiometricAvailability() async {
     try {
-      final isAvailable = await _localAuth.canCheckBiometrics;
+      // فحص دعم الجهاز لبصمة مُسجَّلة فيه (من إعدادات الهاتف)
       final isDeviceSupported = await _localAuth.isDeviceSupported();
-      
-      setState(() {
-        _biometricAvailable = isAvailable && isDeviceSupported;
-      });
+      final canCheck = await _localAuth.canCheckBiometrics;
+      final available = isDeviceSupported && canCheck
+          ? await _localAuth.getAvailableBiometrics()
+          : <BiometricType>[];
+
+      if (mounted) {
+        setState(() {
+          _biometricAvailable =
+              isDeviceSupported && canCheck && available.isNotEmpty;
+          _availableBiometrics = available;
+        });
+      }
     } catch (e) {
-      setState(() => _biometricAvailable = false);
+      if (mounted) setState(() => _biometricAvailable = false);
     }
+  }
+
+  // ── نوع البصمة المتاحة ──────────────────────────────────────────────────
+  bool get _isFaceId =>
+      _availableBiometrics.contains(BiometricType.face) ||
+      _availableBiometrics.contains(BiometricType.iris);
+
+  IconData get _biometricIconData =>
+      _isFaceId ? Icons.face_retouching_natural : Icons.fingerprint_rounded;
+
+  String get _biometricTitle => _isFaceId ? 'بصمة الوجه' : 'بصمة الإصبع';
+
+  String get _biometricSubtitle {
+    if (!_biometricAvailable) return 'غير متاحة على هذا الجهاز';
+    if (!_pinEnabled) return 'يتطلب تفعيل كلمة السر أولاً';
+    if (_biometricEnabled) return 'مُفعَّلة - تستخدم بصمة الجهاز';
+    return 'غير مُفعَّلة - اضغط للتفعيل';
   }
 
   @override
@@ -125,13 +151,11 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
                     onTap: _pinEnabled ? _showChangePinDialog : _showSetPinDialog,
                   ),
                   const _ItemDivider(),
-                  // Biometric - بصمة الوجه
+                  // Biometric - بصمة الوجه / بصمة الإصبع
                   _SwitchTile(
-                    icon: Icons.face,
-                    title: l10n.faceId,
-                    subtitle: _biometricEnabled 
-                        ? l10n.enabledUseFaceIdToLogin
-                        : l10n.disabledRequiresPinFirst,
+                    icon: _biometricIconData,
+                    title: _biometricTitle,
+                    subtitle: _biometricSubtitle,
                     value: _biometricEnabled,
                     onChanged: _biometricAvailable && _pinEnabled
                         ? (v) => v ? _enableBiometric() : _disableBiometric()
@@ -505,7 +529,7 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
     try {
       // التحقق من البصمة أولاً
       final didAuthenticate = await _localAuth.authenticate(
-        localizedReason: 'يرجى التحقق من هويتك لتفعيل البصمة',
+        localizedReason: 'يرجى التحقق من هويتك لتفعيل $_biometricTitle',
         options: const AuthenticationOptions(
           biometricOnly: true,
           stickyAuth: true,

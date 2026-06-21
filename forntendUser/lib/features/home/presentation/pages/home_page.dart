@@ -16,6 +16,7 @@ import '../../../../services/deal_service.dart';
 import '../../../../services/promo_notification_service.dart';
 import '../../../../services/payment_service.dart';
 import '../../../../services/auth_service.dart';
+import '../../../../services/featured_brand_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../routing/app_router.dart';
@@ -40,6 +41,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   final DealService _dealService = DealService();
   final PromoNotificationService _promoNotificationService = PromoNotificationService();
   final PaymentService _paymentService = PaymentService();
+  final FeaturedBrandService _featuredBrandService = FeaturedBrandService();
+  
+  List<Map<String, dynamic>> _featuredBrands = [];
+  bool _isLoadingFeaturedBrands = true;
   
   // Promo notification from database
   Map<String, dynamic>? _promoNotification;
@@ -345,6 +350,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     
     // Load data from database
     _loadBanners();
+    _loadFeaturedBrands();
     _loadCategories();
     _loadTopStores();
     _loadBestOffers();
@@ -358,6 +364,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     // Reload data when app comes back to foreground
     if (state == AppLifecycleState.resumed) {
       _loadBanners();
+      _loadFeaturedBrands();
       _loadCategories();
       _loadTopStores();
       _loadBestOffers();
@@ -418,6 +425,56 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     }
   }
   
+  Future<void> _loadFeaturedBrands() async {
+    setState(() => _isLoadingFeaturedBrands = true);
+    
+    try {
+      final response = await _featuredBrandService.getActiveFeaturedBrands();
+      
+      if (response['success']) {
+        final backendData = response['data'];
+        final brandsData = backendData is List ? backendData : (backendData['data'] ?? backendData);
+        
+        if (brandsData is List) {
+          setState(() {
+            _featuredBrands = brandsData.map((brand) => {
+              'id': brand['id'],
+              'storeId': brand['storeId'],
+              'imageUrl': brand['imageUrl'] ?? '',
+              'storeName': brand['storeName'] ?? brand['store']?['name'] ?? '',
+              'storeNameAr': brand['storeNameAr'] ?? brand['store']?['nameAr'] ?? brand['store']?['name'] ?? '',
+              'logoUrl': brand['logoUrl'] ?? brand['store']?['logoUrl'] ?? '',
+              'rating': brand['store']?['rating'] != null 
+                  ? (brand['store']?['rating'] is String 
+                      ? double.tryParse(brand['store']?['rating']) ?? 0.0 
+                      : (brand['store']?['rating'] as num).toDouble())
+                  : 0.0,
+              'categoryAr': brand['store']?['categoryRelation']?['nameAr'] ?? brand['store']?['category'] ?? '',
+              'categoryEn': brand['store']?['categoryRelation']?['name'] ?? brand['store']?['category'] ?? '',
+            }).toList();
+            _isLoadingFeaturedBrands = false;
+          });
+          
+          if (EnvDev.enableLogging) {
+            print('🎯 Loaded ${_featuredBrands.length} featured brands from database');
+          }
+        } else {
+          setState(() => _isLoadingFeaturedBrands = false);
+        }
+      } else {
+        setState(() => _isLoadingFeaturedBrands = false);
+        if (EnvDev.enableLogging) {
+          print('❌ Failed to load featured brands: ${response['error']}');
+        }
+      }
+    } catch (e) {
+      setState(() => _isLoadingFeaturedBrands = false);
+      if (EnvDev.enableLogging) {
+        print('❌ Error loading featured brands: $e');
+      }
+    }
+  }
+
   Future<void> _loadCategories() async {
     setState(() => _isLoadingCategories = true);
     
@@ -988,7 +1045,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         strokeWidth: 3,
         displacement: 40,
         child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
+          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
           child: Column(
             children: [
               // Header Section
@@ -1009,6 +1066,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               
               // Store Cards Section
               _buildStoreCards(),
+              
+              // Featured Brands Section
+              _buildFeaturedBrandsSection(),
               
               // Categories Section
               _buildCategoriesSection(),
@@ -1179,6 +1239,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     // إعادة تحميل البيانات من قاعدة البيانات
     await Future.wait([
       _loadBanners(),
+      _loadFeaturedBrands(),
       _loadCategories(),
       _loadTopStores(),
       _loadBestOffers(),
@@ -2269,7 +2330,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           ),
           const SizedBox(height: 20),
           SizedBox(
-            height: 250,
+            height: _topStores.length <= 4 ? 130 : 250,
             child: PageView.builder(
               controller: _storesPageController,
               reverse: false,
@@ -2305,37 +2366,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               },
             ),
           ),
-          // const SizedBox(height: 6),
-          // Page Indicators
-          Column(
-            children: [
-              // Text(
-              //   'الصفحة ${_currentStoresPage + 1} من ${(_topStores.length / 8).ceil()}',
-              //   style: GoogleFonts.mada(
-              //     fontSize: 12,
-              //     color: const Color(0xFF64748B),
-              //   ),
-              // ),
-              // const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  (_topStores.length / 8).ceil(),
-                  (index) => Container(
-                    width: 8,
-                    height: 8,
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: index == _currentStoresPage 
-                          ? AppColors.primary
-                          : const Color(0xFFE5E7EB),
-                    ),
+          if (_topStores.length > 8) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                (_topStores.length / 8).ceil(),
+                (index) => Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: index == _currentStoresPage 
+                        ? AppColors.primary
+                        : const Color(0xFFE5E7EB),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ],
       ),
     );
@@ -2486,6 +2536,216 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           size: 28,
           color: Colors.white,
         ),
+      ),
+    );
+  }
+
+  Widget _buildFeaturedBrandsSection() {
+    final languageService = Provider.of<LanguageService>(context);
+    final isRTL = languageService.isArabic;
+
+    if (_isLoadingFeaturedBrands && _featuredBrands.isEmpty) {
+      return Container(
+        margin: const EdgeInsets.only(top: 24, left: 20, right: 20),
+        height: 180,
+        child: const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
+
+    if (_featuredBrands.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(top: 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isRTL ? 'علامات تجارية مميزة' : 'Featured Brands',
+                  style: AppTextStyles.changaH4.copyWith(
+                    color: const Color(0xFF0F172A),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  isRTL ? 'تسوق من أشهر العلامات التجارية' : 'Shop from popular brands',
+                  style: GoogleFonts.mada(
+                    fontSize: 12,
+                    color: const Color(0xFF64748B),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 180,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: _featuredBrands.length,
+              itemBuilder: (context, index) {
+                final brand = _featuredBrands[index];
+                return GestureDetector(
+                  onTap: () {
+                    AppRouter.navigateToStoreDetails(
+                      context,
+                      storeId: brand['storeId'],
+                      storeName: isRTL ? brand['storeNameAr'] : brand['storeName'],
+                      storeLogo: brand['logoUrl'],
+                      storeBanner: brand['logoUrl'],
+                      rating: brand['rating'] ?? 0.0,
+                      reviewsCount: 0,
+                      description: isRTL ? brand['categoryAr'] : brand['categoryEn'],
+                    );
+                  },
+                  child: Container(
+                    width: 280,
+                    margin: EdgeInsets.only(
+                      left: isRTL ? 0 : 16,
+                      right: isRTL ? 16 : 0,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: ImageHelper.buildImage(
+                              imageUrl: brand['imageUrl'],
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned.fill(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.black.withOpacity(0.1),
+                                    Colors.black.withOpacity(0.65),
+                                  ],
+                                  stops: const [0.5, 1.0],
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 14,
+                            right: isRTL ? 14 : null,
+                            left: isRTL ? null : 14,
+                            child: Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.9),
+                                  width: 2.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.12),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(25),
+                                child: ImageHelper.buildImage(
+                                  imageUrl: brand['logoUrl'],
+                                  fit: BoxFit.cover,
+                                  errorWidget: Center(
+                                    child: Text(
+                                      brand['storeName'].isNotEmpty ? brand['storeName'][0].toUpperCase() : 'B',
+                                      style: TextStyle(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 16,
+                            left: 18,
+                            right: 18,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  isRTL ? brand['storeNameAr'] : brand['storeName'],
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.tajawal(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.star_rounded,
+                                      color: Colors.amber,
+                                      size: 14,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      brand['rating'].toStringAsFixed(1),
+                                      style: GoogleFonts.mada(
+                                        fontSize: 12,
+                                        color: Colors.white.withOpacity(0.9),
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      isRTL ? brand['categoryAr'] : brand['categoryEn'],
+                                      style: GoogleFonts.mada(
+                                        fontSize: 12,
+                                        color: Colors.white.withOpacity(0.75),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

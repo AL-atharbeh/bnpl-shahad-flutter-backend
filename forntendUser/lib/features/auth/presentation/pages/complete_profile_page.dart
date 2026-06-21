@@ -207,11 +207,8 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
           ),
         );
 
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRouter.home,
-          (route) => false,
-        );
+        // توجيه المستخدم لإعداد PIN و بصمة الوجه
+        AppRouter.navigateToSetupSecurity(context);
       }
     } catch (e) {
       if (mounted) {

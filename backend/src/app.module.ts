@@ -27,6 +27,7 @@ import { ReportsModule } from './reports/reports.module';
 import { BannersModule } from './banners/banners.module';
 import { AppConfigModule } from './app-config/app-config.module';
 import { SavedCardsModule } from './saved-cards/saved-cards.module';
+import { FeaturedBrandsModule } from './featured-brands/featured-brands.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { SavedCardsModule } from './saved-cards/saved-cards.module';
     BannersModule,
     AppConfigModule,
     SavedCardsModule,
+    FeaturedBrandsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
