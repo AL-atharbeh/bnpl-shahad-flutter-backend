@@ -48,9 +48,11 @@ export class FirebaseService implements OnModuleInit {
     private cleanImageUrl(urlStr?: string): string | undefined {
         if (!urlStr) return undefined;
         try {
-            const url = new URL(urlStr);
+            // Encode URI to handle Unicode/Arabic characters in filenames that FCM rejects
+            const encodedUrl = encodeURI(urlStr);
+            const url = new URL(encodedUrl);
             if (url.protocol === 'http:' || url.protocol === 'https:') {
-                return urlStr;
+                return encodedUrl;
             }
         } catch {
             // Ignore invalid URL format
