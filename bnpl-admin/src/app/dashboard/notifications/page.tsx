@@ -50,8 +50,9 @@ export default function NotificationsPage() {
       const res = await getUpcomingPayments();
       if (res && res.data) {
         // Backend returns: { success: true, data: [...] } or direct array
-        const data = res.data.data || res.data;
-        setPayments(data || []);
+        const data = res.data?.data || res.data;
+        const paymentsList = data?.upcomingPayments || (Array.isArray(data) ? data : []);
+        setPayments(paymentsList);
       }
     } catch (e) {
       console.error("Failed to load upcoming payments", e);
@@ -377,15 +378,17 @@ export default function NotificationsPage() {
                       <tr key={p.id} className="hover:bg-slate-900/40 transition-colors">
                         <td className="px-4 py-3 font-semibold text-slate-50">#{p.id}</td>
                         <td className="px-4 py-3">{p.customer || p.user?.name || "غير معروف"}</td>
-                        <td className="px-4 py-3 text-slate-300">{p.storeName || p.store?.nameAr || p.store?.name}</td>
+                        <td className="px-4 py-3 text-slate-300">
+                          {p.storeName || (typeof p.store === 'string' ? p.store : (p.store?.nameAr || p.store?.name || "غير معروف"))}
+                        </td>
                         <td className="px-4 py-3">
                           قسط {p.installmentNumber} من {p.installmentsCount}
                         </td>
                         <td className="px-4 py-3 text-red-300">
-                          {new Date(p.dueDate).toLocaleDateString("ar-JO", {
+                          {p.dueDate ? new Date(p.dueDate).toLocaleDateString("ar-JO", {
                             day: "numeric",
                             month: "long",
-                          })}
+                          }) : "—"}
                         </td>
                         <td className="px-4 py-3 font-bold text-emerald-400">{p.amount} JOD</td>
                         <td className="px-4 py-3 text-center">
