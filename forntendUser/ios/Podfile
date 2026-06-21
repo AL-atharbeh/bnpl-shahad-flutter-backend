@@ -44,3 +44,9 @@ post_install do |installer|
     end
   end
 end
+
+target 'ImageNotificationExtension' do
+  use_frameworks!
+  use_modular_headers!
+  pod 'Firebase/Messaging'
+end
