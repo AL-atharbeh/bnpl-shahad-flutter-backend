@@ -92,8 +92,10 @@ export class FirebaseService implements OnModuleInit {
                         aps: {
                             sound: 'default',
                             badge: 1,
+                            ...(cleanUrl ? { mutableContent: true } : {}),
                         },
                     },
+                    ...(cleanUrl ? { fcmOptions: { imageUrl: cleanUrl } } : {}),
                 },
             };
 
@@ -141,8 +143,10 @@ export class FirebaseService implements OnModuleInit {
                         aps: {
                             sound: 'default',
                             badge: 1,
+                            ...(cleanUrl ? { mutableContent: true } : {}),
                         },
                     },
+                    ...(cleanUrl ? { fcmOptions: { imageUrl: cleanUrl } } : {}),
                 },
             };
 
@@ -188,8 +192,10 @@ export class FirebaseService implements OnModuleInit {
                         aps: {
                             sound: 'default',
                             badge: 1,
+                            ...(cleanUrl ? { mutableContent: true } : {}),
                         },
                     },
+                    ...(cleanUrl ? { fcmOptions: { imageUrl: cleanUrl } } : {}),
                 },
             };
 
