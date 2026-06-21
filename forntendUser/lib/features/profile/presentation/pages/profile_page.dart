@@ -873,7 +873,7 @@ class _CardChip extends StatelessWidget {
 
 class _VisaLogo extends StatelessWidget {
   final bool isDark;
-  const _VisaLogo({required this.isDark});
+  const _VisaLogo({this.isDark = true});
 
   @override
   Widget build(BuildContext context) {
@@ -1115,22 +1115,6 @@ class _CardLogo extends StatelessWidget {
   }
 }
 
-class _VisaLogo extends StatelessWidget {
-  const _VisaLogo();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Text(
-      'VISA',
-      style: TextStyle(
-        color: Colors.white,
-        fontSize: 20,
-        fontWeight: FontWeight.w900,
-        fontStyle: FontStyle.italic,
-      ),
-    );
-  }
-}
 
 class _MastercardLogo extends StatelessWidget {
   const _MastercardLogo();
