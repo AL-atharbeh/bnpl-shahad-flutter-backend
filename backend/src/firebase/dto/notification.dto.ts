@@ -17,6 +17,11 @@ export class SendNotificationDto {
     @IsString()
     body: string;
 
+    @ApiPropertyOptional({ description: 'Notification image URL' })
+    @IsOptional()
+    @IsString()
+    imageUrl?: string;
+
     @ApiPropertyOptional({ description: 'Additional data payload' })
     @IsOptional()
     @IsObject()
@@ -37,6 +42,11 @@ export class SendBulkNotificationDto {
     @IsNotEmpty()
     @IsString()
     body: string;
+
+    @ApiPropertyOptional({ description: 'Notification image URL' })
+    @IsOptional()
+    @IsString()
+    imageUrl?: string;
 
     @ApiPropertyOptional({ description: 'Additional data payload' })
     @IsOptional()
@@ -59,6 +69,11 @@ export class SendTopicNotificationDto {
     @IsNotEmpty()
     @IsString()
     body: string;
+
+    @ApiPropertyOptional({ description: 'Notification image URL' })
+    @IsOptional()
+    @IsString()
+    imageUrl?: string;
 
     @ApiPropertyOptional({ description: 'Additional data payload' })
     @IsOptional()

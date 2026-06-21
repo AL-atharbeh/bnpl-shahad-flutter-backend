@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import '../../routing/app_router.dart';
 import '../../main.dart';
 import 'dart:convert';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -21,7 +24,7 @@ class NotificationService {
     if (_initialized) return;
 
     const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/launcher_icon');
 
     const DarwinInitializationSettings iosSettings =
         DarwinInitializationSettings(
@@ -68,16 +71,46 @@ class NotificationService {
     final notification = message.notification;
     if (notification == null) return;
 
-    const AndroidNotificationDetails androidDetails =
-        AndroidNotificationDetails(
-      'default',
-      'Default Notifications',
-      channelDescription: 'This channel is used for default notifications',
-      importance: Importance.high,
-      priority: Priority.high,
-      playSound: true,
-      icon: '@mipmap/ic_launcher',
-    );
+    final imageUrl = notification.android?.imageUrl ?? 
+                     message.data['imageUrl'] ?? 
+                     message.data['image'];
+
+    AndroidNotificationDetails androidDetails;
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      final bigPicturePath = await _downloadAndSaveFile(imageUrl, 'notification_picture');
+      if (bigPicturePath != null) {
+        androidDetails = AndroidNotificationDetails(
+          'default',
+          'Default Notifications',
+          channelDescription: 'This channel is used for default notifications',
+          importance: Importance.high,
+          priority: Priority.high,
+          playSound: true,
+          styleInformation: BigPictureStyleInformation(
+            FilePathAndroidBitmap(bigPicturePath),
+            largeIcon: const DrawableResourceAndroidBitmap('launcher_icon'),
+          ),
+        );
+      } else {
+        androidDetails = const AndroidNotificationDetails(
+          'default',
+          'Default Notifications',
+          channelDescription: 'This channel is used for default notifications',
+          importance: Importance.high,
+          priority: Priority.high,
+          playSound: true,
+        );
+      }
+    } else {
+      androidDetails = const AndroidNotificationDetails(
+        'default',
+        'Default Notifications',
+        channelDescription: 'This channel is used for default notifications',
+        importance: Importance.high,
+        priority: Priority.high,
+        playSound: true,
+      );
+    }
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
       presentAlert: true,
@@ -85,7 +118,7 @@ class NotificationService {
       presentSound: true,
     );
 
-    const NotificationDetails details = NotificationDetails(
+    final NotificationDetails details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
@@ -100,6 +133,22 @@ class NotificationService {
 
     if (kDebugMode) {
       print('Notification shown: ${notification.title}');
+    }
+  }
+
+  Future<String?> _downloadAndSaveFile(String url, String fileName) async {
+    try {
+      final Directory directory = await getTemporaryDirectory();
+      final String filePath = '${directory.path}/$fileName';
+      final http.Response response = await http.get(Uri.parse(url));
+      final File file = File(filePath);
+      await file.writeAsBytes(response.bodyBytes);
+      return filePath;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error downloading image for notification: $e');
+      }
+      return null;
     }
   }
 

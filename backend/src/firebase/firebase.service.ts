@@ -48,7 +48,7 @@ export class FirebaseService implements OnModuleInit {
     /**
      * Send notification to a single device
      */
-    async sendToDevice(token: string, notification: { title: string; body: string }, data?: Record<string, string>) {
+    async sendToDevice(token: string, notification: { title: string; body: string; imageUrl?: string }, data?: Record<string, string>) {
         if (!this.messaging) {
             this.logger.warn('Firebase messaging not initialized');
             return null;
@@ -60,6 +60,7 @@ export class FirebaseService implements OnModuleInit {
                 notification: {
                     title: notification.title,
                     body: notification.body,
+                    imageUrl: notification.imageUrl,
                 },
                 data: data || {},
                 android: {
@@ -93,7 +94,7 @@ export class FirebaseService implements OnModuleInit {
      */
     async sendToMultipleDevices(
         tokens: string[],
-        notification: { title: string; body: string },
+        notification: { title: string; body: string; imageUrl?: string },
         data?: Record<string, string>,
     ) {
         if (!this.messaging) {
@@ -107,6 +108,7 @@ export class FirebaseService implements OnModuleInit {
                 notification: {
                     title: notification.title,
                     body: notification.body,
+                    imageUrl: notification.imageUrl,
                 },
                 data: data || {},
                 android: {
@@ -140,7 +142,7 @@ export class FirebaseService implements OnModuleInit {
     /**
      * Send notification to a topic
      */
-    async sendToTopic(topic: string, notification: { title: string; body: string }, data?: Record<string, string>) {
+    async sendToTopic(topic: string, notification: { title: string; body: string; imageUrl?: string }, data?: Record<string, string>) {
         if (!this.messaging) {
             this.logger.warn('Firebase messaging not initialized');
             return null;
@@ -152,6 +154,7 @@ export class FirebaseService implements OnModuleInit {
                 notification: {
                     title: notification.title,
                     body: notification.body,
+                    imageUrl: notification.imageUrl,
                 },
                 data: data || {},
                 android: {

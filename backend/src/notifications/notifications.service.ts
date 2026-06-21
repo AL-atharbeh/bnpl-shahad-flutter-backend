@@ -53,6 +53,7 @@ export class NotificationsService {
     body: string,
     data?: Record<string, string>,
     type?: string,
+    imageUrl?: string,
   ) {
     // Get user's FCM token
     const user = await this.usersService.findById(userId);
@@ -66,7 +67,7 @@ export class NotificationsService {
       title,
       message: body,
       type: type || 'system',
-      metadata: data,
+      metadata: data ? { ...data, ...(imageUrl ? { imageUrl } : {}) } : (imageUrl ? { imageUrl } : null),
     });
     await this.notificationRepository.save(notification);
 
@@ -75,7 +76,7 @@ export class NotificationsService {
       try {
         this.logger.log(`📱 Attempting to send FCM to user ${userId}. Token: ${user.fcmToken.substring(0, 10)}...`);
         this.logger.log(`📊 FCM Data: ${JSON.stringify(data)}`);
-        const response = await this.firebaseService.sendToDevice(user.fcmToken, { title, body }, data);
+        const response = await this.firebaseService.sendToDevice(user.fcmToken, { title, body, imageUrl }, data);
         this.logger.log(`✅ FCM Notification response: ${JSON.stringify(response)}`);
       } catch (error) {
         this.logger.error(`❌ Failed to send FCM notification to user ${userId}:`, error.stack);
@@ -113,6 +114,7 @@ export class NotificationsService {
     body: string,
     data?: Record<string, string>,
     type?: string,
+    imageUrl?: string,
   ) {
     // Get users by IDs
     const users = await Promise.all(
@@ -134,7 +136,7 @@ export class NotificationsService {
         title,
         message: body,
         type: type || 'system',
-        metadata: data,
+        metadata: data ? { ...data, ...(imageUrl ? { imageUrl } : {}) } : (imageUrl ? { imageUrl } : null),
       }),
     );
     await this.notificationRepository.save(notifications);
@@ -142,7 +144,7 @@ export class NotificationsService {
     // Send via Firebase
     if (tokens.length > 0) {
       try {
-        await this.firebaseService.sendToMultipleDevices(tokens, { title, body }, data);
+        await this.firebaseService.sendToMultipleDevices(tokens, { title, body, imageUrl }, data);
       } catch (error) {
         console.error('Failed to send FCM notifications:', error);
       }
@@ -154,9 +156,9 @@ export class NotificationsService {
   /**
    * Send notification to a topic
    */
-  async sendToTopic(topic: string, title: string, body: string, data?: Record<string, string>) {
+  async sendToTopic(topic: string, title: string, body: string, data?: Record<string, string>, imageUrl?: string) {
     try {
-      await this.firebaseService.sendToTopic(topic, { title, body }, data);
+      await this.firebaseService.sendToTopic(topic, { title, body, imageUrl }, data);
     } catch (error) {
       console.error('Failed to send topic notification:', error);
       throw error;

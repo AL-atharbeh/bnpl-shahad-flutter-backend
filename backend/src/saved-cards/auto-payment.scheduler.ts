@@ -64,8 +64,8 @@ export class AutoPaymentScheduler {
       await this.processPayment(payment, true);
     }
 
-    // 3. Send reminders for payments due tomorrow (24h reminder)
-    await this.sendDueTomorrowReminders();
+    // 3. Send reminders for payments due in the next 4 days
+    await this.sendDueSoonReminders();
 
     this.logger.log('✅ Daily auto-payment processing completed.');
   }
@@ -166,24 +166,39 @@ export class AutoPaymentScheduler {
     }
   }
 
-  private async sendDueTomorrowReminders() {
-    const tomorrow = dayjs().add(1, 'day').startOf('day').toDate();
-    const endOfTomorrow = dayjs().add(1, 'day').endOf('day').toDate();
+  private async sendDueSoonReminders() {
+    const startOfTomorrow = dayjs().add(1, 'day').startOf('day').toDate();
+    const endOfFourDays = dayjs().add(4, 'days').endOf('day').toDate();
 
-    const tomorrowPayments = await this.paymentRepository.find({
+    const upcomingPayments = await this.paymentRepository.find({
       where: [
-        { status: 'pending', dueDate: Between(tomorrow, endOfTomorrow) },
-        { status: 'pending', postponedDueDate: Between(tomorrow, endOfTomorrow) },
+        { status: 'pending', dueDate: Between(startOfTomorrow, endOfFourDays) },
+        { status: 'pending', postponedDueDate: Between(startOfTomorrow, endOfFourDays) },
       ],
       relations: ['user'],
     });
 
-    for (const payment of tomorrowPayments) {
+    this.logger.log(`⏰ Found ${upcomingPayments.length} upcoming payments within 4 days to remind.`);
+
+    for (const payment of upcomingPayments) {
+      const activeDueDate = payment.isPostponed && payment.postponedDueDate ? payment.postponedDueDate : payment.dueDate;
+      const daysLeft = dayjs(activeDueDate).diff(dayjs().startOf('day'), 'day');
+      
+      let daysText = '';
+      if (daysLeft === 1) {
+        daysText = 'غداً';
+      } else if (daysLeft === 2) {
+        daysText = 'بعد غد';
+      } else {
+        daysText = `خلال ${daysLeft} أيام`;
+      }
+
       await this.notificationsService.sendToUser(
         payment.userId,
         'تذكير بموعد الدفع ⏰',
-        `نود تذكيرك بأن قسطك القادم بقيمة ${payment.amount} JOD مستحق غداً. سيتم الخصم تلقائياً من بطاقتك المفضلة.`,
-        { paymentId: payment.id.toString(), type: 'reminder' }
+        `نود تذكيرك بأن قسطك القادم بقيمة ${payment.amount} JOD مستحق ${daysText}. سيتم الخصم تلقائياً من بطاقتك.`,
+        { paymentId: payment.id.toString(), type: 'payment_reminder', daysLeft: daysLeft.toString() },
+        'info'
       );
     }
   }

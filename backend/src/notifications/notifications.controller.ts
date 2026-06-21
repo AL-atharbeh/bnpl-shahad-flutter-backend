@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
+import { UsersService } from '../users/users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   SendNotificationDto,
@@ -22,7 +23,10 @@ import {
 @ApiTags('notifications')
 @Controller('notifications')
 export class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService) { }
+  constructor(
+    private readonly notificationsService: NotificationsService,
+    private readonly usersService: UsersService,
+  ) { }
 
   @Get()
   @UseGuards(JwtAuthGuard)
@@ -83,6 +87,8 @@ export class NotificationsController {
       dto.title,
       dto.body,
       dto.data,
+      'system',
+      dto.imageUrl,
     );
     return {
       success: true,
@@ -99,10 +105,37 @@ export class NotificationsController {
       dto.title,
       dto.body,
       dto.data,
+      'system',
+      dto.imageUrl,
     );
     return {
       success: true,
       message: 'تم إرسال الإشعارات بنجاح',
+      data: notifications,
+    };
+  }
+
+  @Post('send-all')
+  @ApiOperation({ summary: 'Send notification to all users (Admin)' })
+  async sendAllNotification(
+    @Body() dto: { title: string; body: string; imageUrl?: string; data?: Record<string, string> }
+  ) {
+    // Get all users from db
+    const { users } = await this.usersService.findAll({ limit: 10000 });
+    const userIds = users.map((u) => u.id);
+    
+    const notifications = await this.notificationsService.sendToMultipleUsers(
+      userIds,
+      dto.title,
+      dto.body,
+      dto.data,
+      'system',
+      dto.imageUrl,
+    );
+    
+    return {
+      success: true,
+      message: 'تم إرسال الإشعار لجميع المستخدمين بنجاح',
       data: notifications,
     };
   }
@@ -115,6 +148,7 @@ export class NotificationsController {
       dto.title,
       dto.body,
       dto.data,
+      dto.imageUrl,
     );
     return {
       success: true,

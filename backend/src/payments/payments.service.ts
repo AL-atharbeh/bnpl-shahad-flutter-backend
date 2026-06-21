@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { Payment } from './entities/payment.entity';
 import { Store } from '../stores/entities/store.entity';
 import { RewardsService } from '../rewards/rewards.service';
 import { CommissionSettingsService } from '../commission-settings/commission-settings.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import dayjs from 'dayjs';
 
 @Injectable()
@@ -16,6 +17,8 @@ export class PaymentsService {
     private storeRepository: Repository<Store>,
     private rewardsService: RewardsService,
     private commissionSettingsService: CommissionSettingsService,
+    @Inject(forwardRef(() => NotificationsService))
+    private notificationsService: NotificationsService,
   ) { }
 
   /**
@@ -776,9 +779,12 @@ export class PaymentsService {
       };
     }
 
-    // TODO: Integrate with notifications service
-    // For now, just return success
-    // await this.notificationsService.sendPaymentReminder(payment);
+    // Integrate with notifications service to send the reminder
+    await this.notificationsService.sendPaymentReminder(
+      payment.userId,
+      Number(payment.amount),
+      payment.dueDate,
+    );
 
     return {
       success: true,

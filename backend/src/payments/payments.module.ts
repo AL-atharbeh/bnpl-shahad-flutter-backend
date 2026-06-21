@@ -15,6 +15,7 @@ import { BnplSessionsModule } from '../bnpl-sessions/bnpl-sessions.module';
 import { CommissionSettingsModule } from '../commission-settings/commission-settings.module';
 
 import { SavedCardsModule } from '../saved-cards/saved-cards.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { SavedCardsModule } from '../saved-cards/saved-cards.module';
     UsersModule,
     forwardRef(() => BnplSessionsModule),
     forwardRef(() => SavedCardsModule),
+    forwardRef(() => NotificationsModule),
     CommissionSettingsModule,
   ],
   controllers: [PaymentsController],
