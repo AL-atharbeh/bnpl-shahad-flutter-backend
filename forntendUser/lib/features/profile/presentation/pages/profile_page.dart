@@ -417,6 +417,7 @@ class _AvatarAndName extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           name,
+          textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w800,
