@@ -113,8 +113,12 @@ export class SavedCardsService {
       }
     }
 
-    // Detach from Stripe
-    await this.stripeService.detachPaymentMethod(card.stripePaymentMethodId);
+    // Detach from Stripe (wrapped in try-catch to prevent blocking if already detached on Stripe)
+    try {
+      await this.stripeService.detachPaymentMethod(card.stripePaymentMethodId);
+    } catch (stripeError) {
+      console.warn(`⚠️ Failed to detach payment method from Stripe: ${stripeError.message}`);
+    }
 
     // Delete from DB or mark as inactive
     await this.savedCardRepository.remove(card);
