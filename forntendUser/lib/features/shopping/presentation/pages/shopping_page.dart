@@ -688,31 +688,42 @@ class _DealCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         child: Stack(
           children: [
-            // Background Image with Parallax Effect
+            // Background Image with Parallax Effect (Blurred Cover)
             Positioned.fill(
-              child: ImageHelper.buildImage(
-                imageUrl: imageUrl,
-                fit: BoxFit.cover,
-                errorWidget: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        ShopColors.primary.withValues(alpha: 0.15),
-                        ShopColors.primary.withValues(alpha: 0.05),
-                        Colors.purple.withValues(alpha: 0.1),
-                      ],
+              child: ImageFiltered(
+                imageFilter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: ImageHelper.buildImage(
+                  imageUrl: imageUrl,
+                  fit: BoxFit.cover,
+                  errorWidget: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          ShopColors.primary.withValues(alpha: 0.15),
+                          ShopColors.primary.withValues(alpha: 0.05),
+                          Colors.purple.withValues(alpha: 0.1),
+                        ],
+                      ),
                     ),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.local_offer_outlined,
-                      size: 80,
-                      color: ShopColors.primary.withValues(alpha: 0.3),
+                    child: Center(
+                      child: Icon(
+                        Icons.local_offer_outlined,
+                        size: 80,
+                        color: ShopColors.primary.withValues(alpha: 0.3),
+                      ),
                     ),
                   ),
                 ),
+              ),
+            ),
+            
+            // Foregound image (Contain Fit) to display the image fully
+            Positioned.fill(
+              child: ImageHelper.buildImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.contain,
               ),
             ),
             
