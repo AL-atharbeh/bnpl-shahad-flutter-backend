@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SavedCard } from './entities/saved-card.entity';
@@ -14,7 +14,7 @@ import { Payment } from '../payments/entities/payment.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([SavedCard, AutoPaymentLog, Payment]),
-    PaymentsModule,
+    forwardRef(() => PaymentsModule),
     UsersModule,
     NotificationsModule,
   ],

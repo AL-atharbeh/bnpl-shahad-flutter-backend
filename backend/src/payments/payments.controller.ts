@@ -11,6 +11,8 @@ import {
   Res,
   HttpException,
   HttpStatus,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
@@ -20,6 +22,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UsersService } from '../users/users.service';
 import { BnplSessionsService } from '../bnpl-sessions/bnpl-sessions.service';
 import { StripeService } from './stripe.service';
+import { SavedCardsService } from '../saved-cards/saved-cards.service';
 
 @ApiTags('payments')
 @Controller('payments')
@@ -31,6 +34,8 @@ export class PaymentsController {
     private readonly usersService: UsersService,
     private readonly bnplSessionsService: BnplSessionsService,
     private readonly stripeService: StripeService,
+    @Inject(forwardRef(() => SavedCardsService))
+    private readonly savedCardsService: SavedCardsService,
   ) { }
 
   @Get()
@@ -901,6 +906,16 @@ export class PaymentsController {
           if (session && session.userId) {
             await this.bnplSessionsService.approveSession(sessionId, session.userId);
             console.log(`✅ Session ${sessionId} approved via Stripe`);
+
+            // Auto-save the payment method card
+            try {
+              const paymentMethodId = await this.stripeService.getPaymentMethodFromSession(stripeSessionId);
+              if (paymentMethodId) {
+                await this.savedCardsService.saveCardFromStripeSession(session.userId, paymentMethodId);
+              }
+            } catch (cardError) {
+              console.error('⚠️ Failed to auto-save card during checkout success callback:', cardError.message);
+            }
           }
         } catch (error) {
           console.error(`❌ Failed to approve session ${sessionId} after Stripe payment:`, error.message);
@@ -990,6 +1005,21 @@ export class PaymentsController {
     }
 
     const user = await this.usersService.findById(req.user.id);
+    let stripeCustomerId = user.stripeCustomerId;
+    if (!stripeCustomerId) {
+      try {
+        const customer = await this.stripeService.createCustomer(
+          user.email || 'customer@example.com',
+          user.name || 'Customer',
+          user.phone
+        );
+        stripeCustomerId = customer.id;
+        await this.usersService.updateProfile(user.id, { stripeCustomerId });
+      } catch (e) {
+        console.error('⚠️ Failed to create Stripe customer in createStripeInstallmentSession:', e.message);
+      }
+    }
+
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 
     console.log(`💳 Creating Stripe installment session for payment: ${id}`);
@@ -1007,6 +1037,7 @@ export class PaymentsController {
         paymentId: id.toString(),
         type: 'installment',
       },
+      customerId: stripeCustomerId || undefined,
     });
 
     return {
@@ -1030,8 +1061,18 @@ export class PaymentsController {
 
       if (isPaid) {
         // Mark payment as completed
-        await this.paymentsService.processPayment(parseInt(paymentId));
+        const payment = await this.paymentsService.processPayment(parseInt(paymentId));
         console.log(`✅ Payment ${paymentId} marked as completed after Stripe payment`);
+
+        // Auto-save the payment method card
+        try {
+          const paymentMethodId = await this.stripeService.getPaymentMethodFromSession(stripeSessionId);
+          if (paymentMethodId && payment) {
+            await this.savedCardsService.saveCardFromStripeSession(payment.userId, paymentMethodId);
+          }
+        } catch (cardError) {
+          console.error('⚠️ Failed to auto-save card during installment success callback:', cardError.message);
+        }
 
         const baseUrl = `${req.protocol}://${req.get('host')}`;
         return res.send(`

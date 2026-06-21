@@ -32,8 +32,9 @@ export class StripeService {
     cancelUrl: string;
     productName?: string;
     metadata?: Record<string, string>;
+    customerId?: string;
   }) {
-    const { amount, currency, customerEmail, customerReference, successUrl, cancelUrl, productName, metadata } = params;
+    const { amount, currency, customerEmail, customerReference, successUrl, cancelUrl, productName, metadata, customerId } = params;
 
     // Convert amount to cents/fils (Stripe expects integers)
     // JOD has 3 decimal places (fils). Stripe JOD is a 3-decimal currency.
@@ -42,6 +43,9 @@ export class StripeService {
 
     const session = await this.stripe.checkout.sessions.create({
       payment_method_types: ['card'],
+      payment_intent_data: {
+        setup_future_usage: 'off_session',
+      },
       line_items: [
         {
           price_data: {
@@ -55,7 +59,8 @@ export class StripeService {
         },
       ],
       mode: 'payment',
-      customer_email: customerEmail,
+      customer: customerId || undefined,
+      customer_email: customerId ? undefined : customerEmail,
       client_reference_id: customerReference,
       success_url: successUrl,
       cancel_url: cancelUrl,
@@ -75,6 +80,27 @@ export class StripeService {
 
   async retrieveSession(sessionId: string) {
     return this.stripe.checkout.sessions.retrieve(sessionId);
+  }
+
+  async getPaymentMethodFromSession(stripeSessionId: string): Promise<string | null> {
+    try {
+      const session = await this.stripe.checkout.sessions.retrieve(stripeSessionId);
+      if (session && session.payment_intent) {
+        const paymentIntentId = typeof session.payment_intent === 'string' 
+          ? session.payment_intent 
+          : session.payment_intent.id;
+        
+        const paymentIntent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
+        if (paymentIntent && paymentIntent.payment_method) {
+          return typeof paymentIntent.payment_method === 'string'
+            ? paymentIntent.payment_method
+            : paymentIntent.payment_method.id;
+        }
+      }
+    } catch (e) {
+      console.error('⚠️ Error getting payment method from session:', e.message);
+    }
+    return null;
   }
 
   async createCustomer(email: string, name: string, phone?: string) {

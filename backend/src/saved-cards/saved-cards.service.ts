@@ -94,6 +94,25 @@ export class SavedCardsService {
       throw new NotFoundException('Card not found');
     }
 
+    // Check if the user has any pending or failed installments
+    const pendingPayments = await this.paymentRepository.count({
+      where: [
+        { userId, status: 'pending' },
+        { userId, status: 'failed' },
+      ],
+    });
+
+    if (pendingPayments > 0) {
+      const totalCards = await this.savedCardRepository.count({
+        where: { userId },
+      });
+      if (totalCards <= 1) {
+        throw new BadRequestException(
+          'لا يمكن حذف البطاقة لوجود دفعات مستحقة عليك. يجب الاحتفاظ ببطاقة دفع واحدة على الأقل لتسديد الدفعات تلقائياً.'
+        );
+      }
+    }
+
     // Detach from Stripe
     await this.stripeService.detachPaymentMethod(card.stripePaymentMethodId);
 
@@ -190,6 +209,48 @@ export class SavedCardsService {
       }
     } catch (error) {
       throw new BadRequestException(`فشل الدفع: ${error.message}`);
+    }
+  }
+
+  async saveCardFromStripeSession(userId: number, paymentMethodId: string) {
+    try {
+      const user = await this.usersService.findById(userId);
+      if (!user.stripeCustomerId) return null;
+
+      // Check if card is already saved
+      const existing = await this.savedCardRepository.findOne({
+        where: { stripePaymentMethodId: paymentMethodId },
+      });
+
+      if (existing) {
+        return existing;
+      }
+
+      // Retrieve card details from Stripe
+      const paymentMethod = await this.stripeService.getPaymentMethod(paymentMethodId);
+      const card = paymentMethod.card;
+      if (!card) return null;
+
+      const cardsCount = await this.savedCardRepository.count({ where: { userId } });
+
+      const savedCard = this.savedCardRepository.create({
+        userId,
+        stripeCustomerId: user.stripeCustomerId,
+        stripePaymentMethodId: paymentMethodId,
+        brand: card.brand,
+        last4: card.last4,
+        expMonth: card.exp_month,
+        expYear: card.exp_year,
+        isDefault: cardsCount === 0,
+        isActive: true,
+      });
+
+      const saved = await this.savedCardRepository.save(savedCard);
+      console.log(`✅ Automatically saved card **** **** **** ${card.last4} for user ${userId}`);
+      return saved;
+    } catch (e) {
+      console.error('⚠️ Error auto-saving card from Stripe session:', e.message);
+      return null;
     }
   }
 }

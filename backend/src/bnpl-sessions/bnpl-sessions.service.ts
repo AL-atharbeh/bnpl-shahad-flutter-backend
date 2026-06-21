@@ -427,6 +427,22 @@ export class BnplSessionsService {
             throw new BadRequestException('لا يوجد مستخدم مرتبط بهذه الجلسة. يجب الموافقة على الجلسة أولاً.');
         }
 
+        const user = await this.usersService.findById(session.userId);
+        let stripeCustomerId = user.stripeCustomerId;
+        if (!stripeCustomerId) {
+            try {
+                const customer = await this.stripeService.createCustomer(
+                    user.email || 'customer@example.com',
+                    user.name || 'Customer',
+                    user.phone
+                );
+                stripeCustomerId = customer.id;
+                await this.usersService.updateProfile(user.id, { stripeCustomerId });
+            } catch (e) {
+                console.error('⚠️ Failed to create Stripe customer in completeSession:', e.message);
+            }
+        }
+
         const installmentAmount = Number(session.totalAmount) / session.installmentsCount;
         const orderId = `order_${session.sessionId}`;
 
@@ -457,6 +473,7 @@ export class BnplSessionsService {
                 customerReference: sessionId,
                 successUrl: `${baseUrl}/api/v1/payments/stripe/callback/success?sessionId=${sessionId}&stripeSessionId={CHECKOUT_SESSION_ID}`,
                 cancelUrl: `${baseUrl}/api/v1/payments/stripe/callback/error?sessionId=${sessionId}`,
+                customerId: stripeCustomerId || undefined,
             });
 
             console.log('✅ Stripe Payment URL generated:', paymentResponse.url);

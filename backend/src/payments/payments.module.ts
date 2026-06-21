@@ -14,6 +14,8 @@ import { UsersModule } from '../users/users.module';
 import { BnplSessionsModule } from '../bnpl-sessions/bnpl-sessions.module';
 import { CommissionSettingsModule } from '../commission-settings/commission-settings.module';
 
+import { SavedCardsModule } from '../saved-cards/saved-cards.module';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([Payment, Store]),
@@ -22,6 +24,7 @@ import { CommissionSettingsModule } from '../commission-settings/commission-sett
     forwardRef(() => PostponementsModule), // Use forwardRef to avoid circular dependency
     UsersModule,
     forwardRef(() => BnplSessionsModule),
+    forwardRef(() => SavedCardsModule),
     CommissionSettingsModule,
   ],
   controllers: [PaymentsController],
