@@ -71,16 +71,17 @@ void main() async {
         final otp = message.data['otp'] as String;
         final context = navigatorKey.currentContext;
         if (context != null) {
+          final l10n = AppLocalizations.of(context)!;
           showDialog(
             context: context,
             barrierDismissible: true,
             builder: (context) => AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              title: const Text('رمز التحقق - Verification Code', textAlign: TextAlign.center),
+              title: Text(l10n.verificationCode, textAlign: TextAlign.center),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('قم بإعطاء هذا الرمز للتاجر لإتمام العملية:', textAlign: TextAlign.center),
+                  Text(l10n.giveOtpToMerchant, textAlign: TextAlign.center),
                   const SizedBox(height: 20),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -104,7 +105,7 @@ void main() async {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('إغلاق - Close'),
+                  child: Text(l10n.close),
                 ),
               ],
             ),
@@ -117,20 +118,21 @@ void main() async {
         final sessionId = message.data['sessionId'] as String;
         final context = navigatorKey.currentContext;
         if (context != null) {
+          final l10n = AppLocalizations.of(context)!;
           showDialog(
             context: context,
             barrierDismissible: false,
             builder: (context) => AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              title: const Text('طلب دفع جديد - Payment Request', textAlign: TextAlign.center),
-              content: const Text(
-                'لديك طلب دفع جاري. هل تريد الانتقال لصفحة الدفع الآن؟',
+              title: Text(l10n.newPaymentRequest, textAlign: TextAlign.center),
+              content: Text(
+                l10n.paymentRequestMessage,
                 textAlign: TextAlign.center,
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('لاحقاً - Later'),
+                  child: Text(l10n.later),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -145,7 +147,7 @@ void main() async {
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('ادفع الآن - Pay Now'),
+                  child: Text(l10n.payNow),
                 ),
               ],
             ),

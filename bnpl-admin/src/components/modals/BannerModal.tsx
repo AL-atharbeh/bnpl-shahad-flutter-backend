@@ -147,7 +147,7 @@ export default function BannerModal({ isOpen, onClose, onSuccess, editBanner }: 
             <div className="flex flex-col gap-4">
               {formData.imageUrl && (
                 <div className="relative h-48 w-full overflow-hidden rounded-lg border border-slate-700 bg-slate-800 shadow-inner">
-                  <img src={formData.imageUrl} alt="Preview" className="h-full w-full object-cover" />
+                  <img src={formData.imageUrl} alt="Preview" className="h-full w-full object-fill" />
                   <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button
                       type="button"

@@ -1631,4 +1631,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get aboutStore => 'عن المتجر';
+
+  @override
+  String get giveOtpToMerchant => 'قم بإعطاء هذا الرمز للتاجر لإتمام العملية:';
+
+  @override
+  String get newPaymentRequest => 'طلب دفع جديد';
+
+  @override
+  String get paymentRequestMessage =>
+      'لديك طلب دفع جاري. هل تريد الانتقال لصفحة الدفع الآن؟';
+
+  @override
+  String get later => 'لاحقاً';
+
+  @override
+  String get payNow => 'ادفع الآن';
 }

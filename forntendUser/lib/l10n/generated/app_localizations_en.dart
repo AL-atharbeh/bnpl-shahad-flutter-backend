@@ -1640,4 +1640,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aboutStore => 'About Store';
+
+  @override
+  String get giveOtpToMerchant =>
+      'Give this code to the merchant to complete the transaction:';
+
+  @override
+  String get newPaymentRequest => 'New Payment Request';
+
+  @override
+  String get paymentRequestMessage =>
+      'You have an active payment request. Do you want to go to the payment page now?';
+
+  @override
+  String get later => 'Later';
+
+  @override
+  String get payNow => 'Pay Now';
 }

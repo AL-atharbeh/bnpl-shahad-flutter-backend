@@ -625,6 +625,53 @@ export default function UsersPage() {
                 </div>
               </section>
 
+              {/* Civil ID Images Section */}
+              {(selectedUser.civilIdFront || selectedUser.civilIdBack) && (
+                <section className="rounded-xl border border-slate-800 bg-[#031824] p-4">
+                  <h3 className="text-sm font-semibold text-slate-50 mb-4">
+                    🪪 صور الهوية المدنية
+                  </h3>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {selectedUser.civilIdFront && (
+                      <div>
+                        <p className="text-xs text-slate-400 mb-2">الوجه الأمامي</p>
+                        <div className="relative group rounded-lg overflow-hidden border border-slate-700 bg-slate-900/40">
+                          <img
+                            src={selectedUser.civilIdFront}
+                            alt="الوجه الأمامي للهوية"
+                            className="w-full h-48 object-contain cursor-pointer transition-transform group-hover:scale-105"
+                            onClick={() => window.open(selectedUser.civilIdFront!, '_blank')}
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                            <span className="opacity-0 group-hover:opacity-100 text-white text-xs bg-black/60 px-3 py-1.5 rounded-lg transition-opacity">
+                              🔍 اضغط للتكبير
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {selectedUser.civilIdBack && (
+                      <div>
+                        <p className="text-xs text-slate-400 mb-2">الوجه الخلفي</p>
+                        <div className="relative group rounded-lg overflow-hidden border border-slate-700 bg-slate-900/40">
+                          <img
+                            src={selectedUser.civilIdBack}
+                            alt="الوجه الخلفي للهوية"
+                            className="w-full h-48 object-contain cursor-pointer transition-transform group-hover:scale-105"
+                            onClick={() => window.open(selectedUser.civilIdBack!, '_blank')}
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                            <span className="opacity-0 group-hover:opacity-100 text-white text-xs bg-black/60 px-3 py-1.5 rounded-lg transition-opacity">
+                              🔍 اضغط للتكبير
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </section>
+              )}
+
               {/* Additional Information */}
               <section className="rounded-xl border border-slate-800 bg-[#031824] p-4">
                 <h3 className="text-sm font-semibold text-slate-50 mb-4">

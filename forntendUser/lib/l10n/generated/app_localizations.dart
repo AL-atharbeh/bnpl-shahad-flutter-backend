@@ -3223,6 +3223,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'About Store'**
   String get aboutStore;
+
+  /// Instruction to show OTP to merchant
+  ///
+  /// In en, this message translates to:
+  /// **'Give this code to the merchant to complete the transaction:'**
+  String get giveOtpToMerchant;
+
+  /// Title of the payment request dialog
+  ///
+  /// In en, this message translates to:
+  /// **'New Payment Request'**
+  String get newPaymentRequest;
+
+  /// Body of the payment request dialog
+  ///
+  /// In en, this message translates to:
+  /// **'You have an active payment request. Do you want to go to the payment page now?'**
+  String get paymentRequestMessage;
+
+  /// Later button text
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get later;
+
+  /// Pay Now button text
+  ///
+  /// In en, this message translates to:
+  /// **'Pay Now'**
+  String get payNow;
 }
 
 class _AppLocalizationsDelegate

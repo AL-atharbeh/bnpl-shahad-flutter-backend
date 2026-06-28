@@ -3008,5 +3008,26 @@
   "aboutStore": "About Store",
   "@aboutStore": {
     "description": "About store section title"
+  },
+  "giveOtpToMerchant": "Give this code to the merchant to complete the transaction:",
+  "@giveOtpToMerchant": {
+    "description": "Instruction to show OTP to merchant"
+  },
+  "newPaymentRequest": "New Payment Request",
+  "@newPaymentRequest": {
+    "description": "Title of the payment request dialog"
+  },
+  "paymentRequestMessage": "You have an active payment request. Do you want to go to the payment page now?",
+  "@paymentRequestMessage": {
+    "description": "Body of the payment request dialog"
+  },
+  "later": "Later",
+  "@later": {
+    "description": "Later button text"
+  },
+  "payNow": "Pay Now",
+  "@payNow": {
+    "description": "Pay Now button text"
   }
 }
+

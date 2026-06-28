@@ -83,7 +83,7 @@ export default function BannersPage() {
                   <tr key={banner.id} className="hover:bg-slate-900/30 transition-colors">
                     <td className="px-6 py-4">
                       <div className="h-12 w-24 overflow-hidden rounded-md border border-slate-700 bg-slate-800">
-                        <img src={banner.imageUrl} alt={banner.title} className="h-full w-full object-cover" />
+                        <img src={banner.imageUrl} alt={banner.title} className="h-full w-full object-fill" />
                       </div>
                     </td>
                     <td className="px-6 py-4">

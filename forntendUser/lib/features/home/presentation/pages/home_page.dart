@@ -1757,12 +1757,27 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
             child: Stack(
               fit: StackFit.expand,
               children: [
-                // ── Background Image ──
-                ImageHelper.buildImage(
-                  imageUrl: imageUrl,
-                  fit: BoxFit.cover,
-                  placeholder: _buildBannerPlaceholder(),
-                  errorWidget: _buildFallbackBanner(index),
+                // ── Background Image (Blurred Cover) ──
+                Positioned.fill(
+                  child: ImageFiltered(
+                    imageFilter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                    child: ImageHelper.buildImage(
+                      imageUrl: imageUrl,
+                      fit: BoxFit.cover,
+                      placeholder: _buildBannerPlaceholder(),
+                      errorWidget: _buildFallbackBanner(index),
+                    ),
+                  ),
+                ),
+                
+                // ── Foreground Image (Sharp Contain) ──
+                Positioned.fill(
+                  child: ImageHelper.buildImage(
+                    imageUrl: imageUrl,
+                    fit: BoxFit.contain,
+                    placeholder: const SizedBox.shrink(),
+                    errorWidget: const SizedBox.shrink(),
+                  ),
                 ),
                 
                 // ── Cinematic Gradient Overlay ──

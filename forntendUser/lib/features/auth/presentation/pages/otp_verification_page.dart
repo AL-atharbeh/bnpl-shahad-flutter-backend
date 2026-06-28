@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../services/language_service.dart';
 import '../../../../services/auth_service.dart';
-import '../../../../core/services/firebase_service.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/app_router.dart';
 
@@ -151,8 +151,8 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
     final authService = Provider.of<AuthService>(context, listen: false);
 
     try {
-      // التحقق من OTP عبر Firebase Auth
-      final verifyResult = await authService.verifyFirebaseOTP(otp);
+      // التحقق من OTP عبر الباك إند
+      final verifyResult = await authService.verifyOTPCode(widget.phoneNumber, otp);
 
       if (!verifyResult['success']) {
         if (mounted) {
@@ -180,15 +180,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
         // إذا كان المستخدم موجود وله ملف كامل → تسجيل الدخول مباشرة
         if (userExists && !requiresProfileCompletion && verifyResult['token'] != null) {
           // تم حفظ Token في authService.verifyOTPCode
-          // إرسال FCM token إلى الـ backend
-          print('🔐 User logged in successfully, updating FCM token...');
-          try {
-            final firebaseService = Provider.of<FirebaseService>(context, listen: false);
-            await firebaseService.updateTokenOnServer(null);
-            print('✅ FCM token update initiated');
-          } catch (e) {
-            print('⚠️ Failed to update FCM token: $e');
-          }
+          print('🔐 User logged in successfully');
           
           Navigator.pushNamedAndRemoveUntil(
             context,

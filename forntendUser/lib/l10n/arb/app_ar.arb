@@ -3008,5 +3008,26 @@
   "aboutStore": "عن المتجر",
   "@aboutStore": {
     "description": "About store section title"
+  },
+  "giveOtpToMerchant": "قم بإعطاء هذا الرمز للتاجر لإتمام العملية:",
+  "@giveOtpToMerchant": {
+    "description": "Instruction to show OTP to merchant"
+  },
+  "newPaymentRequest": "طلب دفع جديد",
+  "@newPaymentRequest": {
+    "description": "Title of the payment request dialog"
+  },
+  "paymentRequestMessage": "لديك طلب دفع جاري. هل تريد الانتقال لصفحة الدفع الآن؟",
+  "@paymentRequestMessage": {
+    "description": "Body of the payment request dialog"
+  },
+  "later": "لاحقاً",
+  "@later": {
+    "description": "Later button text"
+  },
+  "payNow": "ادفع الآن",
+  "@payNow": {
+    "description": "Pay Now button text"
   }
 }
+

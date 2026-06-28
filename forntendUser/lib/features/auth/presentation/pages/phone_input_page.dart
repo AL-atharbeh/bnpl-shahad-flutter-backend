@@ -76,37 +76,33 @@ class _PhoneInputPageState extends State<PhoneInputPage> with SingleTickerProvid
 
       final userExists = checkResult['exists'] ?? false;
 
-      // إرسال OTP لكلا الحالتين (مستخدم موجود أو جديد) عبر Firebase Auth
-      await authService.sendFirebaseOTP(
-        phoneNumber: phoneNumber,
-        onCodeSent: (verificationId) {
-          if (mounted) {
-            setState(() => _isLoading = false);
-            // الانتقال إلى صفحة التحقق من OTP
-            Navigator.pushNamed(
-              context,
-              AppRouter.otpVerification,
-              arguments: {
-                'phoneNumber': phoneNumber,
-                'userExists': userExists,
-              },
-            );
-          }
-        },
-        onError: (error) {
-          if (mounted) {
-            setState(() => _isLoading = false);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('فشل إرسال رمز التحقق: $error'),
-                backgroundColor: Colors.red.shade400,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            );
-          }
-        },
-      );
+      // إرسال OTP عبر الباك إند (بدلاً من Firebase)
+      final otpResult = await authService.sendOTPToPhone(phoneNumber);
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+
+        if (otpResult['success']) {
+          // الانتقال إلى صفحة التحقق من OTP
+          Navigator.pushNamed(
+            context,
+            AppRouter.otpVerification,
+            arguments: {
+              'phoneNumber': phoneNumber,
+              'userExists': userExists,
+            },
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(otpResult['error'] ?? 'فشل إرسال رمز التحقق'),
+              backgroundColor: Colors.red.shade400,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);

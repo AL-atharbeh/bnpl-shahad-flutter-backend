@@ -6,6 +6,8 @@ export interface User {
     phone: string;
     email: string | null;
     civilIdNumber: string | null;
+    civilIdFront: string | null;
+    civilIdBack: string | null;
     address: string | null;
     monthlyIncome: number | null;
     employer: string | null;
