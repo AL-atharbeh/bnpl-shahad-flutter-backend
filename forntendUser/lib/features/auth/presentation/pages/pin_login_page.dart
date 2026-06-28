@@ -7,6 +7,7 @@ import '../../../../services/security_service.dart';
 import '../../../../routing/app_router.dart';
 import '../../../../config/env/env_dev.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/firebase_service.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 
 class PinLoginPage extends StatefulWidget {
@@ -129,6 +130,16 @@ class _PinLoginPageState extends State<PinLoginPage>
     });
   }
 
+  void _navigateToHome() {
+    try {
+      final firebaseService = Provider.of<FirebaseService>(context, listen: false);
+      firebaseService.updateTokenOnServer(null).catchError((e) => print('❌ Failed to update FCM token: $e'));
+    } catch (e) {
+      print('⚠️ Failed to initiate FCM token update: $e');
+    }
+    AppRouter.navigateToHome(context);
+  }
+
   // ─── التحقق من PIN ────────────────────────────────────────────────────────
   Future<void> _verifyPin() async {
     if (_enteredPin.length != _pinLength) return;
@@ -153,7 +164,7 @@ class _PinLoginPageState extends State<PinLoginPage>
             false;
 
         if (isValid) {
-          if (mounted) AppRouter.navigateToHome(context);
+          if (mounted) _navigateToHome();
         } else {
           _triggerError();
         }
@@ -197,7 +208,7 @@ class _PinLoginPageState extends State<PinLoginPage>
           stickyAuth: true,
         ),
       );
-      if (authenticated && mounted) AppRouter.navigateToHome(context);
+      if (authenticated && mounted) _navigateToHome();
     } on PlatformException catch (e) {
       if (EnvDev.enableLogging) print('❌ Biometric error: ${e.code}');
     } catch (e) {

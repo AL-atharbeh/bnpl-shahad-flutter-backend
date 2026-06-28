@@ -6,6 +6,7 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../services/language_service.dart';
 import '../../../../services/auth_service.dart';
 
+import '../../../../core/services/firebase_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/app_router.dart';
 
@@ -180,7 +181,14 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
         // إذا كان المستخدم موجود وله ملف كامل → تسجيل الدخول مباشرة
         if (userExists && !requiresProfileCompletion && verifyResult['token'] != null) {
           // تم حفظ Token في authService.verifyOTPCode
-          print('🔐 User logged in successfully');
+          print('🔐 User logged in successfully, updating FCM token...');
+          try {
+            final firebaseService = Provider.of<FirebaseService>(context, listen: false);
+            await firebaseService.updateTokenOnServer(null);
+            print('✅ FCM token update initiated');
+          } catch (e) {
+            print('⚠️ Failed to update FCM token: $e');
+          }
           
           Navigator.pushNamedAndRemoveUntil(
             context,
