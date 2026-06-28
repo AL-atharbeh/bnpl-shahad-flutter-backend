@@ -370,12 +370,15 @@ export class HomeService {
       amountFormattedEn: `${payment.currency} ${finalAmount.toFixed(2)}`, // Formatted version
       dueDate: daysLeft > 0 ? `${daysLeft} أيام` : 'مستحق الآن',
       dueDateEn: daysLeft > 0 ? `${daysLeft} days` : 'Due Now',
+      dueDateRaw: effectiveDueDate.toISOString(),
       daysLeft: daysLeft > 0 ? `${daysLeft} أيام` : '0 أيام',
       daysLeftEn: daysLeft > 0 ? `${daysLeft} days` : '0 days',
       daysUntilDue: daysLeft, // Add numeric value for easier calculation
       status: payment.status,
       color: '#10B981',
       icon: 'store',
+      installmentNumber: payment.installmentNumber,
+      installmentsCount: payment.installmentsCount,
       store: store ? {
         id: store.id,
         name: store.name,

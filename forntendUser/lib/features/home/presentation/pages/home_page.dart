@@ -17,6 +17,7 @@ import '../../../../services/promo_notification_service.dart';
 import '../../../../services/payment_service.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../services/featured_brand_service.dart';
+import '../../../../services/home_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../routing/app_router.dart';
@@ -42,6 +43,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   final PromoNotificationService _promoNotificationService = PromoNotificationService();
   final PaymentService _paymentService = PaymentService();
   final FeaturedBrandService _featuredBrandService = FeaturedBrandService();
+  final HomeService _homeService = HomeService();
   
   List<Map<String, dynamic>> _featuredBrands = [];
   bool _isLoadingFeaturedBrands = true;
@@ -349,13 +351,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     _startBannerAnimation();
     
     // Load data from database
-    _loadBanners();
-    _loadFeaturedBrands();
-    _loadCategories();
-    _loadTopStores();
-    _loadBestOffers();
-    _loadPromoNotification();
-    _loadPendingPayments();
+    _loadHomeData();
   }
   
   @override
@@ -363,16 +359,254 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     super.didChangeAppLifecycleState(state);
     // Reload data when app comes back to foreground
     if (state == AppLifecycleState.resumed) {
-      _loadBanners();
-      _loadFeaturedBrands();
-      _loadCategories();
-      _loadTopStores();
-      _loadBestOffers();
-      _loadPendingPayments();
+      _loadHomeData();
     }
   }
   
   
+  Future<void> _loadHomeData() async {
+    setState(() {
+      _isLoadingBanners = true;
+      _isLoadingFeaturedBrands = true;
+      _isLoadingCategories = true;
+      _isLoadingStores = true;
+      _isLoadingOffers = true;
+      _isLoadingPromo = true;
+      _isLoadingPendingPayments = true;
+    });
+
+    try {
+      final response = await _homeService.getHomeData();
+      
+      if (response['success'] == true && response['data'] != null) {
+        final data = response['data'];
+        
+        // 1. Parse Banners
+        final bannersData = data['banners'];
+        if (bannersData is List) {
+          _banners = bannersData.map<Map<String, dynamic>>((banner) => {
+            'id': banner['id'],
+            'title': banner['title'] ?? banner['titleAr'] ?? '',
+            'titleEn': banner['titleEn'] ?? banner['title'] ?? '',
+            'imageUrl': banner['imageUrl'] ?? banner['image'] ?? '',
+            'linkUrl': banner['linkUrl'] ?? banner['link'] ?? '',
+            'linkType': banner['linkType'] ?? 'none',
+            'linkId': banner['linkId'],
+            'description': banner['description'] ?? banner['descriptionAr'] ?? '',
+            'descriptionEn': banner['descriptionEn'] ?? banner['description'] ?? '',
+          }).toList();
+        }
+        
+        // 2. Parse Featured Brands
+        final brandsData = data['featuredBrands'];
+        if (brandsData is List) {
+          _featuredBrands = brandsData.map<Map<String, dynamic>>((brand) => {
+            'id': brand['id'],
+            'storeId': brand['storeId'],
+            'imageUrl': brand['imageUrl'] ?? '',
+            'storeName': brand['storeName'] ?? '',
+            'storeNameAr': brand['storeNameAr'] ?? brand['storeName'] ?? '',
+            'logoUrl': brand['logoUrl'] ?? '',
+            'rating': brand['rating'] != null ? (brand['rating'] as num).toDouble() : 0.0,
+            'categoryAr': brand['categoryAr'] ?? '',
+            'categoryEn': brand['categoryEn'] ?? '',
+          }).toList();
+        }
+
+        // 3. Parse Categories
+        final categoriesData = data['categories'];
+        if (categoriesData is List) {
+          final iconMap = {
+            'devices': Icons.devices,
+            'style': Icons.style,
+            'sports_soccer': Icons.sports_soccer,
+            'sports': Icons.sports_soccer,
+            'book': Icons.book,
+            'home': Icons.home,
+            'shopping_bag': Icons.shopping_bag,
+            'restaurant': Icons.restaurant,
+            'fitness_center': Icons.fitness_center,
+            'spa': Icons.spa,
+            'directions_car': Icons.directions_car,
+            'drive_eta': Icons.directions_car,
+            'face': Icons.face,
+            'favorite': Icons.favorite,
+            'toys': Icons.toys,
+          };
+          final defaultColors = [
+            AppColors.primary,
+            AppColors.primary,
+            AppColors.primary,
+            AppColors.primary,
+          ];
+          _categories = categoriesData.asMap().entries.map<Map<String, dynamic>>((entry) {
+            final index = entry.key;
+            final category = entry.value;
+            final iconName = category['icon'] ?? '';
+            final icon = iconMap[iconName] ?? Icons.category;
+            final color = defaultColors[index % defaultColors.length];
+            return {
+              'id': category['id'],
+              'titleAr': category['name'] ?? category['nameAr'] ?? '',
+              'titleEn': category['nameEn'] ?? category['name'] ?? '',
+              'subtitleAr': category['descriptionAr'] ?? category['description'] ?? '',
+              'subtitleEn': category['descriptionEn'] ?? category['description'] ?? '',
+              'icon': icon,
+              'image': category['image'] ?? category['imageUrl'] ?? '',
+              'color': color,
+              'storesCount': category['storesCount'] ?? 0,
+            };
+          }).toList();
+        }
+
+        // 4. Parse Top Stores
+        final storesData = data['topStores'];
+        if (storesData is List) {
+          final categoryIconMap = {
+            'Fashion & Clothing': Icons.style,
+            'الأزياء والملابس': Icons.style,
+            'Electronics': Icons.devices,
+            'الإلكترونيات': Icons.devices,
+            'Sports & Outdoors': Icons.sports_soccer,
+            'الرياضة والهواء الطلق': Icons.sports_soccer,
+            'Books & Education': Icons.book,
+            'الكتب والتعليم': Icons.book,
+            'Home & Furniture': Icons.home,
+            'المنزل والأثاث': Icons.home,
+            'Beauty & Cosmetics': Icons.face,
+            'الجمال ومستحضرات التجميل': Icons.face,
+            'Food & Beverages': Icons.restaurant,
+            'الطعام والمشروبات': Icons.restaurant,
+            'Health & Wellness': Icons.favorite,
+            'الصحة والعافية': Icons.favorite,
+            'Toys & Games': Icons.toys,
+            'الألعاب والألعاب': Icons.toys,
+            'Automotive': Icons.directions_car,
+            'السيارات': Icons.directions_car,
+          };
+          final defaultColors = [
+            AppColors.primary,
+            AppColors.primary,
+            AppColors.primary,
+            AppColors.primary,
+          ];
+          _topStores = storesData.asMap().entries.map<Map<String, dynamic>>((entry) {
+            final index = entry.key;
+            final store = entry.value;
+            final categoryName = store['category'] ?? '';
+            final categoryNameAr = store['categoryAr'] ?? categoryName;
+            final icon = categoryIconMap[categoryName] ?? categoryIconMap[categoryNameAr] ?? Icons.store;
+            final color = defaultColors[index % defaultColors.length];
+            final logoUrl = store['logo'] ?? store['logoUrl'] ?? '';
+            final image = logoUrl.isNotEmpty && (logoUrl.startsWith('http://') || logoUrl.startsWith('https://'))
+                ? logoUrl
+                : (logoUrl.isNotEmpty ? logoUrl : 'assets/images/zara.jpg');
+            return {
+              'id': store['id'],
+              'nameAr': store['nameAr'] ?? store['name'] ?? '',
+              'nameEn': store['name'] ?? '',
+              'image': image,
+              'icon': icon,
+              'categoryAr': categoryNameAr.isNotEmpty ? categoryNameAr : (categoryName.isNotEmpty ? categoryName : 'عام'),
+              'categoryEn': categoryName.isNotEmpty ? categoryName : 'General',
+              'rating': store['rating'] != null ? (store['rating'] as num).toDouble() : 0.0,
+              'color': color,
+              'hasDeal': store['hasDeal'] ?? false,
+              'productsCount': store['productsCount'] ?? 0,
+            };
+          }).toList();
+        }
+
+        // 5. Parse Best Offers (Deals)
+        final dealsData = data['bestOffers'];
+        if (dealsData is List) {
+          final languageService = Provider.of<LanguageService>(context, listen: false);
+          final isArabic = languageService.isArabic;
+          _bestOffers = dealsData.map<Map<String, dynamic>>((deal) {
+            final discount = deal['discount'] ?? '';
+            final description = isArabic 
+                ? (deal['descriptionAr'] ?? deal['description'] ?? 'على أصناف مختارة')
+                : (deal['description'] ?? deal['descriptionAr'] ?? 'ON SELECTED ITEMS');
+            final imageUrl = deal['image'] ?? deal['logo'] ?? '';
+            final storeLogo = deal['logo'] ?? '';
+            Color badgeColor = const Color(0xFFD1FAE5);
+            Color storeColor = AppColors.primary;
+            if (discount.contains('20') || discount.contains('25')) {
+              badgeColor = AppColors.primary;
+              storeColor = AppColors.primary;
+            } else if (discount.contains('15')) {
+              badgeColor = const Color(0xFFA7F3D0);
+              storeColor = AppColors.primary;
+            }
+            return {
+              'storeNameAr': deal['storeNameAr'] ?? deal['storeName'] ?? '',
+              'storeNameEn': deal['storeName'] ?? '',
+              'descriptionAr': isArabic ? description : '',
+              'descriptionEn': !isArabic ? description : '',
+              'discount': discount,
+              'image': imageUrl,
+              'logo': storeLogo,
+              'badgeColor': badgeColor,
+              'storeColor': storeColor,
+              'storeUrl': deal['storeUrl'] ?? '',
+            };
+          }).toList();
+        }
+
+        // 6. Parse Promo Notifications
+        final promoData = data['unreadNotifications'];
+        if (promoData is List && promoData.isNotEmpty) {
+          _promoNotification = Map<String, dynamic>.from(promoData[0] as Map);
+          _showPromoBanner = true;
+        } else {
+          _promoNotification = null;
+          _showPromoBanner = false;
+        }
+
+        // 7. Parse Pending Payments
+        final paymentsData = data['pendingPayments'];
+        if (paymentsData is List) {
+          _pendingPayments = paymentsData.take(3).map((item) {
+            if (item is Map<String, dynamic>) {
+              return item;
+            } else if (item is Map) {
+              return Map<String, dynamic>.from(item);
+            } else {
+              return <String, dynamic>{};
+            }
+          }).toList().cast<Map<String, dynamic>>();
+        } else {
+          _pendingPayments = [];
+        }
+      }
+    } catch (e) {
+      if (EnvDev.enableLogging) {
+        print('❌ Error loading home data: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingBanners = false;
+          _isLoadingFeaturedBrands = false;
+          _isLoadingCategories = false;
+          _isLoadingStores = false;
+          _isLoadingOffers = false;
+          _isLoadingPromo = false;
+          _isLoadingPendingPayments = false;
+        });
+        
+        if (_banners.isNotEmpty && _bannerPageController.hasClients) {
+          _currentBannerIndex = 0;
+          _bannerPageController.jumpToPage(0);
+        }
+        if (_storesPageController.hasClients && _topStores.isNotEmpty) {
+          _currentStoresPage = 0;
+          _storesPageController.jumpToPage(0);
+        }
+      }
+    }
+  }
+
   Future<void> _loadBanners() async {
     setState(() => _isLoadingBanners = true);
     
@@ -1237,15 +1471,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
 
   Future<void> _handleRefresh() async {
     // إعادة تحميل البيانات من قاعدة البيانات
-    await Future.wait([
-      _loadBanners(),
-      _loadFeaturedBrands(),
-      _loadCategories(),
-      _loadTopStores(),
-      _loadBestOffers(),
-      _loadPromoNotification(),
-      _loadPendingPayments(),
-    ]);
+    await _loadHomeData();
     
     // إعادة تعيين فهرس البانر
     if (_bannerPageController.hasClients) {
@@ -1467,29 +1693,39 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     final amountText = 'JD ${amount.toStringAsFixed(3)}';
     
     // Calculate days left
-    final dueDateStr = payment['dueDate']?.toString();
+    final dueDateRawStr = payment['dueDateRaw']?.toString();
+    final dueDateStr = dueDateRawStr ?? payment['dueDate']?.toString();
     int daysLeft = 30;
     String daysLeftText = '';
     bool isOverdue = false;
     if (dueDateStr != null) {
-      try {
-        final dueDate = DateTime.parse(dueDateStr);
-        final now = DateTime.now();
-        final difference = dueDate.difference(now).inDays;
-        daysLeft = difference;
-        isOverdue = difference < 0;
-        
-        if (difference < 0) {
-          daysLeftText = isRTL ? 'متأخر' : 'Overdue';
-        } else if (difference == 0) {
-          daysLeftText = isRTL ? 'اليوم' : 'Today';
-        } else if (difference == 1) {
-          daysLeftText = isRTL ? 'غداً' : 'Tomorrow';
-        } else {
-          daysLeftText = isRTL ? '$difference يوم' : '$difference days';
+      if (dueDateRawStr == null && (dueDateStr.contains('أيام') || dueDateStr.contains('days') || dueDateStr.contains('مستحق') || dueDateStr.contains('Due'))) {
+        daysLeftText = dueDateStr;
+        final daysUntilDue = payment['daysUntilDue'] as int?;
+        if (daysUntilDue != null) {
+          daysLeft = daysUntilDue;
+          isOverdue = daysUntilDue < 0;
         }
-      } catch (e) {
-        daysLeftText = isRTL ? 'تاريخ غير صحيح' : 'Invalid date';
+      } else {
+        try {
+          final dueDate = DateTime.parse(dueDateStr);
+          final now = DateTime.now();
+          final difference = dueDate.difference(now).inDays;
+          daysLeft = difference;
+          isOverdue = difference < 0;
+          
+          if (difference < 0) {
+            daysLeftText = isRTL ? 'متأخر' : 'Overdue';
+          } else if (difference == 0) {
+            daysLeftText = isRTL ? 'اليوم' : 'Today';
+          } else if (difference == 1) {
+            daysLeftText = isRTL ? 'غداً' : 'Tomorrow';
+          } else {
+            daysLeftText = isRTL ? '$difference يوم' : '$difference days';
+          }
+        } catch (e) {
+          daysLeftText = isRTL ? 'تاريخ غير صحيح' : 'Invalid date';
+        }
       }
     }
     
