@@ -69,6 +69,7 @@ export default function UsersPage() {
   const [showUserModal, setShowUserModal] = useState(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -640,7 +641,7 @@ export default function UsersPage() {
                             src={selectedUser.civilIdFront}
                             alt="الوجه الأمامي للهوية"
                             className="w-full h-48 object-contain cursor-pointer transition-transform group-hover:scale-105"
-                            onClick={() => window.open(selectedUser.civilIdFront!, '_blank')}
+                            onClick={() => setEnlargedImage(selectedUser.civilIdFront!)}
                           />
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                             <span className="opacity-0 group-hover:opacity-100 text-white text-xs bg-black/60 px-3 py-1.5 rounded-lg transition-opacity">
@@ -658,7 +659,7 @@ export default function UsersPage() {
                             src={selectedUser.civilIdBack}
                             alt="الوجه الخلفي للهوية"
                             className="w-full h-48 object-contain cursor-pointer transition-transform group-hover:scale-105"
-                            onClick={() => window.open(selectedUser.civilIdBack!, '_blank')}
+                            onClick={() => setEnlargedImage(selectedUser.civilIdBack!)}
                           />
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                             <span className="opacity-0 group-hover:opacity-100 text-white text-xs bg-black/60 px-3 py-1.5 rounded-lg transition-opacity">
@@ -865,6 +866,28 @@ export default function UsersPage() {
           fetchStats();
         }}
       />
+
+      {/* Enlarged Image Overlay */}
+      {enlargedImage && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setEnlargedImage(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setEnlargedImage(null)}
+              className="absolute -top-3 -right-3 z-10 rounded-full bg-red-500 w-8 h-8 flex items-center justify-center text-white text-sm font-bold hover:bg-red-400 transition-colors shadow-lg"
+            >
+              ✕
+            </button>
+            <img
+              src={enlargedImage}
+              alt="صورة الهوية مكبرة"
+              className="max-w-full max-h-[85vh] object-contain rounded-xl border-2 border-slate-600 shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
