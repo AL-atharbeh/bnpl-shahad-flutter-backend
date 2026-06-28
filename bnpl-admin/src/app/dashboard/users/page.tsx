@@ -643,7 +643,7 @@ export default function UsersPage() {
                             className="w-full h-48 object-contain cursor-pointer transition-transform group-hover:scale-105"
                             onClick={() => setEnlargedImage(selectedUser.civilIdFront!)}
                           />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center pointer-events-none">
                             <span className="opacity-0 group-hover:opacity-100 text-white text-xs bg-black/60 px-3 py-1.5 rounded-lg transition-opacity">
                               🔍 اضغط للتكبير
                             </span>
@@ -661,7 +661,7 @@ export default function UsersPage() {
                             className="w-full h-48 object-contain cursor-pointer transition-transform group-hover:scale-105"
                             onClick={() => setEnlargedImage(selectedUser.civilIdBack!)}
                           />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center pointer-events-none">
                             <span className="opacity-0 group-hover:opacity-100 text-white text-xs bg-black/60 px-3 py-1.5 rounded-lg transition-opacity">
                               🔍 اضغط للتكبير
                             </span>
