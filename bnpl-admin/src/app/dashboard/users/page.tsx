@@ -72,6 +72,35 @@ export default function UsersPage() {
   const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
   const itemsPerPage = 10;
 
+  const getUserTransactions = (user: User | null) => {
+    if (!user || !user.payments) return [];
+    const uniqueTransactionsMap = new Map<string, {
+      storeName: string;
+      totalAmount: number;
+      date: string;
+      status: string;
+    }>();
+
+    user.payments.forEach((payment: any) => {
+      const key = payment.orderId || `p-${payment.id}`;
+      if (!uniqueTransactionsMap.has(key)) {
+        uniqueTransactionsMap.set(key, {
+          storeName: payment.store?.name || 'متجر غير معروف',
+          totalAmount: parseFloat(payment.totalAmount || payment.amount || 0),
+          date: new Date(payment.createdAt).toLocaleDateString('ar-JO'),
+          status: payment.status === 'completed' ? 'مكتملة' : 'معلقة',
+        });
+      } else {
+        const existing = uniqueTransactionsMap.get(key)!;
+        if (payment.status !== 'completed') {
+          existing.status = 'معلقة';
+        }
+      }
+    });
+
+    return Array.from(uniqueTransactionsMap.values());
+  };
+
   useEffect(() => {
     fetchUsers();
     fetchStats();
@@ -729,28 +758,38 @@ export default function UsersPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800">
-                      {mockTransactions
-                        .filter((t) => t.userId === selectedUser.id)
-                        .map((transaction) => (
-                          <tr key={transaction.id}>
+                      {getUserTransactions(selectedUser).length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="px-3 py-4 text-center text-slate-400">
+                            لا توجد معاملات بعد
+                          </td>
+                        </tr>
+                      ) : (
+                        getUserTransactions(selectedUser).map((transaction, idx) => (
+                          <tr key={idx} className="hover:bg-slate-900/20">
                             <td className="px-3 py-2 text-slate-50">
-                              {transaction.store}
+                              {transaction.storeName}
                             </td>
                             <td className="px-3 py-2 text-slate-50">
-                              {transaction.amount}
+                              {transaction.totalAmount} دينار
                             </td>
                             <td className="px-3 py-2 text-slate-400">
                               {transaction.date}
                             </td>
                             <td className="px-3 py-2">
                               <span
-                                className={`inline-flex rounded-full px-2 py-0.5 text-[10px] border ${statusColors[transaction.statusColor as keyof typeof statusColors]}`}
+                                className={`inline-flex rounded-full px-2 py-0.5 text-[10px] border ${
+                                  transaction.status === 'مكتملة'
+                                    ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+                                    : 'bg-amber-500/15 text-amber-200 border-amber-500/40'
+                                }`}
                               >
                                 {transaction.status}
                               </span>
                             </td>
                           </tr>
-                        ))}
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -782,31 +821,43 @@ export default function UsersPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800">
-                      {mockPayments
-                        .filter((p) => p.userId === selectedUser.id)
-                        .map((payment) => (
-                          <tr key={payment.id}>
+                      {(!selectedUser.payments || selectedUser.payments.length === 0) ? (
+                        <tr>
+                          <td colSpan={5} className="px-3 py-4 text-center text-slate-400">
+                            لا توجد دفعات بعد
+                          </td>
+                        </tr>
+                      ) : (
+                        selectedUser.payments.map((payment: any) => (
+                          <tr key={payment.id} className="hover:bg-slate-900/20">
                             <td className="px-3 py-2 text-slate-50">
-                              {payment.installment}
+                              {payment.installmentNumber}/{payment.installmentsCount}
                             </td>
                             <td className="px-3 py-2 text-slate-50">
-                              {payment.amount}
+                              {payment.amount} دينار
                             </td>
                             <td className="px-3 py-2 text-slate-400">
-                              {payment.dueDate}
+                              {payment.dueDate ? new Date(payment.dueDate).toLocaleDateString('ar-JO') : '—'}
                             </td>
                             <td className="px-3 py-2 text-slate-400">
-                              {payment.paidDate || "—"}
+                              {payment.paidAt ? new Date(payment.paidAt).toLocaleDateString('ar-JO') : '—'}
                             </td>
                             <td className="px-3 py-2">
                               <span
-                                className={`inline-flex rounded-full px-2 py-0.5 text-[10px] border ${statusColors[payment.statusColor as keyof typeof statusColors]}`}
+                                className={`inline-flex rounded-full px-2 py-0.5 text-[10px] border ${
+                                  payment.status === 'completed'
+                                    ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+                                    : payment.status === 'failed'
+                                    ? 'bg-red-500/15 text-red-300 border-red-500/40'
+                                    : 'bg-amber-500/15 text-amber-200 border-amber-500/40'
+                                }`}
                               >
-                                {payment.status}
+                                {payment.status === 'completed' ? 'مدفوعة' : payment.status === 'failed' ? 'فشلت' : 'مستحقة'}
                               </span>
                             </td>
                           </tr>
-                        ))}
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>

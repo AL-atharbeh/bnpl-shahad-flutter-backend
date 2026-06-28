@@ -19,6 +19,8 @@ export class UsersService {
     // Critical for fields updated by other services (e.g., freePostponeUsed)
     const user = await this.userRepository
       .createQueryBuilder('user')
+      .leftJoinAndSelect('user.payments', 'payments')
+      .leftJoinAndSelect('payments.store', 'store')
       .where('user.id = :id', { id })
       .getOne();
 
