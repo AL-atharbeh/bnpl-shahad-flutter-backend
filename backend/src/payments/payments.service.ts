@@ -50,7 +50,7 @@ export class PaymentsService {
     // Get all payments for the user (both pending and completed) grouped by orderId
     const allPayments = await this.paymentRepository.find({
       where: { userId },
-      relations: ['store', 'user'],
+      relations: ['store'],
       order: {
         orderId: 'ASC',
         installmentNumber: 'ASC',
