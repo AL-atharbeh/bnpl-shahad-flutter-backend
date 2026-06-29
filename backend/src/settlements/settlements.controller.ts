@@ -20,9 +20,10 @@ export class SettlementsController {
     async getAllSettlements(
         @Query('page') page: number = 1,
         @Query('limit') limit: number = 10,
-        @Query('storeId') storeId?: number,
+        @Query('storeId') storeId?: string,
     ) {
-        return this.settlementsService.getAllSettlements({ page, limit, storeId });
+        const parsedStoreId = storeId && storeId !== 'undefined' && storeId !== 'null' ? parseInt(storeId) : undefined;
+        return this.settlementsService.getAllSettlements({ page, limit, storeId: parsedStoreId });
     }
 
     @Post('admin/create')

@@ -63,7 +63,8 @@ export class SettlementsService {
         const skip = (page - 1) * limit;
 
         const where: any = {};
-        if (storeId) {
+        const hasStoreId = storeId !== undefined && storeId !== null && !isNaN(storeId);
+        if (hasStoreId) {
             where.payments = { storeId: storeId };
         }
 
