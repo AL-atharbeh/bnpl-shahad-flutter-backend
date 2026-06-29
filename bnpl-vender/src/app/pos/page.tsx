@@ -622,7 +622,7 @@ export default function POSPage() {
                                             </div>
                                         ) : customerPhone.length >= 9 && !searchLoading && (
                                             <div className="px-3 py-2 bg-red-500/5 rounded-xl border border-red-500/10 text-[9px] text-red-400 font-bold">
-                                                {language === "ar" ? "رقم الهاتف غير مسجل في النظام" : "Phone number not registered"}
+                                                {language === "ar" ? "رقم الهاتف غير مسجل في النظام - تجربة التحديث" : "Phone number not registered - Test Update"}
                                             </div>
                                         )}
                                     </div>
