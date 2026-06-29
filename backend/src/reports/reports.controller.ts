@@ -9,20 +9,23 @@ export class ReportsController {
 
     @Get('stats')
     @ApiOperation({ summary: 'Get dashboard statistics for reports' })
-    async getDashboardStats(@Query('storeId', new ParseIntPipe({ optional: true })) storeId?: number) {
-        return this.reportsService.getDashboardStats(storeId);
+    async getDashboardStats(@Query('storeId') storeId?: string) {
+        const parsedId = storeId && storeId !== 'undefined' && storeId !== 'null' ? parseInt(storeId) : undefined;
+        return this.reportsService.getDashboardStats(parsedId);
     }
 
     @Get('performance')
     @ApiOperation({ summary: 'Get performance chart data' })
-    async getPerformanceData(@Query('storeId', new ParseIntPipe({ optional: true })) storeId?: number) {
-        return this.reportsService.getPerformanceData(storeId);
+    async getPerformanceData(@Query('storeId') storeId?: string) {
+        const parsedId = storeId && storeId !== 'undefined' && storeId !== 'null' ? parseInt(storeId) : undefined;
+        return this.reportsService.getPerformanceData(parsedId);
     }
 
     @Get('risks')
     @ApiOperation({ summary: 'Get risk distribution data' })
-    async getRiskDistribution(@Query('storeId', new ParseIntPipe({ optional: true })) storeId?: number) {
-        return this.reportsService.getRiskDistribution(storeId);
+    async getRiskDistribution(@Query('storeId') storeId?: string) {
+        const parsedId = storeId && storeId !== 'undefined' && storeId !== 'null' ? parseInt(storeId) : undefined;
+        return this.reportsService.getRiskDistribution(parsedId);
     }
 
     @Get('top-stores')
