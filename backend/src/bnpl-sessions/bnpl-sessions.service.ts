@@ -152,21 +152,6 @@ export class BnplSessionsService {
                         );
                         console.log(`✅ POS OTP sent to user ${user.id} for session ${sessionId}: ${otp}`);
                     }
-
-                    // 2. Send POS Session request (so they can click and pay directly inside the app)
-                    await this.notificationsService.sendToUser(
-                        user.id,
-                        'طلب شراء جديد - New Purchase Request',
-                        `لديك طلب شراء جديد من متجر ${storeName} بقيمة ${createSessionDto.total_amount} JOD. اضغط هنا لتأكيد الطلب وإتمام الدفع.`,
-                        {
-                            type: 'pos_session',
-                            sessionId: sessionId,
-                            totalAmount: createSessionDto.total_amount.toString(),
-                            storeName: storeName,
-                        },
-                        'high'
-                    );
-                    console.log(`✅ POS Session notification sent to user ${user.id} for session ${sessionId}`);
                 }
             } catch (error) {
                 console.error('⚠️ Failed to send POS notifications:', error.message);
@@ -336,6 +321,28 @@ export class BnplSessionsService {
         }
         
         await this.sessionRepository.save(session);
+
+        // 2. Send POS Session request (so they can click and pay directly inside the app)
+        if (session.userId) {
+            try {
+                const storeName = session.store.nameAr || session.store.name;
+                await this.notificationsService.sendToUser(
+                    session.userId,
+                    'طلب شراء جديد - New Purchase Request',
+                    `لديك طلب شراء جديد من متجر ${storeName} بقيمة ${session.totalAmount} JOD. اضغط هنا لتأكيد الطلب وإتمام الدفع.`,
+                    {
+                        type: 'pos_session',
+                        sessionId: session.sessionId,
+                        totalAmount: session.totalAmount.toString(),
+                        storeName: storeName,
+                    },
+                    'high'
+                );
+                console.log(`✅ POS Session notification sent to user ${session.userId} for session ${session.sessionId} after OTP verification`);
+            } catch (error) {
+                console.error('⚠️ Failed to send POS session notification after OTP verification:', error.message);
+            }
+        }
 
         // 🎯 CRITICAL: Automatically trigger completeSession to get Stripe URL
         const paymentResult = await this.completeSession(sessionId);

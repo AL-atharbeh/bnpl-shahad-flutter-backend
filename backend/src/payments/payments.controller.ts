@@ -864,26 +864,60 @@ export class PaymentsController {
     @Body('currency') currency: string = 'JOD',
     @Request() req,
   ) {
-    const successUrl = `${req.protocol}://${req.get('host')}/api/v1/payments/stripe/callback/success?sessionId=${sessionId}&stripeSessionId={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${req.protocol}://${req.get('host')}/api/v1/payments/stripe/callback/error?sessionId=${sessionId}`;
+    console.log(`💳 Creating Stripe Checkout Session: amount=${amount}, currency=${currency}, sessionId=${sessionId}`);
+    
+    // Map JOD to USD to bypass Stripe account/decimal currency restrictions in testing
+    const chargeCurrency = currency.toUpperCase() === 'JOD' ? 'USD' : currency;
 
-    const session = await this.stripeService.createCheckoutSession({
-      amount,
-      currency,
-      customerName: req.user.name || 'Customer',
-      customerEmail: req.user.email || 'customer@example.com',
-      customerReference: sessionId,
-      successUrl,
-      cancelUrl,
-    });
+    try {
+      const successUrl = `${req.protocol}://${req.get('host')}/api/v1/payments/stripe/callback/success?sessionId=${sessionId}&stripeSessionId={CHECKOUT_SESSION_ID}`;
+      const cancelUrl = `${req.protocol}://${req.get('host')}/api/v1/payments/stripe/callback/error?sessionId=${sessionId}`;
 
-    return {
-      success: true,
-      data: {
-        url: session.url,
-        sessionId: session.id,
-      },
-    };
+      const session = await this.stripeService.createCheckoutSession({
+        amount,
+        currency: chargeCurrency,
+        customerName: req.user.name || 'Customer',
+        customerEmail: req.user.email || 'customer@example.com',
+        customerReference: sessionId,
+        successUrl,
+        cancelUrl,
+      });
+
+      console.log(`✅ Stripe Checkout Session created: ${session.url}`);
+
+      return {
+        success: true,
+        data: {
+          url: session.url,
+          sessionId: session.id,
+        },
+      };
+    } catch (error) {
+      console.error(`❌ Failed to create Stripe Checkout Session:`, error.message);
+      throw new BadRequestException(`فشل بدء الدفع عبر Stripe: ${error.message}`);
+    }
+  }
+
+  @Post('complete-first-installment')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Mark first installment as completed for a session' })
+  async completeFirstInstallment(
+    @Body('sessionId') sessionId: string,
+  ) {
+    console.log(`💳 Marking first installment completed for session: ${sessionId}`);
+    const orderId = `order_${sessionId}`;
+    try {
+      const result = await this.paymentsService.markFirstInstallmentCompleted(orderId);
+      return {
+        success: true,
+        message: 'تم إكمال الدفعة الأولى بنجاح',
+        data: result,
+      };
+    } catch (error) {
+      console.error(`❌ Failed to complete first installment for ${sessionId}:`, error.message);
+      throw new BadRequestException(`فشل إكمال القسط الأول: ${error.message}`);
+    }
   }
 
   @Get('stripe/callback/success')
