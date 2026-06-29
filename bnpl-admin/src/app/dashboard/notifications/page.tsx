@@ -102,10 +102,8 @@ export default function NotificationsPage() {
   };
 
   useEffect(() => {
-    if (activeTab === "payments") {
-      fetchUpcomingPayments();
-    }
-  }, [activeTab]);
+    fetchUpcomingPayments();
+  }, []);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -564,7 +562,9 @@ export default function NotificationsPage() {
                 <span>⚠️</span>
                 <span>تنبيهات تأخير</span>
               </p>
-              <p className="mt-2 text-2xl font-semibold text-slate-50">1</p>
+              <p className="mt-2 text-2xl font-semibold text-slate-50">
+                {payments.filter(p => isOverdue(p.dueDate)).length}
+              </p>
               <p className="mt-1 text-[11px] text-slate-300">دفعة بحاجة لتذكير</p>
             </div>
 
