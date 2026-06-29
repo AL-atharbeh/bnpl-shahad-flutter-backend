@@ -54,19 +54,26 @@ export class BnplSessionsService {
 
         // Validate API Key or Bearer Token
         let isAuthorized = false;
+        console.log(`[BnplSessionsService] createSession: apiKey="${apiKey}", authHeader="${authHeader ? authHeader.substring(0, 30) + '...' : 'none'}"`);
+        
         if (authHeader && authHeader.startsWith('Bearer ')) {
             try {
                 const token = authHeader.substring(7);
                 const payload = this.jwtService.verify(token);
+                console.log(`[BnplSessionsService] Decoded Token Payload:`, payload);
                 if (payload && payload.role === 'vendor' && Number(payload.storeId) === Number(createSessionDto.store_id)) {
                     isAuthorized = true;
+                    console.log(`[BnplSessionsService] POS Vendor Authorized successfully via JWT token.`);
+                } else {
+                    console.warn(`[BnplSessionsService] POS Vendor authorization mismatch: role=${payload?.role}, storeId=${payload?.storeId} vs requested store_id=${createSessionDto.store_id}`);
                 }
             } catch (err) {
-                // Token verification failed, fall back to API Key check
+                console.error(`[BnplSessionsService] JWT verification failed:`, err.message);
             }
         }
 
         if (!isAuthorized) {
+            console.log(`[BnplSessionsService] Falling back to API Key check. Store API Key="${store.apiKey}"`);
             if (store.apiKey !== apiKey) {
                 throw new UnauthorizedException('Invalid API Key for this store');
             }
