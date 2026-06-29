@@ -14,6 +14,10 @@ export class UsersService {
   ) { }
 
   async findById(id: number): Promise<User> {
+    if (isNaN(id) || id === null || id === undefined) {
+      throw new NotFoundException('المستخدم غير موجود');
+    }
+    
     // Use QueryBuilder to completely bypass TypeORM cache (both query cache and entity manager cache)
     // This ensures we ALWAYS get fresh data from database
     // Critical for fields updated by other services (e.g., freePostponeUsed)
