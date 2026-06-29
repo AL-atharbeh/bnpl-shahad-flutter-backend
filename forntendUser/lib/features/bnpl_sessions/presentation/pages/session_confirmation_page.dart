@@ -363,7 +363,128 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
     );
   }
 
+  Widget _buildAlreadyPaidState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: const BoxDecoration(
+                color: Color(0xFFE8F5E9),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check_circle_outline, size: 48, color: Color(0xFF4CAF50)),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'تم الدفع بالفعل',
+              style: GoogleFonts.cairo(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF1A1A1A),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'لقد قمت بإتمام عملية الدفع والموافقة على هذا الطلب مسبقاً بنجاح.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.cairo(
+                fontSize: 15,
+                color: const Color(0xFF757575),
+              ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+              ),
+              child: Text(
+                'العودة للرئيسية',
+                style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRejectedState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFEBEE),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.cancel_outlined, size: 48, color: Color(0xFFE53935)),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'طلب مرفوض',
+              style: GoogleFonts.cairo(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF1A1A1A),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'لقد قمت برفض هذا الطلب مسبقاً ولا يمكن إتمامه.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.cairo(
+                fontSize: 15,
+                color: const Color(0xFF757575),
+              ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+              ),
+              child: Text(
+                'العودة للرئيسية',
+                style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildContent() {
+    if (_session!.status == 'approved' || _session!.status == 'completed') {
+      return _buildAlreadyPaidState();
+    }
+    if (_session!.status == 'rejected') {
+      return _buildRejectedState();
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
       child: Column(
