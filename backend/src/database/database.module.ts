@@ -17,7 +17,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         ssl: configService.get('database.ssl'),
         autoLoadEntities: true, 
         synchronize: true, 
-        logging: false,
+        logging: ['query', 'error'],
       }),
     }),
   ],
