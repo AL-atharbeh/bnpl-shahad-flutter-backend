@@ -67,7 +67,7 @@ export class InAppNotificationsService {
   async getUserInAppNotifications(userId: number): Promise<InAppNotification[]> {
     return await this.inAppNotificationRepository.find({
       where: { userId },
-      relations: ['notification', 'user'],
+      relations: ['notification'],
       order: { createdAt: 'DESC' },
     });
   }
