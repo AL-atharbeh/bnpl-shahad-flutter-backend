@@ -17,6 +17,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { StripeService } from '../payments/stripe.service';
 
 import { Product } from '../products/entities/product.entity';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class BnplSessionsService {
@@ -36,11 +37,13 @@ export class BnplSessionsService {
         private rewardsService: RewardsService,
         private notificationsService: NotificationsService,
         private stripeService: StripeService,
+        private jwtService: JwtService,
     ) { }
 
     async createSession(
         createSessionDto: CreateSessionDto,
         apiKey: string,
+        authHeader?: string,
     ): Promise<SessionResponseDto> {
         const store = await this.storeRepository.findOne({
             where: { id: createSessionDto.store_id },
@@ -49,9 +52,24 @@ export class BnplSessionsService {
             throw new NotFoundException(`Store with ID ${createSessionDto.store_id} not found`);
         }
 
-        // Validate API Key
-        if (store.apiKey !== apiKey) {
-            throw new UnauthorizedException('Invalid API Key for this store');
+        // Validate API Key or Bearer Token
+        let isAuthorized = false;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            try {
+                const token = authHeader.substring(7);
+                const payload = this.jwtService.verify(token);
+                if (payload && payload.role === 'vendor' && Number(payload.storeId) === Number(createSessionDto.store_id)) {
+                    isAuthorized = true;
+                }
+            } catch (err) {
+                // Token verification failed, fall back to API Key check
+            }
+        }
+
+        if (!isAuthorized) {
+            if (store.apiKey !== apiKey) {
+                throw new UnauthorizedException('Invalid API Key for this store');
+            }
         }
 
         // Validate min/max order amount

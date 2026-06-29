@@ -28,8 +28,9 @@ export class BnplSessionsController {
     async createSession(
         @Body() createSessionDto: CreateSessionDto,
         @Headers('x-api-key') apiKey: string,
+        @Headers('authorization') authHeader?: string,
     ) {
-        return this.sessionsService.createSession(createSessionDto, apiKey);
+        return this.sessionsService.createSession(createSessionDto, apiKey, authHeader);
     }
 
     @Post(':sessionId/send-otp')

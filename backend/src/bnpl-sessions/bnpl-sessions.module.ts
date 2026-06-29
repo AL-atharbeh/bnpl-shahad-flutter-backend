@@ -11,6 +11,8 @@ import { RewardsModule } from '../rewards/rewards.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 
 import { Product } from '../products/entities/product.entity';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
     imports: [
@@ -19,6 +21,13 @@ import { Product } from '../products/entities/product.entity';
         UsersModule,
         RewardsModule,
         NotificationsModule,
+        JwtModule.registerAsync({
+            imports: [ConfigModule],
+            useFactory: (configService: ConfigService) => ({
+                secret: configService.get('JWT_SECRET', 'your-secret-key'),
+            }),
+            inject: [ConfigService],
+        }),
     ],
     controllers: [BnplSessionsController],
     providers: [BnplSessionsService],
