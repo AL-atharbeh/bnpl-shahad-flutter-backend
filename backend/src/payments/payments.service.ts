@@ -633,11 +633,13 @@ export class PaymentsService {
       queryBuilder.andWhere('payment.status = :status', { status });
     }
 
-    if (userId) {
+    const hasUserId = userId !== undefined && userId !== null && !isNaN(userId);
+    if (hasUserId) {
       queryBuilder.andWhere('payment.userId = :userId', { userId });
     }
 
-    if (storeId) {
+    const hasStoreId = storeId !== undefined && storeId !== null && !isNaN(storeId);
+    if (hasStoreId) {
       queryBuilder.andWhere('payment.storeId = :storeId', { storeId });
     }
 
