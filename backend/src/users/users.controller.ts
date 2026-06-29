@@ -147,7 +147,9 @@ export class UsersController {
   @Get('find-by-phone')
   @ApiOperation({ summary: 'Find user by phone (for POS)' })
   async findByPhone(@Query('phone') phone: string) {
+    console.log(`[UsersController] find-by-phone requested for: "${phone}"`);
     const user = await this.usersService.findByPhone(phone);
+    console.log(`[UsersController] find-by-phone result for "${phone}":`, user ? `Found (ID: ${user.id})` : 'Not Found');
     if (!user) {
       return {
         success: false,

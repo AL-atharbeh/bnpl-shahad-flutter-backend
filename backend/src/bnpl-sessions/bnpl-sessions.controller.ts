@@ -43,7 +43,11 @@ export class BnplSessionsController {
 
     @Get('store/:storeId/recent')
     async getRecentStoreSessions(@Param('storeId') storeId: string) {
-        return this.sessionsService.getRecentSessionsByStoreId(parseInt(storeId));
+        const parsedStoreId = parseInt(storeId);
+        if (isNaN(parsedStoreId)) {
+            return [];
+        }
+        return this.sessionsService.getRecentSessionsByStoreId(parsedStoreId);
     }
 
     @Get('view/:sessionId')
