@@ -28,6 +28,44 @@ export default function NotificationsPage() {
   const [payments, setPayments] = useState<any[]>([]);
   const [paymentsLoading, setPaymentsLoading] = useState(false);
 
+  // Custom reminder modal states
+  const [selectedPayment, setSelectedPayment] = useState<any | null>(null);
+  const [customTitle, setCustomTitle] = useState("تنبيه بدفع القسط المستحق ⚠️");
+  const [customMessage, setCustomMessage] = useState("");
+  const [sendingReminder, setSendingReminder] = useState(false);
+
+  const handleSendCustomNotification = async (userId: number) => {
+    if (!userId) {
+      alert("⚠️ عذراً، لا يوجد معرّف مستخدم صالح لإرسال الإشعار له.");
+      return;
+    }
+    if (!customMessage.trim()) {
+      alert("⚠️ يرجى كتابة نص الإشعار أولاً.");
+      return;
+    }
+    setSendingReminder(true);
+    try {
+      await notificationsService.sendToUser({
+        userId: userId.toString(),
+        title: customTitle,
+        body: customMessage,
+      });
+      alert("✅ تم إرسال الإشعار المخصص إلى هاتف العميل بنجاح!");
+      setSelectedPayment(null);
+      setCustomMessage("");
+    } catch (e: any) {
+      console.error(e);
+      alert("❌ فشل إرسال الإشعار: " + (e.response?.data?.message || e.message || "خطأ غير معروف"));
+    } finally {
+      setSendingReminder(false);
+    }
+  };
+
+  const isOverdue = (dueDate: string) => {
+    if (!dueDate) return false;
+    return new Date(dueDate).getTime() < new Date().setHours(0, 0, 0, 0);
+  };
+
   // Search users when targetType is 'user' and query changes
   useEffect(() => {
     if (targetType === "user" && searchQuery.length >= 2) {
@@ -411,55 +449,86 @@ export default function NotificationsPage() {
                   <tr>
                     <th className="px-4 py-3 text-right">رقم الدفعة</th>
                     <th className="px-4 py-3 text-right">العميل</th>
+                    <th className="px-4 py-3 text-right">رقم الهاتف</th>
                     <th className="px-4 py-3 text-right">المتجر</th>
                     <th className="px-4 py-3 text-right">القسط</th>
                     <th className="px-4 py-3 text-right">تاريخ الاستحقاق</th>
-                    <th className="px-4 py-3 text-right">المبلغ</th>
+                    <th className="px-4 py-3 text-right">الحالة</th>
+                    <th className="px-4 py-3 text-right">المبلغ المستحق</th>
                     <th className="px-4 py-3 text-center">إجراء تذكير</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800 bg-[#031824] text-slate-200">
                   {paymentsLoading ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
+                      <td colSpan={9} className="px-4 py-8 text-center text-slate-400">
                         جاري تحميل الدفعات القادمة...
                       </td>
                     </tr>
                   ) : payments.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
+                      <td colSpan={9} className="px-4 py-8 text-center text-slate-400">
                         لا توجد دفعات معلقة مستحقة خلال الأيام القادمة.
                       </td>
                     </tr>
                   ) : (
-                    payments.map((p: any) => (
-                      <tr key={p.id} className="hover:bg-slate-900/40 transition-colors">
-                        <td className="px-4 py-3 font-semibold text-slate-50">#{p.id}</td>
-                        <td className="px-4 py-3">{p.customer || p.user?.name || "غير معروف"}</td>
-                        <td className="px-4 py-3 text-slate-300">
-                          {p.storeName || (typeof p.store === 'string' ? p.store : (p.store?.nameAr || p.store?.name || "غير معروف"))}
-                        </td>
-                        <td className="px-4 py-3">
-                          قسط {p.installmentNumber} من {p.installmentsCount}
-                        </td>
-                        <td className="px-4 py-3 text-red-300">
-                          {p.dueDate ? new Date(p.dueDate).toLocaleDateString("ar-JO", {
-                            day: "numeric",
-                            month: "long",
-                          }) : "—"}
-                        </td>
-                        <td className="px-4 py-3 font-bold text-emerald-400">{p.amount} JOD</td>
-                        <td className="px-4 py-3 text-center">
-                          <button
-                            onClick={() => handleSendReminder(p.id)}
-                            className="rounded bg-blue-500 hover:bg-blue-600 px-3 py-1.5 text-[11px] text-white font-medium flex items-center gap-1 mx-auto"
-                          >
-                            <span>🔔</span>
-                            <span>تذكير يدوي</span>
-                          </button>
-                        </td>
-                      </tr>
-                    ))
+                    payments.map((p: any) => {
+                      const late = isOverdue(p.dueDate);
+                      return (
+                        <tr key={p.id} className={`hover:bg-slate-900/40 transition-colors ${late ? 'bg-red-500/5' : ''}`}>
+                          <td className="px-4 py-3 font-semibold text-slate-50">#{p.id}</td>
+                          <td className="px-4 py-3 font-medium">{p.customer || p.user?.name || "غير معروف"}</td>
+                          <td className="px-4 py-3 text-slate-300 font-mono">{p.phone || "—"}</td>
+                          <td className="px-4 py-3 text-slate-300">
+                            {p.storeName || (typeof p.store === 'string' ? p.store : (p.store?.nameAr || p.store?.name || "غير معروف"))}
+                          </td>
+                          <td className="px-4 py-3">
+                            قسط {p.installmentNumber} من {p.installmentsCount}
+                          </td>
+                          <td className="px-4 py-3 text-red-300">
+                            {p.dueDate ? new Date(p.dueDate).toLocaleDateString("ar-JO", {
+                              day: "numeric",
+                              month: "long",
+                            }) : "—"}
+                          </td>
+                          <td className="px-4 py-3">
+                            {late ? (
+                              <span className="inline-flex items-center gap-1 rounded bg-red-500/10 px-2 py-0.5 text-[10px] font-semibold text-red-400 border border-red-500/30">
+                                🔴 متأخرة
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 rounded bg-yellow-500/10 px-2 py-0.5 text-[10px] font-semibold text-yellow-400 border border-yellow-500/30">
+                                🟡 قريباً
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 font-bold text-emerald-400">{p.amount} JOD</td>
+                          <td className="px-4 py-3 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => handleSendReminder(p.id)}
+                                title="إرسال تذكير تلقائي افتراضي"
+                                className="rounded bg-blue-500/10 border border-blue-500/40 hover:bg-blue-500/20 px-2.5 py-1 text-[11px] text-blue-300 font-medium flex items-center gap-1"
+                              >
+                                <span>🔔</span>
+                                <span>تنبيه تلقائي</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSelectedPayment(p);
+                                  setCustomTitle("تنبيه: قسط متأخر مستحق الدفع ⚠️");
+                                  setCustomMessage(`عزيزي العميل ${p.customer || ''}، يرجى العلم بأن لديك قسطاً متأخراً بقيمة ${p.amount} JOD مستحقاً منذ تاريخ ${p.dueDate ? new Date(p.dueDate).toLocaleDateString("ar-JO") : ''}. يرجى السداد في أقرب وقت لتفادي غرامات التأخير.`);
+                                }}
+                                className="rounded bg-amber-500 hover:bg-amber-600 px-2.5 py-1 text-[11px] text-slate-950 font-bold flex items-center gap-1"
+                              >
+                                <span>✍️</span>
+                                <span>تنبيه مخصص</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -539,6 +608,69 @@ export default function NotificationsPage() {
                   <input type="checkbox" defaultChecked className="h-4 w-4 rounded border-emerald-500 text-emerald-500 focus:ring-emerald-500" />
                 </label>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Reminder Modal */}
+      {selectedPayment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-xs">
+          <div className="w-full max-w-md rounded-xl border border-slate-800 bg-[#021f2a] p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-semibold text-slate-50">إرسال إشعار مخصص للعميل</h3>
+              <button 
+                onClick={() => setSelectedPayment(null)}
+                className="text-slate-400 hover:text-slate-200 text-lg"
+              >
+                &times;
+              </button>
+            </div>
+            
+            <div className="space-y-2 text-slate-300 bg-slate-950/40 p-3 rounded-lg border border-slate-800">
+              <p><strong>العميل:</strong> {selectedPayment.customer || "غير معروف"}</p>
+              <p><strong>رقم الهاتف:</strong> <span className="font-mono">{selectedPayment.phone || "لا يوجد"}</span></p>
+              <p><strong>المبلغ المستحق:</strong> <span className="text-emerald-400 font-bold">{selectedPayment.amount} JOD</span></p>
+              <p><strong>تاريخ الاستحقاق:</strong> {selectedPayment.dueDate ? new Date(selectedPayment.dueDate).toLocaleDateString("ar-JO") : '—'}</p>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-slate-400 mb-1 font-medium">عنوان الإشعار (Title)</label>
+                <input
+                  type="text"
+                  value={customTitle}
+                  onChange={(e) => setCustomTitle(e.target.value)}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-50 focus:border-emerald-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-400 mb-1 font-medium">نص الرسالة المخصصة (Body)</label>
+                <textarea
+                  rows={4}
+                  value={customMessage}
+                  onChange={(e) => setCustomMessage(e.target.value)}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-50 focus:border-emerald-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setSelectedPayment(null)}
+                className="rounded-lg border border-slate-700 px-4 py-2 text-slate-300 hover:bg-slate-800"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                disabled={sendingReminder}
+                onClick={() => handleSendCustomNotification(selectedPayment.userId)}
+                className="rounded-lg bg-emerald-500 px-4 py-2 font-semibold text-slate-950 hover:bg-emerald-400 disabled:opacity-50"
+              >
+                {sendingReminder ? "جاري الإرسال..." : "🚀 إرسال التنبيه الآن"}
+              </button>
             </div>
           </div>
         </div>

@@ -13,7 +13,7 @@ async function bootstrap() {
   // Increase body size limit for image uploads
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ limit: '10mb', extended: true }));
-  
+
   // Serve test store static files (moved into public for reliable deployment)
   const publicPath = path.join(process.cwd(), 'public');
   app.use('/store-test', express.static(path.join(publicPath, 'store-test')));

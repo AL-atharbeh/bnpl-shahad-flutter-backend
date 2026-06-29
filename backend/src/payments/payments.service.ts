@@ -706,9 +706,11 @@ export class PaymentsService {
         amount: Number(p.amount),
         dueDate: p.isPostponed && p.postponedDueDate ? p.postponedDueDate : p.dueDate,
         customer: p.user?.name || 'Unknown',
+        phone: p.user?.phone || '',
         store: p.store?.nameAr || p.store?.name || 'Unknown',
         installmentNumber: p.installmentNumber,
         installmentsCount: p.installmentsCount,
+        userId: p.userId,
       }));
 
     return {
