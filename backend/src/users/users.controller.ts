@@ -79,6 +79,37 @@ export class UsersController {
     };
   }
 
+  @Get('find-by-phone')
+  @ApiOperation({ summary: 'Find user by phone (for POS)' })
+  async findByPhone(@Query('phone') phone: string) {
+    console.log(`[UsersController] find-by-phone requested for: "${phone}"`);
+    
+    // Debug: print sample users from DB to verify formats
+    try {
+      const sampleUsers = await this.usersService.findSampleUsersForDebug();
+      console.log(`[UsersController] DB Sample users:`, sampleUsers.map(u => ({ id: u.id, name: u.name, phone: u.phone })));
+    } catch (e) {
+      console.error(`[UsersController] Debug sample users failed:`, e.message);
+    }
+
+    const user = await this.usersService.findByPhone(phone);
+    console.log(`[UsersController] find-by-phone result for "${phone}":`, user ? `Found (ID: ${user.id})` : 'Not Found');
+    if (!user) {
+      return {
+        success: false,
+        message: 'المستخدم غير موجود',
+      };
+    }
+    return {
+      success: true,
+      data: {
+        id: user.id,
+        name: user.name,
+        isVerified: user.isPhoneVerified,
+      },
+    };
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get user by ID (Admin)' })
   async getUserById(@Param('id') id: string) {
@@ -144,36 +175,6 @@ export class UsersController {
   }
 
 
-  @Get('find-by-phone')
-  @ApiOperation({ summary: 'Find user by phone (for POS)' })
-  async findByPhone(@Query('phone') phone: string) {
-    console.log(`[UsersController] find-by-phone requested for: "${phone}"`);
-    
-    // Debug: print sample users from DB to verify formats
-    try {
-      const sampleUsers = await this.usersService.findSampleUsersForDebug();
-      console.log(`[UsersController] DB Sample users:`, sampleUsers.map(u => ({ id: u.id, name: u.name, phone: u.phone })));
-    } catch (e) {
-      console.error(`[UsersController] Debug sample users failed:`, e.message);
-    }
-
-    const user = await this.usersService.findByPhone(phone);
-    console.log(`[UsersController] find-by-phone result for "${phone}":`, user ? `Found (ID: ${user.id})` : 'Not Found');
-    if (!user) {
-      return {
-        success: false,
-        message: 'المستخدم غير موجود',
-      };
-    }
-    return {
-      success: true,
-      data: {
-        id: user.id,
-        name: user.name,
-        isVerified: user.isPhoneVerified,
-      },
-    };
-  }
 }
 
 
