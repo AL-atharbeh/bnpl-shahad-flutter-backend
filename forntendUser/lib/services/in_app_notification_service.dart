@@ -23,8 +23,15 @@ class InAppNotificationService {
       final response = await _apiService.get(ApiPaths.inAppNotifications);
       
       if (response['success'] == true && response['data'] != null) {
-        final data = response['data'] as Map<String, dynamic>;
-        final notificationsList = data['data'] as List<dynamic>? ?? data as List<dynamic>;
+        final rawData = response['data'];
+        List<dynamic> notificationsList;
+        if (rawData is List<dynamic>) {
+          notificationsList = rawData;
+        } else if (rawData is Map<String, dynamic> && rawData['data'] is List<dynamic>) {
+          notificationsList = rawData['data'] as List<dynamic>;
+        } else {
+          notificationsList = [];
+        }
         
         _cachedNotifications = notificationsList
             .map((item) => InAppNotification.fromJson(item as Map<String, dynamic>))
@@ -48,8 +55,15 @@ class InAppNotificationService {
       final response = await _apiService.get(ApiPaths.inAppNotificationsUnread);
       
       if (response['success'] == true && response['data'] != null) {
-        final data = response['data'] as Map<String, dynamic>;
-        final notificationsList = data['data'] as List<dynamic>? ?? data as List<dynamic>;
+        final rawData = response['data'];
+        List<dynamic> notificationsList;
+        if (rawData is List<dynamic>) {
+          notificationsList = rawData;
+        } else if (rawData is Map<String, dynamic> && rawData['data'] is List<dynamic>) {
+          notificationsList = rawData['data'] as List<dynamic>;
+        } else {
+          notificationsList = [];
+        }
         
         return notificationsList
             .map((item) => InAppNotification.fromJson(item as Map<String, dynamic>))
