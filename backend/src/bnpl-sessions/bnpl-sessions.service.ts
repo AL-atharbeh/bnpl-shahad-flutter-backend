@@ -105,27 +105,46 @@ export class BnplSessionsService {
 
         const savedSession = await this.sessionRepository.save(session);
 
-        // Notify user with OTP if phone number is provided
-        if (createSessionDto.customer_phone && otp) {
+        // Notify user with OTP and Session request if phone number is provided
+        if (createSessionDto.customer_phone) {
             try {
                 const user = await this.usersService.findByPhone(createSessionDto.customer_phone);
                 if (user) {
                     const storeName = store.nameAr || store.name;
+                    
+                    // 1. Send POS OTP Notification
+                    if (otp) {
+                        await this.notificationsService.sendToUser(
+                            user.id,
+                            'رمز التحقق - Verification Code',
+                            `رمز التحقق الخاص بك لعملية الشراء من ${storeName} هو: ${otp}. قم بإعطاء هذا الرمز للتاجر لإتمام العملية.`,
+                            {
+                                type: 'pos_otp',
+                                otp: otp,
+                                sessionId: sessionId,
+                            },
+                            'urgent'
+                        );
+                        console.log(`✅ POS OTP sent to user ${user.id} for session ${sessionId}: ${otp}`);
+                    }
+
+                    // 2. Send POS Session request (so they can click and pay directly inside the app)
                     await this.notificationsService.sendToUser(
                         user.id,
-                        'رمز التحقق - Verification Code',
-                        `رمز التحقق الخاص بك لعملية الشراء من ${storeName} هو: ${otp}. قم بإعطاء هذا الرمز للتاجر لإتمام العملية.`,
+                        'طلب شراء جديد - New Purchase Request',
+                        `لديك طلب شراء جديد من متجر ${storeName} بقيمة ${createSessionDto.total_amount} JOD. اضغط هنا لتأكيد الطلب وإتمام الدفع.`,
                         {
-                            type: 'pos_otp',
-                            otp: otp,
+                            type: 'pos_session',
                             sessionId: sessionId,
+                            totalAmount: createSessionDto.total_amount.toString(),
+                            storeName: storeName,
                         },
-                        'urgent'
+                        'high'
                     );
-                    console.log(`✅ POS OTP sent to user ${user.id} for session ${sessionId}: ${otp}`);
+                    console.log(`✅ POS Session notification sent to user ${user.id} for session ${sessionId}`);
                 }
             } catch (error) {
-                console.error('⚠️ Failed to send POS OTP notification:', error.message);
+                console.error('⚠️ Failed to send POS notifications:', error.message);
             }
         }
 

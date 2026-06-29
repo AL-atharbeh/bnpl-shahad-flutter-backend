@@ -31,11 +31,45 @@ export class UsersService {
     return user;
   }
 
+  /**
+   * Normalize Jordanian phone numbers to +962XXXXXXXXX
+   */
+  private normalizePhone(phone: string): string {
+    if (!phone) return phone;
+    let clean = phone.trim();
+    // Remove any spaces or dashes
+    clean = clean.replace(/[\s-]/g, '');
+
+    if (clean.startsWith('+9620')) {
+      clean = '+962' + clean.substring(5);
+    } else if (clean.startsWith('9620')) {
+      clean = '+962' + clean.substring(4);
+    } else if (clean.startsWith('009620')) {
+      clean = '+962' + clean.substring(6);
+    } else if (clean.startsWith('00962')) {
+      clean = '+962' + clean.substring(5);
+    } else if (clean.startsWith('962')) {
+      clean = '+962' + clean.substring(3);
+    } else if (clean.startsWith('07')) {
+      clean = '+962' + clean.substring(1);
+    } else if (clean.startsWith('7') && clean.length === 9) {
+      clean = '+962' + clean;
+    }
+    return clean;
+  }
+
   async findByPhone(phone: string): Promise<User | null> {
+    const normalized = this.normalizePhone(phone);
+    // 1. Try finding by exact normalized format first
+    const exactUser = await this.userRepository.findOne({ where: { phone: normalized } });
+    if (exactUser) return exactUser;
+
+    // 2. Fallback: try finding using query variations (in case stored differently)
     const cleanPhone = phone.replace(/[^\d+]/g, ''); // Keep only digits and plus
     const variations = new Set<string>();
     
     variations.add(cleanPhone);
+    variations.add(normalized);
     
     // Add variations with and without '+'
     if (cleanPhone.startsWith('+')) {
@@ -57,7 +91,7 @@ export class UsersService {
       }
     }
 
-    const queryVariations = Array.from(variations);
+    const queryVariations = Array.from(variations).filter(Boolean);
     if (queryVariations.length === 0) return null;
 
     return this.userRepository.createQueryBuilder('user')
