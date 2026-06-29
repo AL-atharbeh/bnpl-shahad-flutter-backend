@@ -59,10 +59,15 @@ export class UsersService {
   }
 
   async findByPhone(phone: string): Promise<User | null> {
+    console.log(`[UsersService] findByPhone called with raw phone: "${phone}"`);
     const normalized = this.normalizePhone(phone);
+    console.log(`[UsersService] Normalized phone: "${normalized}"`);
     // 1. Try finding by exact normalized format first
     const exactUser = await this.userRepository.findOne({ where: { phone: normalized } });
-    if (exactUser) return exactUser;
+    if (exactUser) {
+        console.log(`[UsersService] Exact match found: ${exactUser.name} (ID: ${exactUser.id})`);
+        return exactUser;
+    }
 
     // 2. Fallback: try finding using query variations (in case stored differently)
     const cleanPhone = phone.replace(/[^\d+]/g, ''); // Keep only digits and plus
@@ -92,11 +97,18 @@ export class UsersService {
     }
 
     const queryVariations = Array.from(variations).filter(Boolean);
-    if (queryVariations.length === 0) return null;
-
-    return this.userRepository.createQueryBuilder('user')
+    console.log(`[UsersService] Query variations:`, queryVariations);
+    
+    const dbUser = await this.userRepository.createQueryBuilder('user')
       .where('user.phone IN (:...phones)', { phones: queryVariations })
       .getOne();
+      
+    if (dbUser) {
+        console.log(`[UsersService] Fallback match found: ${dbUser.name} (ID: ${dbUser.id})`);
+    } else {
+        console.log(`[UsersService] No match found in database for any variation.`);
+    }
+    return dbUser;
   }
 
   async updateProfile(userId: number, updateData: Partial<User>): Promise<User> {
