@@ -13,6 +13,7 @@ import {
   HttpStatus,
   Inject,
   forwardRef,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
