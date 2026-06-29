@@ -36,25 +36,15 @@ export class ReportsService {
         const startOfQuarter = now.startOf('quarter').toDate();
         const endOfQuarter = now.endOf('quarter').toDate();
 
-        // Security check: If storeId is missing and we don't have an admin flag, return zeros
-        if (storeId === undefined || storeId === null || isNaN(storeId)) {
-            console.log('[ReportsService] No valid storeId provided for stats. Returning zeros.');
-            return {
-                success: true,
-                data: {
-                    totalFinancedQuarter: 0,
-                    totalCollected: 0,
-                    riskIndicator: 0,
-                    totalCommission: 0,
-                }
-            };
-        }
+        const hasStoreId = storeId !== undefined && storeId !== null && !isNaN(storeId);
 
         // 1. Transaction Volume (Current Quarter) - Sum of totalAmount for unique orderIds
         const whereClause: any = {
-            createdAt: Between(startOfQuarter, endOfQuarter),
-            storeId: storeId
+            createdAt: Between(startOfQuarter, endOfQuarter)
         };
+        if (hasStoreId) {
+            whereClause.storeId = storeId;
+        }
 
         const quarterPayments = await this.paymentRepository.find({
             where: whereClause,
@@ -71,7 +61,9 @@ export class ReportsService {
 
         // 2. Collected Installments (All time)
         const collectedWhere: any = { status: 'completed' };
-        if (storeId) collectedWhere.storeId = storeId;
+        if (hasStoreId) {
+            collectedWhere.storeId = storeId;
+        }
 
         const completedPayments = await this.paymentRepository.find({
             where: collectedWhere,
@@ -81,17 +73,23 @@ export class ReportsService {
 
         // 3. Risk Indicator (Overdue vs Total active)
         const overdueWhere: any = { status: 'pending', dueDate: LessThan(new Date()) };
-        if (storeId) overdueWhere.storeId = storeId;
+        if (hasStoreId) {
+            overdueWhere.storeId = storeId;
+        }
         const overdueCount = await this.paymentRepository.count({ where: overdueWhere });
 
         const activeWhere: any = { status: In(['pending', 'completed']) };
-        if (storeId) activeWhere.storeId = storeId;
+        if (hasStoreId) {
+            activeWhere.storeId = storeId;
+        }
         const totalActiveCount = await this.paymentRepository.count({ where: activeWhere });
         const riskIndicator = totalActiveCount > 0 ? (overdueCount / totalActiveCount) * 100 : 0;
 
         // 4. Platform Net Commission (Completed payments)
         const commissionWhere: any = { status: 'completed' };
-        if (storeId) commissionWhere.storeId = storeId;
+        if (hasStoreId) {
+            commissionWhere.storeId = storeId;
+        }
 
         const platformPayments = await this.paymentRepository.find({
             where: commissionWhere,
@@ -109,7 +107,6 @@ export class ReportsService {
             
             // Priority: Store Override > Payment Record > Global Default
             const pRate = this.normalizeRate(p.store?.platformCommissionRate ?? p.platformCommissionRate, globalPlatformRate);
-            const bRate = this.normalizeRate(p.store?.bankCommissionRate ?? p.bankCommissionRate, globalBankRate);
             
             const pShare = amount * pRate;
             return sum + pShare;
@@ -129,12 +126,8 @@ export class ReportsService {
     async getPerformanceData(storeId?: number) {
         console.log(`[ReportsService] getPerformanceData called with storeId: ${storeId}`);
 
-        if (storeId === undefined || storeId === null || isNaN(storeId)) {
-            console.log('[ReportsService] No valid storeId provided for performance. Returning empty list.');
-            return { success: true, data: [] };
-        }
-
         const sixMonthsAgo = dayjs().subtract(5, 'month').startOf('month').toDate();
+        const hasStoreId = storeId !== undefined && storeId !== null && !isNaN(storeId);
 
         const query = this.paymentRepository.createQueryBuilder('p')
             .select("DATE_FORMAT(p.createdAt, '%Y-%m')", 'month')
@@ -142,8 +135,11 @@ export class ReportsService {
             // Calculate total financed amount (sum of totalAmount for only one installment per order to avoid double counting)
             .addSelect('SUM(CASE WHEN p.installmentNumber = 1 THEN p.totalAmount ELSE 0 END)', 'purchases')
             .addSelect("SUM(CASE WHEN p.status = 'pending' AND p.dueDate < NOW() THEN p.amount ELSE 0 END)", 'overdue')
-            .where('p.createdAt >= :sixMonthsAgo', { sixMonthsAgo })
-            .andWhere('p.storeId = :storeId', { storeId });
+            .where('p.createdAt >= :sixMonthsAgo', { sixMonthsAgo });
+
+        if (hasStoreId) {
+            query.andWhere('p.storeId = :storeId', { storeId });
+        }
 
         const stats = await query
             .groupBy("DATE_FORMAT(p.createdAt, '%Y-%m')")
@@ -175,25 +171,21 @@ export class ReportsService {
     async getRiskDistribution(storeId?: number) {
         console.log(`[ReportsService] getRiskDistribution called with storeId: ${storeId}`);
 
-        if (storeId === undefined || storeId === null || isNaN(storeId)) {
-            console.log('[ReportsService] No valid storeId provided for risk. Returning empty distribution.');
-            return {
-                success: true,
-                data: [
-                    { label: 'منخفض', value: 0, color: 'text-emerald-300' },
-                    { label: 'متوسط', value: 0, color: 'text-amber-300' },
-                    { label: 'مرتفع', value: 0, color: 'text-red-300' },
-                    { label: 'قيد المراجعة', value: 0, color: 'text-sky-300' },
-                ]
-            };
-        }
-
+        const hasStoreId = storeId !== undefined && storeId !== null && !isNaN(storeId);
         let userIds = [];
-        const storePayments = await this.paymentRepository.find({
-            where: { storeId },
-            select: ['userId'],
-        });
-        userIds = [...new Set(storePayments.map(p => p.userId))];
+
+        if (hasStoreId) {
+            const storePayments = await this.paymentRepository.find({
+                where: { storeId },
+                select: ['userId'],
+            });
+            userIds = [...new Set(storePayments.map(p => p.userId))];
+        } else {
+            const allPayments = await this.paymentRepository.find({
+                select: ['userId'],
+            });
+            userIds = [...new Set(allPayments.map(p => p.userId))];
+        }
 
         const userWhere: any = {};
         if (userIds.length === 0) {
@@ -217,8 +209,8 @@ export class ReportsService {
         let low = 0, medium = 0, high = 0, review = 0;
 
         users.forEach(user => {
-            // CRITICAL: Filter payments to only include those belonging to the specific store
-            const storePayments = storeId
+            // CRITICAL: Filter payments to only include those belonging to the specific store if provided
+            const storePayments = hasStoreId
                 ? user.payments?.filter(p => Number(p.storeId) === Number(storeId))
                 : user.payments;
 
