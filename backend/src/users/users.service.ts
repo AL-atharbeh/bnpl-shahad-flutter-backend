@@ -111,6 +111,10 @@ export class UsersService {
     return dbUser;
   }
 
+  async findSampleUsersForDebug() {
+    return this.userRepository.find({ take: 5, select: ['id', 'name', 'phone'] });
+  }
+
   async updateProfile(userId: number, updateData: Partial<User>): Promise<User> {
     const user = await this.findById(userId);
     Object.assign(user, updateData);
