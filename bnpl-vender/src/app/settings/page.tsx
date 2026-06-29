@@ -107,6 +107,8 @@ export default function SettingsPage() {
                 storeUrl: store.storeUrl,
                 categoryId: store.categoryId,
                 genderCategoryId: store.genderCategoryId,
+                minOrderAmount: store.minOrderAmount ? Number(store.minOrderAmount) : undefined,
+                maxOrderAmount: store.maxOrderAmount ? Number(store.maxOrderAmount) : undefined,
             });
             setSuccess(true);
             setTimeout(() => setSuccess(false), 3000);
@@ -292,6 +294,39 @@ export default function SettingsPage() {
                                             onChange={handleChange}
                                             className={`w-full rounded-xl border border-emerald-900/30 bg-[#011f18] py-3 ${language === "ar" ? "pr-10 pl-4" : "pl-10 pr-4"} text-sm text-slate-200 outline-none focus:border-emerald-500/50`}
                                             placeholder="store-slug"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid gap-6 md:grid-cols-2">
+                                <div className="space-y-2">
+                                    <label className={`text-xs font-bold text-slate-500 ${language === "ar" ? "pr-1" : "pl-1"}`}>
+                                        {language === "ar" ? "الحد الأدنى للطلب (JOD)" : "Minimum Order Amount (JOD)"}
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            name="minOrderAmount"
+                                            value={store?.minOrderAmount || ""}
+                                            onChange={handleChange}
+                                            className="w-full rounded-xl border border-emerald-900/30 bg-[#011f18] py-3 px-4 text-sm text-slate-200 outline-none focus:border-emerald-500/50"
+                                            placeholder="50"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className={`text-xs font-bold text-slate-500 ${language === "ar" ? "pr-1" : "pl-1"}`}>
+                                        {language === "ar" ? "الحد الأقصى للطلب (JOD)" : "Maximum Order Amount (JOD)"}
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            name="maxOrderAmount"
+                                            value={store?.maxOrderAmount || ""}
+                                            onChange={handleChange}
+                                            className="w-full rounded-xl border border-emerald-900/30 bg-[#011f18] py-3 px-4 text-sm text-slate-200 outline-none focus:border-emerald-500/50"
+                                            placeholder="5000"
                                         />
                                     </div>
                                 </div>
