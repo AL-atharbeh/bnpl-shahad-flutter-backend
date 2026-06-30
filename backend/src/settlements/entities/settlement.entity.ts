@@ -1,5 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Payment } from '../../payments/entities/payment.entity';
+import { Store } from '../../stores/entities/store.entity';
+import { BnplSession } from '../../bnpl-sessions/entities/bnpl-session.entity';
 
 @Entity('settlements')
 export class Settlement {
@@ -23,6 +25,16 @@ export class Settlement {
 
     @Column({ type: 'text', nullable: true })
     notes: string;
+
+    @Column({ name: 'store_id', nullable: true })
+    storeId: number;
+
+    @ManyToOne(() => Store, { nullable: true })
+    @JoinColumn({ name: 'store_id' })
+    store: Store;
+
+    @OneToMany(() => BnplSession, (session) => session.settlement)
+    sessions: BnplSession[];
 
     @ManyToMany(() => Payment)
     @JoinTable({

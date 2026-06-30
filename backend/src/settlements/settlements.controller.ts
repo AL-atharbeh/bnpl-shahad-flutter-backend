@@ -15,6 +15,12 @@ export class SettlementsController {
         return this.settlementsService.getSettlementStats(storeId);
     }
 
+    @Get('admin/stores-balances')
+    @ApiOperation({ summary: 'Get all stores accounting and balance tracking summary' })
+    async getStoresBalances() {
+        return this.settlementsService.getStoresBalances();
+    }
+
     @Get('admin/all')
     @ApiOperation({ summary: 'Get all settlements' })
     async getAllSettlements(

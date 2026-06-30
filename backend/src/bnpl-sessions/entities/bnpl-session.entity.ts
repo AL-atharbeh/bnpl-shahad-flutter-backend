@@ -11,6 +11,7 @@ import {
 import { User } from '../../users/entities/user.entity';
 import { Store } from '../../stores/entities/store.entity';
 import { BnplSessionItem } from './bnpl-session-item.entity';
+import { Settlement } from '../../settlements/entities/settlement.entity';
 
 export enum SessionStatus {
     PENDING = 'pending',
@@ -107,4 +108,11 @@ export class BnplSession {
     @ManyToOne(() => User, { nullable: true })
     @JoinColumn({ name: 'user_id' })
     user: User;
+
+    @Column({ name: 'settlement_id', nullable: true })
+    settlementId: number;
+
+    @ManyToOne(() => Settlement, (settlement) => settlement.sessions, { nullable: true })
+    @JoinColumn({ name: 'settlement_id' })
+    settlement: Settlement;
 }

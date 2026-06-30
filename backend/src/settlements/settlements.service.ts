@@ -3,8 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Settlement } from './entities/settlement.entity';
 import { Payment } from '../payments/entities/payment.entity';
+import { Store } from '../stores/entities/store.entity';
+import { BnplSession } from '../bnpl-sessions/entities/bnpl-session.entity';
 import { UsersService } from '../users/users.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { CommissionSettingsService } from '../commission-settings/commission-settings.service';
 
 @Injectable()
 export class SettlementsService {
@@ -13,50 +16,74 @@ export class SettlementsService {
         private settlementRepository: Repository<Settlement>,
         @InjectRepository(Payment)
         private paymentRepository: Repository<Payment>,
+        @InjectRepository(Store)
+        private storeRepository: Repository<Store>,
+        @InjectRepository(BnplSession)
+        private sessionRepository: Repository<BnplSession>,
         private usersService: UsersService,
         private notificationsService: NotificationsService,
+        private commissionSettingsService: CommissionSettingsService,
     ) { }
 
+    private normalizeRate(val: any, fallback: number) {
+        if (val === null || val === undefined) return fallback;
+        const num = Number(val);
+        return num >= 1 ? num / 100 : num;
+    }
+
     async getSettlementStats(storeId: number) {
-        // 1. Calculate Pending Balance (Completed payments not yet settled)
-        // We need to find payments for this store that are 'completed' but NOT in any settlement
-        // Since the relation is ManyToMany from Settlement side, we can use a subquery approach
+        // 1. Get all approved/completed sessions for this store that are NOT yet settled
+        const pendingSessions = await this.sessionRepository.find({
+            where: {
+                storeId,
+                status: In(['approved', 'completed', 'payment_pending']),
+                settlementId: null,
+            },
+        });
 
-        const qb = this.paymentRepository.createQueryBuilder('payment');
+        // Load settings and payments to calculate net amounts accurately
+        const settingsRes = await this.commissionSettingsService.getCurrentSettings();
+        const globalBankRate = settingsRes?.data?.bankCommission ? Number(settingsRes.data.bankCommission) : 0.03;
+        const globalPlatformRate = settingsRes?.data?.platformCommission ? Number(settingsRes.data.platformCommission) : 0.02;
 
-        const pendingBalanceResult = await qb
-            .select('SUM(payment.storeAmount)', 'total')
-            .where('payment.storeId = :storeId', { storeId })
-            .andWhere('payment.status = :status', { status: 'completed' })
-            .andWhere(qb => {
-                const subQuery = qb.subQuery()
-                    .select('sp.payment_id')
-                    .from('settlement_payments', 'sp') // Accessing the join table directly if possible, or via relation
-                    .getQuery();
-                return 'payment.id NOT IN ' + subQuery;
-            })
-            .getRawOne();
+        const payments = await this.paymentRepository.find({
+            where: { storeId }
+        });
 
-        // 2. Get Last Transfer (Most recent settlement for this store)
-        const lastSettlement = await this.settlementRepository.createQueryBuilder('settlement')
-            .innerJoin('settlement.payments', 'payment')
-            .where('payment.storeId = :storeId', { storeId })
-            .orderBy('settlement.settlementDate', 'DESC')
-            .take(1)
-            .getOne();
+        let pendingBalance = 0;
+        for (const session of pendingSessions) {
+            const totalAmount = Number(session.totalAmount || 0);
+            const orderId = `order_${session.sessionId}`;
+            const orderPayments = payments.filter(p => p.orderId === orderId);
+
+            const sessionCommission = orderPayments.reduce((sum, p) => {
+                const amount = Number(p.amount || 0);
+                const bRate = this.normalizeRate(p.store?.bankCommissionRate ?? p.bankCommissionRate, globalBankRate);
+                const pRate = this.normalizeRate(p.store?.platformCommissionRate ?? p.platformCommissionRate, globalPlatformRate);
+                return sum + amount * (bRate + pRate);
+            }, 0);
+
+            const netAmount = totalAmount - sessionCommission;
+            pendingBalance += netAmount;
+        }
+
+        // 2. Get Last Transfer (Most recent completed settlement for this store)
+        const lastSettlement = await this.settlementRepository.findOne({
+            where: { storeId, status: 'completed' },
+            order: { settlementDate: 'DESC' },
+        });
 
         return {
             success: true,
             data: {
-                pendingBalance: Number(pendingBalanceResult?.total || 0),
+                pendingBalance: Number(pendingBalance.toFixed(2)),
                 lastTransfer: lastSettlement ? {
-                    amount: Number(lastSettlement.totalCollected),
+                    amount: Number(lastSettlement.totalCollected) - Number(lastSettlement.bankShare) - Number(lastSettlement.platformShare),
                     date: lastSettlement.settlementDate
                 } : null
             }
         };
     }
-
 
     async getAllSettlements(filters: { page: number; limit: number; storeId?: number; status?: string }) {
         const { page, limit, storeId, status } = filters;
@@ -65,7 +92,7 @@ export class SettlementsService {
         const where: any = {};
         const hasStoreId = storeId !== undefined && storeId !== null && !isNaN(storeId);
         if (hasStoreId) {
-            where.payments = { storeId: storeId };
+            where.storeId = storeId;
         }
         if (status) {
             where.status = status;
@@ -73,8 +100,8 @@ export class SettlementsService {
 
         const [settlements, total] = await this.settlementRepository.findAndCount({
             where,
-            relations: ['payments', 'payments.store'],
-            order: { settlementDate: 'DESC' },
+            relations: ['store', 'sessions'],
+            order: { createdAt: 'DESC' },
             skip,
             take: limit,
         });
@@ -97,7 +124,7 @@ export class SettlementsService {
         bankShare: number;
         platformShare: number;
         notes?: string;
-        paymentIds?: number[];
+        storeId?: number;
     }) {
         const settlement = this.settlementRepository.create({
             settlementDate: data.settlementDate,
@@ -106,16 +133,25 @@ export class SettlementsService {
             platformShare: data.platformShare,
             notes: data.notes,
             status: 'completed',
+            storeId: data.storeId,
         });
 
-        if (data.paymentIds && data.paymentIds.length > 0) {
-            const payments = await this.paymentRepository.findBy({
-                id: In(data.paymentIds),
-            });
-            settlement.payments = payments;
-        }
-
         await this.settlementRepository.save(settlement);
+
+        // If manual settlement was created directly for a store, we link any pending sessions for this store to it
+        if (data.storeId) {
+            const pendingSessions = await this.sessionRepository.find({
+                where: {
+                    storeId: data.storeId,
+                    status: In(['approved', 'completed', 'payment_pending']),
+                    settlementId: null,
+                }
+            });
+            for (const session of pendingSessions) {
+                session.settlementId = settlement.id;
+                await this.sessionRepository.save(session);
+            }
+        }
 
         return {
             success: true,
@@ -127,7 +163,7 @@ export class SettlementsService {
     async getSettlementById(id: number) {
         const settlement = await this.settlementRepository.findOne({
             where: { id },
-            relations: ['payments', 'payments.user', 'payments.store'],
+            relations: ['store', 'sessions'],
         });
 
         return {
@@ -137,37 +173,53 @@ export class SettlementsService {
     }
 
     async requestSettlement(storeId: number, vendorName: string) {
-        // 1. Find all completed payments for this store that are NOT yet settled
-        const qb = this.paymentRepository.createQueryBuilder('payment');
-        const pendingPayments = await this.paymentRepository.createQueryBuilder('payment')
-            .where('payment.storeId = :storeId', { storeId })
-            .andWhere('payment.status = :status', { status: 'completed' })
-            .andWhere(qb => {
-                const subQuery = qb.subQuery()
-                    .select('sp.payment_id')
-                    .from('settlement_payments', 'sp')
-                    .getQuery();
-                return 'payment.id NOT IN ' + subQuery;
-            })
-            .getMany();
+        // 1. Find all approved sessions for this store that are NOT yet settled
+        const pendingSessions = await this.sessionRepository.find({
+            where: {
+                storeId,
+                status: In(['approved', 'completed', 'payment_pending']),
+                settlementId: null,
+            },
+        });
 
-        if (pendingPayments.length === 0) {
-            throw new BadRequestException('لا توجد مستحقات مالية مكتملة وجاهزة للتسوية حالياً لهذا المتجر.');
+        if (pendingSessions.length === 0) {
+            throw new BadRequestException('لا توجد مبيعات نشطة غير مسواة وجاهزة للتسوية حالياً لهذا المتجر.');
         }
 
-        // 2. Calculate values
-        let totalCollected = 0;
+        // 2. Load settings and payments to calculate commission splits upfront
+        const settingsRes = await this.commissionSettingsService.getCurrentSettings();
+        const globalBankRate = settingsRes?.data?.bankCommission ? Number(settingsRes.data.bankCommission) : 0.03;
+        const globalPlatformRate = settingsRes?.data?.platformCommission ? Number(settingsRes.data.platformCommission) : 0.02;
+
+        const payments = await this.paymentRepository.find({
+            where: { storeId }
+        });
+
+        let totalCollected = 0; // Gross volume
         let bankShare = 0;
         let platformShare = 0;
 
-        for (const payment of pendingPayments) {
-            const amount = Number(payment.amount || 0);
-            const bRate = Number(payment.bankCommissionRate || 3) / 100;
-            const pRate = Number(payment.platformCommissionRate || 2) / 100;
+        for (const session of pendingSessions) {
+            const totalAmount = Number(session.totalAmount || 0);
+            totalCollected += totalAmount;
 
-            bankShare += amount * bRate;
-            platformShare += amount * pRate;
-            totalCollected += amount;
+            const orderId = `order_${session.sessionId}`;
+            const orderPayments = payments.filter(p => p.orderId === orderId);
+
+            const sessionBankCommission = orderPayments.reduce((sum, p) => {
+                const amount = Number(p.amount || 0);
+                const bRate = this.normalizeRate(p.store?.bankCommissionRate ?? p.bankCommissionRate, globalBankRate);
+                return sum + amount * bRate;
+            }, 0);
+
+            const sessionPlatformCommission = orderPayments.reduce((sum, p) => {
+                const amount = Number(p.amount || 0);
+                const pRate = this.normalizeRate(p.store?.platformCommissionRate ?? p.platformCommissionRate, globalPlatformRate);
+                return sum + amount * pRate;
+            }, 0);
+
+            bankShare += sessionBankCommission;
+            platformShare += sessionPlatformCommission;
         }
 
         // 3. Create the pending settlement record
@@ -177,16 +229,20 @@ export class SettlementsService {
             bankShare,
             platformShare,
             status: 'pending',
+            storeId,
             notes: `طلب تسوية فورية مقدم من المورد ${vendorName}`,
-            payments: pendingPayments,
         });
 
-        await this.settlementRepository.save(settlement);
+        const savedSettlement = await this.settlementRepository.save(settlement);
 
-        // 4. Find all admins
+        // 4. Link sessions to this settlement
+        for (const session of pendingSessions) {
+            session.settlementId = savedSettlement.id;
+            await this.sessionRepository.save(session);
+        }
+
+        // 5. Find all admins
         let admins = await this.usersService.findAllAdmins();
-
-        // Fallback for testing: if no admins exist, notify User ID 1 (so you receive it)
         if (admins.length === 0) {
             const user1 = await this.usersService.findById(1).catch(() => null);
             if (user1) {
@@ -194,14 +250,14 @@ export class SettlementsService {
             }
         }
 
-        // Send notification to each admin
+        // Send notification to admins
         const title = 'طلب تسوية جديد 🏦';
         const body = `قام المورد ${vendorName} بطلب تسوية بقيمة ${totalCollected.toFixed(2)} JOD`;
         const data = {
             type: 'settlement_request',
             storeId: storeId.toString(),
             vendorName: vendorName,
-            settlementId: settlement.id.toString(),
+            settlementId: savedSettlement.id.toString(),
         };
 
         for (const admin of admins) {
@@ -211,14 +267,13 @@ export class SettlementsService {
         return {
             success: true,
             message: 'تم إرسال طلب التسوية بنجاح وتسجيله في النظام كمعلق',
-            data: settlement,
+            data: savedSettlement,
         };
     }
 
     async updateSettlementStatus(id: number, status: string, notes?: string) {
         const settlement = await this.settlementRepository.findOne({
             where: { id },
-            relations: ['payments'],
         });
 
         if (!settlement) {
@@ -236,10 +291,90 @@ export class SettlementsService {
 
         await this.settlementRepository.save(settlement);
 
+        // If settlement failed or was rejected, release the sessions back into the pool
+        if (status === 'failed' || status === 'rejected') {
+            const sessions = await this.sessionRepository.find({
+                where: { settlementId: id }
+            });
+            for (const session of sessions) {
+                session.settlementId = null;
+                await this.sessionRepository.save(session);
+            }
+        }
+
         return {
             success: true,
             message: 'تم تحديث حالة التسوية بنجاح',
             data: settlement,
+        };
+    }
+
+    async getStoresBalances() {
+        const stores = await this.storeRepository.find();
+        const settingsRes = await this.commissionSettingsService.getCurrentSettings();
+        const globalBankRate = settingsRes?.data?.bankCommission ? Number(settingsRes.data.bankCommission) : 0.03;
+        const globalPlatformRate = settingsRes?.data?.platformCommission ? Number(settingsRes.data.platformCommission) : 0.02;
+
+        const results = [];
+        for (const store of stores) {
+            // Find all approved sessions
+            const sessions = await this.sessionRepository.find({
+                where: {
+                    storeId: store.id,
+                    status: In(['approved', 'completed', 'payment_pending'])
+                }
+            });
+
+            const payments = await this.paymentRepository.find({
+                where: { storeId: store.id }
+            });
+
+            let totalGross = 0;
+            let totalCommission = 0;
+
+            for (const session of sessions) {
+                const totalAmount = Number(session.totalAmount || 0);
+                totalGross += totalAmount;
+
+                const orderId = `order_${session.sessionId}`;
+                const orderPayments = payments.filter(p => p.orderId === orderId);
+
+                const sessionCommission = orderPayments.reduce((sum, p) => {
+                    const amount = Number(p.amount || 0);
+                    const bRate = this.normalizeRate(p.store?.bankCommissionRate ?? p.bankCommissionRate, globalBankRate);
+                    const pRate = this.normalizeRate(p.store?.platformCommissionRate ?? p.platformCommissionRate, globalPlatformRate);
+                    return sum + amount * (bRate + pRate);
+                }, 0);
+
+                totalCommission += sessionCommission;
+            }
+
+            const totalNetOwed = totalGross - totalCommission;
+
+            // Total Paid (completed settlements)
+            const completedSettlements = await this.settlementRepository.find({
+                where: { storeId: store.id, status: 'completed' }
+            });
+            const totalPaid = completedSettlements.reduce((sum, s) => {
+                return sum + (Number(s.totalCollected || 0) - Number(s.bankShare || 0) - Number(s.platformShare || 0));
+            }, 0);
+
+            const outstandingBalance = totalNetOwed - totalPaid;
+
+            results.push({
+                storeId: store.id,
+                storeName: store.nameAr || store.name,
+                totalGross: Number(totalGross.toFixed(2)),
+                totalCommission: Number(totalCommission.toFixed(2)),
+                totalNetOwed: Number(totalNetOwed.toFixed(2)),
+                totalPaid: Number(totalPaid.toFixed(2)),
+                outstandingBalance: Number(Math.max(0, outstandingBalance).toFixed(2)),
+            });
+        }
+
+        return {
+            success: true,
+            data: results,
         };
     }
 }
