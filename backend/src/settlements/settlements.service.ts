@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, IsNull } from 'typeorm';
 import { Settlement } from './entities/settlement.entity';
 import { Payment } from '../payments/entities/payment.entity';
 import { Store } from '../stores/entities/store.entity';
@@ -37,7 +37,7 @@ export class SettlementsService {
             where: {
                 storeId,
                 status: In(['approved', 'completed', 'payment_pending']),
-                settlementId: null,
+                settlementId: IsNull(),
             },
         });
 
@@ -135,7 +135,7 @@ export class SettlementsService {
                 id: In(sessionIds),
                 storeId,
                 status: In(['approved', 'completed', 'payment_pending']),
-                settlementId: null,
+                settlementId: IsNull(),
             }
         });
 
@@ -208,7 +208,7 @@ export class SettlementsService {
             where: {
                 storeId,
                 status: In(['approved', 'completed', 'payment_pending']),
-                settlementId: null,
+                settlementId: IsNull(),
             },
             relations: ['user', 'store']
         });
@@ -280,7 +280,7 @@ export class SettlementsService {
             where: {
                 storeId,
                 status: In(['approved', 'completed', 'payment_pending']),
-                settlementId: null,
+                settlementId: IsNull(),
             },
         });
 
