@@ -58,8 +58,8 @@ export class SettlementsService {
     }
 
 
-    async getAllSettlements(filters: { page: number; limit: number; storeId?: number }) {
-        const { page, limit, storeId } = filters;
+    async getAllSettlements(filters: { page: number; limit: number; storeId?: number; status?: string }) {
+        const { page, limit, storeId, status } = filters;
         const skip = (page - 1) * limit;
 
         const where: any = {};
@@ -67,10 +67,13 @@ export class SettlementsService {
         if (hasStoreId) {
             where.payments = { storeId: storeId };
         }
+        if (status) {
+            where.status = status;
+        }
 
         const [settlements, total] = await this.settlementRepository.findAndCount({
             where,
-            relations: ['payments'],
+            relations: ['payments', 'payments.store'],
             order: { settlementDate: 'DESC' },
             skip,
             take: limit,
@@ -208,6 +211,34 @@ export class SettlementsService {
         return {
             success: true,
             message: 'تم إرسال طلب التسوية بنجاح وتسجيله في النظام كمعلق',
+            data: settlement,
+        };
+    }
+
+    async updateSettlementStatus(id: number, status: string, notes?: string) {
+        const settlement = await this.settlementRepository.findOne({
+            where: { id },
+            relations: ['payments'],
+        });
+
+        if (!settlement) {
+            throw new BadRequestException('التسوية غير موجودة');
+        }
+
+        settlement.status = status;
+        if (notes) {
+            settlement.notes = notes;
+        }
+
+        if (status === 'completed') {
+            settlement.settlementDate = new Date();
+        }
+
+        await this.settlementRepository.save(settlement);
+
+        return {
+            success: true,
+            message: 'تم تحديث حالة التسوية بنجاح',
             data: settlement,
         };
     }
