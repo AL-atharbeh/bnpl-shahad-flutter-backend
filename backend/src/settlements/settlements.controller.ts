@@ -37,15 +37,20 @@ export class SettlementsController {
     @ApiOperation({ summary: 'Create a new settlement' })
     async createSettlement(
         @Body() data: {
-            settlementDate: Date;
-            totalCollected: number;
-            bankShare: number;
-            platformShare: number;
+            storeId: number;
+            sessionIds: number[];
             notes?: string;
-            paymentIds?: number[];
         },
     ) {
         return this.settlementsService.createSettlement(data);
+    }
+
+    @Get('admin/stores/:id/outstanding-orders')
+    @ApiOperation({ summary: 'Get outstanding approved orders for a store that are not settled yet' })
+    async getStoreOutstandingOrders(
+        @Param('id', ParseIntPipe) id: number,
+    ) {
+        return this.settlementsService.getStoreOutstandingOrders(id);
     }
 
     @Get('admin/:id')

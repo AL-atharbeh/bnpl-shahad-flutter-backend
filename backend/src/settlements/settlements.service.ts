@@ -119,44 +119,146 @@ export class SettlementsService {
     }
 
     async createSettlement(data: {
-        settlementDate: Date;
-        totalCollected: number;
-        bankShare: number;
-        platformShare: number;
+        storeId: number;
+        sessionIds: number[];
         notes?: string;
-        storeId?: number;
     }) {
-        const settlement = this.settlementRepository.create({
-            settlementDate: data.settlementDate,
-            totalCollected: data.totalCollected,
-            bankShare: data.bankShare,
-            platformShare: data.platformShare,
-            notes: data.notes,
-            status: 'completed',
-            storeId: data.storeId,
+        const { storeId, sessionIds, notes } = data;
+
+        if (!sessionIds || sessionIds.length === 0) {
+            throw new BadRequestException('يجب تحديد عملية واحدة على الأقل لإجراء التسوية.');
+        }
+
+        // Find the sessions to settle
+        const sessions = await this.sessionRepository.find({
+            where: {
+                id: In(sessionIds),
+                storeId,
+                status: In(['approved', 'completed', 'payment_pending']),
+                settlementId: null,
+            }
         });
 
-        await this.settlementRepository.save(settlement);
+        if (sessions.length === 0) {
+            throw new BadRequestException('العمليات المحددة غير موجودة أو تم تسويتها مسبقاً.');
+        }
 
-        // If manual settlement was created directly for a store, we link any pending sessions for this store to it
-        if (data.storeId) {
-            const pendingSessions = await this.sessionRepository.find({
-                where: {
-                    storeId: data.storeId,
-                    status: In(['approved', 'completed', 'payment_pending']),
-                    settlementId: null,
-                }
-            });
-            for (const session of pendingSessions) {
-                session.settlementId = settlement.id;
-                await this.sessionRepository.save(session);
-            }
+        const settingsRes = await this.commissionSettingsService.getCurrentSettings();
+        const globalBankRate = settingsRes?.data?.bankCommission ? Number(settingsRes.data.bankCommission) : 0.03;
+        const globalPlatformRate = settingsRes?.data?.platformCommission ? Number(settingsRes.data.platformCommission) : 0.02;
+
+        const payments = await this.paymentRepository.find({
+            where: { storeId }
+        });
+
+        let totalCollected = 0; // Gross total
+        let bankShare = 0;
+        let platformShare = 0;
+
+        for (const session of sessions) {
+            const totalAmount = Number(session.totalAmount || 0);
+            totalCollected += totalAmount;
+
+            const orderId = `order_${session.sessionId}`;
+            const orderPayments = payments.filter(p => p.orderId === orderId);
+
+            const sessionBankCommission = orderPayments.reduce((sum, p) => {
+                const amount = Number(p.amount || 0);
+                const bRate = this.normalizeRate(p.store?.bankCommissionRate ?? p.bankCommissionRate, globalBankRate);
+                return sum + amount * bRate;
+            }, 0);
+
+            const sessionPlatformCommission = orderPayments.reduce((sum, p) => {
+                const amount = Number(p.amount || 0);
+                const pRate = this.normalizeRate(p.store?.platformCommissionRate ?? p.platformCommissionRate, globalPlatformRate);
+                return sum + amount * pRate;
+            }, 0);
+
+            bankShare += sessionBankCommission;
+            platformShare += sessionPlatformCommission;
+        }
+
+        const settlement = this.settlementRepository.create({
+            settlementDate: new Date(),
+            totalCollected,
+            bankShare,
+            platformShare,
+            status: 'completed',
+            storeId,
+            notes: notes || 'تسوية يدوية للعمليات المحددة',
+        });
+
+        const savedSettlement = await this.settlementRepository.save(settlement);
+
+        // Link sessions to this settlement
+        for (const session of sessions) {
+            session.settlementId = savedSettlement.id;
+            await this.sessionRepository.save(session);
         }
 
         return {
             success: true,
-            message: 'Settlement created successfully',
-            data: settlement,
+            message: 'تمت التسوية للعمليات المحددة بنجاح',
+            data: savedSettlement,
+        };
+    }
+
+    async getStoreOutstandingOrders(storeId: number) {
+        const sessions = await this.sessionRepository.find({
+            where: {
+                storeId,
+                status: In(['approved', 'completed', 'payment_pending']),
+                settlementId: null,
+            },
+            relations: ['user', 'store']
+        });
+
+        const settingsRes = await this.commissionSettingsService.getCurrentSettings();
+        const globalBankRate = settingsRes?.data?.bankCommission ? Number(settingsRes.data.bankCommission) : 0.03;
+        const globalPlatformRate = settingsRes?.data?.platformCommission ? Number(settingsRes.data.platformCommission) : 0.02;
+
+        const payments = await this.paymentRepository.find({
+            where: { storeId }
+        });
+
+        const results = [];
+        for (const session of sessions) {
+            const totalAmount = Number(session.totalAmount || 0);
+            const orderId = `order_${session.sessionId}`;
+            const orderPayments = payments.filter(p => p.orderId === orderId);
+
+            const bankShare = orderPayments.reduce((sum, p) => {
+                const amount = Number(p.amount || 0);
+                const bRate = this.normalizeRate(p.store?.bankCommissionRate ?? p.bankCommissionRate, globalBankRate);
+                return sum + amount * bRate;
+            }, 0);
+
+            const platformShare = orderPayments.reduce((sum, p) => {
+                const amount = Number(p.amount || 0);
+                const pRate = this.normalizeRate(p.store?.platformCommissionRate ?? p.platformCommissionRate, globalPlatformRate);
+                return sum + amount * pRate;
+            }, 0);
+
+            const totalCommission = bankShare + platformShare;
+            const netAmount = totalAmount - totalCommission;
+
+            results.push({
+                id: session.id,
+                sessionId: session.sessionId,
+                storeOrderId: session.storeOrderId,
+                customerName: session.customerName || (session.user ? session.user.name : 'عميل غير معروف'),
+                totalAmount: Number(totalAmount.toFixed(2)),
+                bankShare: Number(bankShare.toFixed(2)),
+                platformShare: Number(platformShare.toFixed(2)),
+                totalCommission: Number(totalCommission.toFixed(2)),
+                netAmount: Number(netAmount.toFixed(2)),
+                createdAt: session.createdAt,
+            });
+        }
+
+        return {
+            success: true,
+            data: results,
         };
     }
 

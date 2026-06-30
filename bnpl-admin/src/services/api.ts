@@ -78,6 +78,7 @@ export const getAllSettlements = (params?: any) => api.get('/settlements/admin/a
 export const createSettlement = (data: any) => api.post('/settlements/admin/create', data);
 export const updateSettlementStatus = (id: number, status: string, notes?: string) => api.put(`/settlements/admin/${id}/status`, { status, notes });
 export const getStoresBalances = () => api.get('/settlements/admin/stores-balances');
+export const getStoreOutstandingOrders = (storeId: number) => api.get(`/settlements/admin/stores/${storeId}/outstanding-orders`);
 
 // Profit Distribution API
 export const getProfitDistributionStats = () => api.get('/profit-distribution/stats');
