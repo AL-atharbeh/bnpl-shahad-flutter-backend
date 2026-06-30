@@ -627,7 +627,8 @@ export class BnplSessionsService {
         const queryBuilder = this.sessionRepository
             .createQueryBuilder('session')
             .leftJoinAndSelect('session.store', 'store')
-            .leftJoinAndSelect('session.user', 'user');
+            .leftJoin('session.user', 'user')
+            .addSelect(['user.id', 'user.name', 'user.phone', 'user.email']);
 
         if (status) {
             queryBuilder.andWhere('session.status = :status', { status });
@@ -706,11 +707,13 @@ export class BnplSessionsService {
     }
 
     async getRecentSessionsByStoreId(storeId: number, limit: number = 5) {
-        return this.sessionRepository.find({
-            where: { storeId },
-            relations: ['store', 'user'],
-            order: { createdAt: 'DESC' },
-            take: limit,
-        });
+        return this.sessionRepository.createQueryBuilder('session')
+            .leftJoinAndSelect('session.store', 'store')
+            .leftJoin('session.user', 'user')
+            .addSelect(['user.id', 'user.name', 'user.phone', 'user.email'])
+            .where('session.storeId = :storeId', { storeId })
+            .orderBy('session.createdAt', 'DESC')
+            .take(limit)
+            .getMany();
     }
 }

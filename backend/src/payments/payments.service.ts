@@ -482,9 +482,11 @@ export class PaymentsService {
     const BANK_COMMISSION_RATE = settings?.bankCommission ? Number(settings.bankCommission) : 0.03;
     const PLATFORM_COMMISSION_RATE = settings?.platformCommission ? Number(settings.platformCommission) : 0.02;
 
-    const allPayments = await this.paymentRepository.find({
-      relations: ['store', 'user'],
-    });
+    const allPayments = await this.paymentRepository.createQueryBuilder('payment')
+      .leftJoinAndSelect('payment.store', 'store')
+      .leftJoin('payment.user', 'user')
+      .addSelect(['user.id', 'user.name', 'user.phone', 'user.email'])
+      .getMany();
 
     const now = new Date();
     const twoDaysAgo = dayjs().subtract(48, 'hours').toDate();
@@ -627,7 +629,8 @@ export class PaymentsService {
     const queryBuilder = this.paymentRepository
       .createQueryBuilder('payment')
       .leftJoinAndSelect('payment.store', 'store')
-      .leftJoinAndSelect('payment.user', 'user');
+      .leftJoin('payment.user', 'user')
+      .addSelect(['user.id', 'user.name', 'user.phone', 'user.email']);
 
     if (status) {
       queryBuilder.andWhere('payment.status = :status', { status });
@@ -674,10 +677,12 @@ export class PaymentsService {
     const tomorrow = today.add(1, 'day');
     const dayAfterTomorrow = today.add(2, 'days');
 
-    const allPendingPayments = await this.paymentRepository.find({
-      where: { status: 'pending' },
-      relations: ['store', 'user'],
-    });
+    const allPendingPayments = await this.paymentRepository.createQueryBuilder('payment')
+      .leftJoinAndSelect('payment.store', 'store')
+      .leftJoin('payment.user', 'user')
+      .addSelect(['user.id', 'user.name', 'user.phone', 'user.email'])
+      .where('payment.status = :status', { status: 'pending' })
+      .getMany();
 
     const getPaymentsForDay = (dayStart: dayjs.Dayjs) => {
       const dayEnd = dayStart.endOf('day');
