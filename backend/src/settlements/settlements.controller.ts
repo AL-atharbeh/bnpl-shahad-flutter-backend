@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Query, ParseIntPipe } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SettlementsService } from './settlements.service';
 
@@ -54,5 +54,14 @@ export class SettlementsController {
         @Body() data: { storeId: number; vendorName: string },
     ) {
         return this.settlementsService.requestSettlement(data.storeId, data.vendorName);
+    }
+
+    @Put('admin/:id/status')
+    @ApiOperation({ summary: 'Update settlement status' })
+    async updateSettlementStatus(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() data: { status: string; notes?: string },
+    ) {
+        return this.settlementsService.updateSettlementStatus(id, data.status, data.notes);
     }
 }
