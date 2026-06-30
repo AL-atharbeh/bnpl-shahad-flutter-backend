@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Settlement } from './entities/settlement.entity';
@@ -134,16 +134,71 @@ export class SettlementsService {
     }
 
     async requestSettlement(storeId: number, vendorName: string) {
-        // Find all admins
-        const admins = await this.usersService.findAllAdmins();
+        // 1. Find all completed payments for this store that are NOT yet settled
+        const qb = this.paymentRepository.createQueryBuilder('payment');
+        const pendingPayments = await this.paymentRepository.createQueryBuilder('payment')
+            .where('payment.storeId = :storeId', { storeId })
+            .andWhere('payment.status = :status', { status: 'completed' })
+            .andWhere(qb => {
+                const subQuery = qb.subQuery()
+                    .select('sp.payment_id')
+                    .from('settlement_payments', 'sp')
+                    .getQuery();
+                return 'payment.id NOT IN ' + subQuery;
+            })
+            .getMany();
+
+        if (pendingPayments.length === 0) {
+            throw new BadRequestException('لا توجد مستحقات مالية مكتملة وجاهزة للتسوية حالياً لهذا المتجر.');
+        }
+
+        // 2. Calculate values
+        let totalCollected = 0;
+        let bankShare = 0;
+        let platformShare = 0;
+
+        for (const payment of pendingPayments) {
+            const amount = Number(payment.amount || 0);
+            const bRate = Number(payment.bankCommissionRate || 3) / 100;
+            const pRate = Number(payment.platformCommissionRate || 2) / 100;
+
+            bankShare += amount * bRate;
+            platformShare += amount * pRate;
+            totalCollected += amount;
+        }
+
+        // 3. Create the pending settlement record
+        const settlement = this.settlementRepository.create({
+            settlementDate: new Date(),
+            totalCollected,
+            bankShare,
+            platformShare,
+            status: 'pending',
+            notes: `طلب تسوية فورية مقدم من المورد ${vendorName}`,
+            payments: pendingPayments,
+        });
+
+        await this.settlementRepository.save(settlement);
+
+        // 4. Find all admins
+        let admins = await this.usersService.findAllAdmins();
+
+        // Fallback for testing: if no admins exist, notify User ID 1 (so you receive it)
+        if (admins.length === 0) {
+            const user1 = await this.usersService.findById(1).catch(() => null);
+            if (user1) {
+                admins = [user1];
+            }
+        }
 
         // Send notification to each admin
-        const title = 'طلب تسوية جديد';
-        const body = `قام المورد ${vendorName} بطلب تسوية فورية للمحل رقم ${storeId}`;
+        const title = 'طلب تسوية جديد 🏦';
+        const body = `قام المورد ${vendorName} بطلب تسوية بقيمة ${totalCollected.toFixed(2)} JOD`;
         const data = {
             type: 'settlement_request',
             storeId: storeId.toString(),
             vendorName: vendorName,
+            settlementId: settlement.id.toString(),
         };
 
         for (const admin of admins) {
@@ -152,7 +207,8 @@ export class SettlementsService {
 
         return {
             success: true,
-            message: 'تم إرسال طلب التسوية بنجاح',
+            message: 'تم إرسال طلب التسوية بنجاح وتسجيله في النظام كمعلق',
+            data: settlement,
         };
     }
 }
