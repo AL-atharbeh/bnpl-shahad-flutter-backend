@@ -21,6 +21,21 @@ api.interceptors.request.use(
     }
 );
 
+// Add response interceptor for error handling
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('vendor_token');
+                localStorage.removeItem('vendor_user');
+                window.location.href = '/auth/login';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
 // Vendor Auth APIs
 export const vendorLogin = (data: any) => api.post('/auth/vendor/login', data);
 export const vendorRegister = (data: any) => api.post('/auth/vendor/register', data);

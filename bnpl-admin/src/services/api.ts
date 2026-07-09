@@ -26,8 +26,10 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            // TODO: Handle unauthorized - redirect to login
-            // For now, admin endpoints don't require auth
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            }
         }
         return Promise.reject(error);
     }
