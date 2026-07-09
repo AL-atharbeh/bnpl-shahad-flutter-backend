@@ -27,6 +27,11 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/";
+  };
+
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-slate-800 bg-[#021f2a] px-4 py-4">
       <div className="flex items-center gap-2 px-2 pb-6">
@@ -69,7 +74,10 @@ export function Sidebar() {
             Sandbox التجريبية
           </span>
         </p>
-        <button className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-left text-[11px] text-slate-200 hover:bg-slate-900">
+        <button 
+          onClick={handleLogout}
+          className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-left text-[11px] text-slate-200 hover:bg-slate-900"
+        >
           تسجيل الخروج
         </button>
       </div>
