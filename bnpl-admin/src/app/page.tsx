@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import api from "@/services/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,19 +17,27 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // TODO: Replace with real backend auth
       if (!email || !password) {
-        throw new Error("Please enter your email and password.");
+        throw new Error("الرجاء إدخال البريد الإلكتروني وكلمة المرور.");
       }
 
-      // Simulate request
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      const { data } = await api.post("/auth/admin/login", { email, password });
+      const token = data?.data?.token;
 
+      if (!token) {
+        throw new Error("لم يصل رمز الدخول من الخادم.");
+      }
+
+      localStorage.setItem("token", token);
       router.push("/dashboard");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to sign in. Please try again."
-      );
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ??
+        (err instanceof Error ? err.message : null) ??
+        "تعذّر تسجيل الدخول. حاول مرة أخرى.";
+
+      setError(message);
     } finally {
       setLoading(false);
     }

@@ -6,10 +6,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AuthController } from './auth.controller';
 import { VendorAuthController } from './vendor-auth.controller';
+import { AdminAuthController } from './admin-auth.controller';
 import { AuthService } from './auth.service';
 import { OtpService } from './otp.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
+import { RolesGuard } from './guards/roles.guard';
 
 import { User } from '../users/entities/user.entity';
 import { OtpCode } from '../users/entities/otp-code.entity';
@@ -27,8 +29,15 @@ import { UsersModule } from '../users/users.module';
         const expiresIn = configService.get<string>('JWT_EXPIRES_IN') || 
                           configService.get<string>('JWT_EXPIRATION_TIME') || 
                           '3650d';
+        const secret = configService.get<string>('JWT_SECRET');
+        if (!secret) {
+          // Signing with a hardcoded fallback would let anyone mint valid
+          // tokens, so refuse to start instead.
+          throw new Error('JWT_SECRET is not set');
+        }
+
         return {
-          secret: configService.get('JWT_SECRET', 'your-secret-key'),
+          secret,
           signOptions: {
             expiresIn,
           },
@@ -38,9 +47,9 @@ import { UsersModule } from '../users/users.module';
     }),
     UsersModule,
   ],
-  controllers: [AuthController, VendorAuthController],
-  providers: [AuthService, OtpService, JwtStrategy, LocalStrategy],
-  exports: [AuthService, OtpService, JwtStrategy, PassportModule],
+  controllers: [AuthController, VendorAuthController, AdminAuthController],
+  providers: [AuthService, OtpService, JwtStrategy, LocalStrategy, RolesGuard],
+  exports: [AuthService, OtpService, JwtStrategy, RolesGuard, PassportModule],
 })
 export class AuthModule { }
 

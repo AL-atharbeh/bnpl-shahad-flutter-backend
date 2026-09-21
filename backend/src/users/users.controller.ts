@@ -2,11 +2,11 @@ import { Controller, Get, Put, Post, Body, UseGuards, Request, Param, Query } fr
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('users')
 @Controller('users')
-// @UseGuards(JwtAuthGuard) // Removed global guard - will apply to specific endpoints
-// @ApiBearerAuth()
 export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 
@@ -37,8 +37,11 @@ export class UsersController {
     };
   }
 
-  // Admin endpoints (should be protected with AdminGuard in production)
+  // Admin endpoints: signed in and role must be 'admin'.
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all users (Admin)' })
   async getAllUsers(
     @Query('search') search?: string,
@@ -70,6 +73,9 @@ export class UsersController {
   }
 
   @Get('stats')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get users statistics (Admin)' })
   async getStats() {
     const stats = await this.usersService.getStats();
@@ -80,6 +86,9 @@ export class UsersController {
   }
 
   @Get('find-by-phone')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Find user by phone (for POS)' })
   async findByPhone(@Query('phone') phone: string) {
     console.log(`[UsersController] find-by-phone requested for: "${phone}"`);
@@ -111,6 +120,9 @@ export class UsersController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get user by ID (Admin)' })
   async getUserById(@Param('id') id: string) {
     const user = await this.usersService.findById(parseInt(id));
@@ -136,6 +148,9 @@ export class UsersController {
   }
 
   @Put(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Update user (Admin)' })
   async updateUser(@Param('id') id: string, @Body() updateData: any) {
     const user = await this.usersService.adminUpdateUser(parseInt(id), updateData);
@@ -148,6 +163,9 @@ export class UsersController {
   }
 
   @Put(':id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Update user status (Admin)' })
   async updateUserStatus(
     @Param('id') id: string,
@@ -163,6 +181,9 @@ export class UsersController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Create new user (Admin)' })
   async createUser(@Body() createData: any) {
     const user = await this.usersService.createUser(createData);

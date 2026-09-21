@@ -23,9 +23,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         NotificationsModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],
-            useFactory: (configService: ConfigService) => ({
-                secret: configService.get('JWT_SECRET', 'your-secret-key'),
-            }),
+            useFactory: (configService: ConfigService) => {
+                const secret = configService.get<string>('JWT_SECRET');
+                if (!secret) {
+                    throw new Error('JWT_SECRET is not set');
+                }
+                return { secret };
+            },
             inject: [ConfigService],
         }),
     ],

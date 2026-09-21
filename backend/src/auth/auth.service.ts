@@ -18,6 +18,7 @@ import { CheckPhoneDto } from './dto/check-phone.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { CreateAccountDto } from './dto/create-account.dto';
+import { AdminLoginDto } from './dto/admin-login.dto';
 import { VendorRegisterDto } from './dto/vendor-register.dto';
 import { VendorLoginDto } from './dto/vendor-login.dto';
 
@@ -373,6 +374,47 @@ export class AuthService {
       data: {
         token,
         user: this.sanitizeVendor(vendor),
+      },
+    };
+  }
+
+  /**
+   * Login to the admin dashboard with email and password. Only users whose
+   * role is 'admin' are accepted; everyone else gets the same generic error so
+   * the response cannot be used to discover which emails exist.
+   */
+  async adminLogin(adminLoginDto: AdminLoginDto) {
+    const { email, password } = adminLoginDto;
+    const invalid = new UnauthorizedException(
+      'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+    );
+
+    const user = await this.userRepository.findOne({ where: { email } });
+
+    if (!user || !user.passwordHash) {
+      throw invalid;
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+
+    if (!isPasswordValid) {
+      throw invalid;
+    }
+
+    if (user.role !== 'admin') {
+      throw invalid;
+    }
+
+    if (user.isActive === false) {
+      throw new UnauthorizedException('هذا الحساب معطّل');
+    }
+
+    return {
+      success: true,
+      message: 'تم تسجيل الدخول بنجاح',
+      data: {
+        token: this.generateToken(user, 'admin'),
+        user: this.sanitizeUser(user),
       },
     };
   }

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Sidebar } from "./sidebar";
+import { AuthGuard } from "./auth-guard";
 
 type DashboardLayoutProps = {
   children: ReactNode;
@@ -7,6 +8,7 @@ type DashboardLayoutProps = {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
+    <AuthGuard>
     <div className="flex min-h-screen bg-[#021820] text-slate-50">
       <Sidebar />
 
@@ -37,6 +39,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </main>
       </div>
     </div>
+    </AuthGuard>
   );
 }
 
