@@ -279,6 +279,23 @@ export class AuthService {
   }
 
   /**
+   * Vendors live in their own table with their own id sequence, so a vendor
+   * token must never be resolved against the users table: vendor 1 and user 1
+   * are different accounts.
+   */
+  async validateVendorById(vendorId: number): Promise<Vendor> {
+    const vendor = await this.vendorRepository.findOne({
+      where: { id: vendorId, isActive: true },
+    });
+
+    if (!vendor) {
+      throw new UnauthorizedException('التاجر غير موجود أو غير نشط');
+    }
+
+    return vendor;
+  }
+
+  /**
    * Vendor Registration: Creates both a Store and a Vendor Record
    */
   async vendorRegister(vendorRegisterDto: VendorRegisterDto) {
