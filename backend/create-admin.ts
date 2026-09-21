@@ -37,11 +37,34 @@ function ask(question: string, hidden = false): Promise<string> {
 }
 
 async function main() {
-  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  let connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 
   if (!connectionString) {
-    console.error('❌ DATABASE_URL is not set.');
-    console.error('   Copy it from Vercel > Storage > your Neon database.');
+    // Asking here avoids any shell quoting or clipboard surprises.
+    connectionString = await ask('الصق DATABASE_URL: ', true);
+  }
+
+  connectionString = connectionString.trim().replace(/^["']|["']$/g, '');
+
+  // Vercel rows are often copied as KEY=value, and Neon's snippets as a psql
+  // command. Accept both rather than failing on a confusing DNS error.
+  connectionString = connectionString
+    .replace(/^(DATABASE_URL|POSTGRES_URL|POSTGRES_PRISMA_URL)\s*=\s*/i, '')
+    .replace(/^psql\s+/i, '')
+    .replace(/^["']|["']$/g, '');
+
+  if (!/^postgres(ql)?:\/\//i.test(connectionString)) {
+    console.error('❌ هذه ليست سلسلة اتصال Postgres صالحة.');
+    console.error('   يجب أن تبدأ بـ postgres:// أو postgresql://');
+    console.error(`   ما وصلني يبدأ بـ: "${connectionString.slice(0, 24)}..."`);
+    process.exit(1);
+  }
+
+  try {
+    const parsed = new URL(connectionString);
+    console.log(`🔗 الاتصال بـ ${parsed.hostname} (قاعدة: ${parsed.pathname.slice(1)})`);
+  } catch {
+    console.error('❌ تعذّر تحليل سلسلة الاتصال.');
     process.exit(1);
   }
 
