@@ -164,51 +164,24 @@ export class BannersController {
       // Check if Vercel Blob Token is present
       const token = process.env.BLOB_READ_WRITE_TOKEN;
       
-      if (token) {
-        const blob = await put(`banners/${filename}`, file.buffer, {
-          access: 'public',
-          addRandomSuffix: true,
-        });
-
-        return {
-          success: true,
-          data: {
-            url: blob.url,
-            filename: filename
-          }
-        };
-      } else {
-        // Fallback to local storage
-        const fs = require('fs');
-        const path = require('path');
-        const uploadDir = path.join(process.cwd(), 'uploads/banners');
-        
-        if (!fs.existsSync(uploadDir)) {
-          fs.mkdirSync(uploadDir, { recursive: true });
-        }
-        
-        const filePath = path.join(uploadDir, filename);
-        fs.writeFileSync(filePath, file.buffer);
-        
-        // Improve URL construction to handle proxies (like Nginx)
-        // Prefer https in production or when forwarded
-        const protocol = req.headers['x-forwarded-proto'] || (req.headers['host']?.includes('localhost') ? req.protocol : 'https');
-        const host = req.headers['x-forwarded-host'] || req.headers['host'];
-        const apiPrefix = process.env.API_PREFIX || 'api/v1';
-        
-        // Ensure we don't have double slashes and correct prefix handling
-        const cleanPrefix = apiPrefix.startsWith('/') ? apiPrefix.substring(1) : apiPrefix;
-        const absoluteUrl = `${protocol}://${host}/${cleanPrefix}/banners/uploads/${filename}`;
-        
-        return {
-          success: true,
-          data: {
-            url: absoluteUrl,
-            filename: filename,
-            isLocal: true
-          }
-        };
+      if (!token) {
+        throw new BadRequestException(
+          'BLOB_READ_WRITE_TOKEN is not configured - image uploads are disabled.',
+        );
       }
+
+      const blob = await put(`banners/${filename}`, file.buffer, {
+        access: 'public',
+        addRandomSuffix: true,
+      });
+
+      return {
+        success: true,
+        data: {
+          url: blob.url,
+          filename: filename,
+        },
+      };
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;

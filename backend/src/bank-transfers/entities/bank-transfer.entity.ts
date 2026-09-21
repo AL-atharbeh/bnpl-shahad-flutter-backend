@@ -6,7 +6,7 @@ export class BankTransfer {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ type: 'datetime' })
+    @Column({ type: 'timestamp' })
     transferDate: Date;
 
     @Column({ type: 'decimal', precision: 10, scale: 2 })

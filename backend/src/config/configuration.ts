@@ -1,19 +1,19 @@
 export default () => ({
   port: parseInt(process.env.PORT, 10) || 3000,
   database: {
-    host: process.env.DB_HOST || process.env.Host || 'localhost',
-    port: parseInt(process.env.DB_PORT || process.env.Port, 10) || 3306,
-    username: process.env.DB_USERNAME || process.env.User || 'bnpl_user',
-    password: process.env.DB_PASSWORD || process.env.Password || 'bnpl_password',
-    database: process.env.DB_DATABASE || process.env.DB_NAME || 'bnpl_db', 
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+    // Vercel Postgres / Neon expose the connection string under these names.
+    url:
+      process.env.DATABASE_URL ||
+      process.env.POSTGRES_URL ||
+      process.env.POSTGRES_PRISMA_URL,
+    sync: process.env.DB_SYNC || 'false',
   },
   jwt: {
-    secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+    secret: process.env.JWT_SECRET,
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   },
   stripe: {
-    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || 'pk_test_51THL3qGnJab9pZ97' + 'eIkQrwbZi0cTOhIlD8IJFUOzYg8wHcVcfsys8mVmoYlEHDO2GzRQDk9eEBy5T5jDe8NQIDlc00CsDA7uTg',
-    secretKey: process.env.STRIPE_SECRET_KEY || 'sk_test_51THL3qGnJab9pZ97' + 'odgTCLPQfsdhK9C1GODISBOEFCPrdWtIG88HXFPFXYOsV7gUvk9XnalsOBDw4FWEPkjPG8QU00sc2vrAVv',
+    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+    secretKey: process.env.STRIPE_SECRET_KEY,
   },
 });

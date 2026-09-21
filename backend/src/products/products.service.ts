@@ -63,7 +63,7 @@ export class ProductsService {
       .select([
         'product.*',
         'COUNT(CASE WHEN s.status = \'APPROVED\' THEN si.id ELSE NULL END) as real_sales_count',
-        'SUM(CASE WHEN s.status = \'APPROVED\' THEN IFNULL(si.price * si.quantity, 0) ELSE 0 END) as real_total_revenue'
+        'SUM(CASE WHEN s.status = \'APPROVED\' THEN COALESCE(si.price * si.quantity, 0) ELSE 0 END) as real_total_revenue'
       ])
       .where('product.store_id = :storeId', { storeId })
       .andWhere('product.is_active = true')

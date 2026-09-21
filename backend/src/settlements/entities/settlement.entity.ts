@@ -8,7 +8,7 @@ export class Settlement {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ type: 'datetime' })
+    @Column({ type: 'timestamp' })
     settlementDate: Date;
 
     @Column({ type: 'decimal', precision: 10, scale: 2 })

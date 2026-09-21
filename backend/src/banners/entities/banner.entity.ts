@@ -60,10 +60,10 @@ export class Banner {
   @Column({ name: 'sort_order', default: 0 })
   sortOrder: number;
 
-  @Column({ name: 'start_date', type: 'datetime', nullable: true })
+  @Column({ name: 'start_date', type: 'timestamp', nullable: true })
   startDate: Date;
 
-  @Column({ name: 'end_date', type: 'datetime', nullable: true })
+  @Column({ name: 'end_date', type: 'timestamp', nullable: true })
   endDate: Date;
 
   @Column({ name: 'click_count', default: 0 })

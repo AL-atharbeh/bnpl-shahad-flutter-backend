@@ -8,19 +8,23 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        type: 'mysql',
-        host: configService.get('database.host'),
-        port: configService.get('database.port'),
-        username: configService.get('database.username'),
-        password: configService.get('database.password'),
-        database: configService.get('database.database'),
-        ssl: configService.get('database.ssl'),
-        autoLoadEntities: true, 
-        synchronize: true, 
-        logging: ['query', 'error'],
+        type: 'postgres',
+        url: configService.get<string>('database.url'),
+        ssl: { rejectUnauthorized: false },
+        autoLoadEntities: true,
+        // Set DB_SYNC=true for the very first deploy to create the tables,
+        // then switch it back to false so schema changes go through migrations.
+        synchronize: configService.get<string>('database.sync') === 'true',
+        // Serverless functions are short lived: keep one connection per instance
+        // so the database does not run out of slots under load.
+        extra: {
+          max: 1,
+          connectionTimeoutMillis: 10000,
+          idleTimeoutMillis: 10000,
+        },
+        logging: ['error'],
       }),
     }),
   ],
 })
 export class DatabaseModule {}
-

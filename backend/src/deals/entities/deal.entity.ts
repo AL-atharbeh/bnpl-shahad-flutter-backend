@@ -51,10 +51,10 @@ export class Deal {
   @Column({ name: 'accent_color', length: 12, nullable: true })
   accentColor: string | null;
 
-  @Column({ name: 'start_date', type: 'datetime', nullable: true })
+  @Column({ name: 'start_date', type: 'timestamp', nullable: true })
   startDate: Date | null;
 
-  @Column({ name: 'end_date', type: 'datetime', nullable: true })
+  @Column({ name: 'end_date', type: 'timestamp', nullable: true })
   endDate: Date | null;
 
   @Column({ name: 'is_active', default: true })

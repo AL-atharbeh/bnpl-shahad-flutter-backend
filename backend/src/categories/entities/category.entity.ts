@@ -24,7 +24,7 @@ export class Category {
   genderType: 'Women' | 'Men' | 'Kids' | 'All';
 
 
-  @Column({ name: 'image_url', type: 'longtext', nullable: true })
+  @Column({ name: 'image_url', type: 'text', nullable: true })
   imageUrl: string;
 
   @Column({ type: 'text', nullable: true })

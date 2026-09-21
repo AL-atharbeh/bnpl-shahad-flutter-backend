@@ -130,7 +130,7 @@ export class ReportsService {
         const hasStoreId = storeId !== undefined && storeId !== null && !isNaN(storeId);
 
         const query = this.paymentRepository.createQueryBuilder('p')
-            .select("DATE_FORMAT(p.createdAt, '%Y-%m')", 'month')
+            .select("TO_CHAR(p.createdAt, 'YYYY-MM')", 'month')
             .addSelect('SUM(p.amount)', 'installments')
             // Calculate total financed amount (sum of totalAmount for only one installment per order to avoid double counting)
             .addSelect('SUM(CASE WHEN p.installmentNumber = 1 THEN p.totalAmount ELSE 0 END)', 'purchases')
@@ -142,7 +142,7 @@ export class ReportsService {
         }
 
         const stats = await query
-            .groupBy("DATE_FORMAT(p.createdAt, '%Y-%m')")
+            .groupBy("TO_CHAR(p.createdAt, 'YYYY-MM')")
             .orderBy('month', 'ASC')
             .getRawMany();
 

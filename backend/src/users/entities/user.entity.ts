@@ -33,10 +33,10 @@ export class User {
   @Exclude()
   passwordHash: string;
 
-  @Column({ name: 'civil_id_front', type: 'longtext', nullable: true })
+  @Column({ name: 'civil_id_front', type: 'text', nullable: true })
   civilIdFront: string;
 
-  @Column({ name: 'civil_id_back', type: 'longtext', nullable: true })
+  @Column({ name: 'civil_id_back', type: 'text', nullable: true })
   civilIdBack: string;
 
   @Column({ name: 'date_of_birth', type: 'date', nullable: true })
@@ -51,7 +51,7 @@ export class User {
   @Column({ length: 255, nullable: true })
   employer: string;
 
-  @Column({ name: 'avatar_url', type: 'longtext', nullable: true })
+  @Column({ name: 'avatar_url', type: 'text', nullable: true })
   avatarUrl: string;
 
   @Column({ name: 'free_postponement_count', default: 0 })

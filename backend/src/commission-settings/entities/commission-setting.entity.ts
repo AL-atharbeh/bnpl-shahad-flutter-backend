@@ -14,7 +14,7 @@ export class CommissionSetting {
     @Column({ type: 'decimal', precision: 5, scale: 4, default: 0.0500 })
     storeDiscount: number;
 
-    @Column({ type: 'datetime' })
+    @Column({ type: 'timestamp' })
     effectiveFrom: Date;
 
     @Column({ nullable: true })

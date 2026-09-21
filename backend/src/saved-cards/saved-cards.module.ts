@@ -5,6 +5,7 @@ import { SavedCard } from './entities/saved-card.entity';
 import { AutoPaymentLog } from './entities/auto-payment-log.entity';
 import { SavedCardsService } from './saved-cards.service';
 import { SavedCardsController } from './saved-cards.controller';
+import { CronController } from './cron.controller';
 import { AutoPaymentScheduler } from './auto-payment.scheduler';
 import { PaymentsModule } from '../payments/payments.module';
 import { UsersModule } from '../users/users.module';
@@ -18,7 +19,7 @@ import { Payment } from '../payments/entities/payment.entity';
     UsersModule,
     NotificationsModule,
   ],
-  controllers: [SavedCardsController],
+  controllers: [SavedCardsController, CronController],
   providers: [SavedCardsService, AutoPaymentScheduler],
   exports: [SavedCardsService],
 })
