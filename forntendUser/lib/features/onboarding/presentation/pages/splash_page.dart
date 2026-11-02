@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../routing/app_router.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../services/security_service.dart';
-import '../../../../services/banner_service.dart';
+import '../widgets/assembling_logo.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -13,76 +13,55 @@ class SplashPage extends StatefulWidget {
   State<SplashPage> createState() => _SplashPageState();
 }
 
-enum SplashStage { logo, loading }
-
 class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
-  // ─── Dynamic Splash Image ───
-  String? _splashImageUrl;
-  bool _isNetworkImage = false;
-  SplashStage _currentStage = SplashStage.logo;
-
   // ─── Animation Controllers ───
-  late AnimationController _logoController;
-  late AnimationController _stageTransitionController;
-  late AnimationController
-      _progressController; // For the shimmering progress bar
+  late AnimationController _assembleController;
+  late AnimationController _settleController;
   late AnimationController _exitController;
 
   // ─── Animations ───
-  late Animation<double> _logoOpacity;
-  late Animation<double> _logoScale;
-  late Animation<double> _loadingStageOpacity;
-  late Animation<double> _progressAnimation;
+  late Animation<double> _assemble;
+  late Animation<double> _settle;
+  late Animation<double> _wordmark;
   late Animation<double> _exitOpacity;
   late Animation<double> _exitScale;
 
   @override
   void initState() {
     super.initState();
-    _loadCachedSplash();
 
-    // Set status bar
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-    ));
-
-    // 1. Stage 1: Logo Animations
-    _logoController = AnimationController(
-        duration: const Duration(milliseconds: 1500), vsync: this);
-
-    _logoOpacity = TweenSequence([
-      TweenSequenceItem(tween: Tween<double>(begin: 0.0, end: 1.0), weight: 30),
-      TweenSequenceItem(tween: ConstantTween<double>(1.0), weight: 50),
-      TweenSequenceItem(tween: Tween<double>(begin: 1.0, end: 0.0), weight: 20),
-    ]).animate(_logoController);
-
-    _logoScale = Tween<double>(begin: 0.95, end: 1.05).animate(
-      CurvedAnimation(parent: _logoController, curve: Curves.easeOutCubic),
-    );
-
-    // 2. Stage Transition
-    _stageTransitionController = AnimationController(
-        duration: const Duration(milliseconds: 800), vsync: this);
-    _loadingStageOpacity = CurvedAnimation(
-      parent: _stageTransitionController,
-      curve: Curves.easeIn,
-    );
-
-    // 3. Progress Bar (Stage 2)
-    _progressController = AnimationController(
-      duration: const Duration(milliseconds: 3000),
+    // The slices fly in and lock together.
+    _assembleController = AnimationController(
+      duration: const Duration(milliseconds: 1100),
       vsync: this,
     );
-    _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _progressController, curve: Curves.easeInOut),
+    _assemble = CurvedAnimation(
+      parent: _assembleController,
+      curve: Curves.easeOutCubic,
     );
 
-    // 4. Global Exit
+    // A short pulse once the pieces meet, so the assembly has a landing.
+    _settleController = AnimationController(
+      duration: const Duration(milliseconds: 520),
+      vsync: this,
+    );
+    _settle = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.07), weight: 40),
+      TweenSequenceItem(tween: Tween(begin: 1.07, end: 1.0), weight: 60),
+    ]).animate(
+      CurvedAnimation(parent: _settleController, curve: Curves.easeOut),
+    );
+    _wordmark = CurvedAnimation(
+      parent: _settleController,
+      curve: const Interval(0.25, 1, curve: Curves.easeOut),
+    );
+
     _exitController = AnimationController(
-        duration: const Duration(milliseconds: 600), vsync: this);
+      duration: const Duration(milliseconds: 520),
+      vsync: this,
+    );
     _exitOpacity = Tween<double>(begin: 1.0, end: 0.0).animate(_exitController);
-    _exitScale = Tween<double>(begin: 1.0, end: 1.1).animate(
+    _exitScale = Tween<double>(begin: 1.0, end: 1.08).animate(
       CurvedAnimation(parent: _exitController, curve: Curves.easeInCubic),
     );
 
@@ -90,80 +69,18 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   }
 
   void _runSplashSequence() async {
-    // Stage 1: Show White Logo Screen
-    await _logoController.forward();
+    await _assembleController.forward();
+    if (!mounted) return;
 
-    // Stage 2: Transition to Loading Image
-    if (mounted) {
-      setState(() => _currentStage = SplashStage.loading);
-      _stageTransitionController.forward();
-      _progressController.forward();
-    }
+    await _settleController.forward();
+    if (!mounted) return;
 
-    // Fetch new splash in background
-    _fetchNewSplash();
+    // Lets the finished mark hold for a beat before it leaves.
+    await Future<void>.delayed(const Duration(milliseconds: 420));
+    if (!mounted) return;
 
-    // Wait for progress to finish
-    await Future.delayed(const Duration(milliseconds: 3200));
-
-    // Stage 3: Exit & Navigate
-    if (mounted) {
-      await _exitController.forward();
-      _navigateNext();
-    }
-  }
-
-  Future<void> _loadCachedSplash() async {
-    final prefs = await SharedPreferences.getInstance();
-    final cachedUrl = prefs.getString('cached_splash_url');
-    if (cachedUrl != null && cachedUrl.isNotEmpty) {
-      if (mounted) {
-        setState(() {
-          _splashImageUrl = cachedUrl;
-          _isNetworkImage = cachedUrl.startsWith('http');
-        });
-        if (_isNetworkImage) {
-          precacheImage(NetworkImage(cachedUrl), context)
-              .catchError((_) => null);
-        }
-      }
-    }
-  }
-
-  Future<void> _fetchNewSplash() async {
-    try {
-      final bannerService = BannerService();
-      final response = await bannerService.getSplashBanner();
-
-      // The backend returns { "success": true, "data": { "splashImageUrl": "..." } }
-      if (response['success'] == true && response['data'] != null) {
-        final configData = response['data'];
-        final innerData = (configData is Map && configData.containsKey('data'))
-            ? configData['data']
-            : configData;
-        final String? newUrl =
-            innerData['splashImageUrl'] ?? configData['splashImageUrl'];
-
-        if (newUrl != null && newUrl.isNotEmpty) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('cached_splash_url', newUrl);
-
-          if (mounted && newUrl != _splashImageUrl) {
-            setState(() {
-              _splashImageUrl = newUrl;
-              _isNetworkImage = newUrl.startsWith('http');
-            });
-            // Precache the new image to show it smoothly if still on splash
-            if (_isNetworkImage) {
-              precacheImage(NetworkImage(newUrl), context)
-                  .catchError((_) => null);
-            }
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('Error fetching splash: $e');
-    }
+    await _exitController.forward();
+    if (mounted) _navigateNext();
   }
 
   Future<void> _navigateNext() async {
@@ -182,29 +99,28 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
         final token = await authService.getSavedToken();
         if (token != null) {
           authService.setAuthToken(token);
-            try {
-              final securityService = SecurityService();
-              final settingsResponse =
-                  await securityService.getSecuritySettings();
-              if (!mounted) return;
-              if (settingsResponse['success']) {
-                final backendData = settingsResponse['data'];
-                final settingsData = backendData['data'] ?? backendData;
-                final pinEnabled = settingsData['pinEnabled'] ?? false;
-                final biometricEnabled = settingsData['biometricEnabled'] ?? false;
-                
-                // إذا كان PIN أو البصمة مُفعّلة، اذهب لصفحة PIN (التي ستُشغّل البصمة تلقائياً)
-                if (pinEnabled || biometricEnabled) {
-                  AppRouter.navigateToPinLoginCinematic(context);
-                } else {
-                  AppRouter.navigateToHomeCinematic(context);
-                }
+          try {
+            final securityService = SecurityService();
+            final settingsResponse =
+                await securityService.getSecuritySettings();
+            if (!mounted) return;
+            if (settingsResponse['success']) {
+              final backendData = settingsResponse['data'];
+              final settingsData = backendData['data'] ?? backendData;
+              final pinEnabled = settingsData['pinEnabled'] ?? false;
+              final biometricEnabled = settingsData['biometricEnabled'] ?? false;
+              
+              if (pinEnabled || biometricEnabled) {
+                AppRouter.navigateToPinLoginCinematic(context);
               } else {
                 AppRouter.navigateToHomeCinematic(context);
               }
-            } catch (e) {
-              if (mounted) AppRouter.navigateToHomeCinematic(context);
+            } else {
+              AppRouter.navigateToHomeCinematic(context);
             }
+          } catch (e) {
+            if (mounted) AppRouter.navigateToHomeCinematic(context);
+          }
         } else {
           AppRouter.navigateToPhoneInputCinematic(context);
         }
@@ -218,9 +134,8 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _logoController.dispose();
-    _stageTransitionController.dispose();
-    _progressController.dispose();
+    _assembleController.dispose();
+    _settleController.dispose();
     _exitController.dispose();
     super.dispose();
   }
@@ -228,191 +143,71 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFC8E6C9),
       body: AnimatedBuilder(
-        animation: _exitController,
-        builder: (context, child) {
-          return FadeTransition(
-            opacity: _exitOpacity,
-            child: ScaleTransition(
-              scale: _exitScale,
-              child: child,
-            ),
-          );
-        },
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // ── Stage 1: Brand Introduction ──
-            if (_currentStage == SplashStage.logo)
-              Container(
-                color: const Color(0xFFC8E6C9),
-                child: Center(
-                  child: FadeTransition(
-                    opacity: _logoOpacity,
-                    child: ScaleTransition(
-                      scale: _logoScale,
-                      child: Image.asset(
-                        'assets/images/logosplash.png',
-                        width: 200,
-                        height: 200,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
+        animation: Listenable.merge([_settleController, _exitController]),
+        builder: (context, _) {
+          return Opacity(
+            opacity: _exitOpacity.value,
+            child: Container(
+              decoration: const BoxDecoration(
+                // A quiet gradient instead of one flat fill, so the mark has
+                // something to sit on.
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFE8F6E9), Color(0xFFC8E6C9)],
                 ),
               ),
-
-            // ── Stage 2: Dynamic Admin Splash & Progress ──
-            if (_currentStage == SplashStage.loading)
-              FadeTransition(
-                opacity: _loadingStageOpacity,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    // Dynamic Image with Fallback
-                    _buildDynamicImage(),
-
-                    // Dark Overlay
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.5)
-                          ],
+              child: Center(
+                child: Transform.scale(
+                  scale: _exitScale.value,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Transform.scale(
+                        scale: _settle.value,
+                        child: AssemblingLogo(
+                          progress: _assemble,
+                          size: 170,
                         ),
                       ),
-                    ),
-
-                    // Shimmering Progress Bar ("Scroll Bar")
-                    Positioned(
-                      left: 45,
-                      right: 45,
-                      bottom: 100,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildProgressPercentage(),
-                          const SizedBox(height: 20),
-                          _buildUnmatchedProgressBar(),
-                        ],
+                      const SizedBox(height: 28),
+                      // The name arrives once the mark is whole, so the two do
+                      // not compete for attention.
+                      Opacity(
+                        opacity: _wordmark.value,
+                        child: Transform.translate(
+                          offset: Offset(0, 12 * (1 - _wordmark.value)),
+                          child: const Text(
+                            'شِهد',
+                            style: TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1B7A32),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDynamicImage() {
-    if (_splashImageUrl != null && _isNetworkImage) {
-      return Image.network(
-        _splashImageUrl!,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Image.asset(
-          'assets/images/splah.png',
-          fit: BoxFit.cover,
-        ),
-      );
-    }
-    return Image.asset(
-      'assets/images/splah.png',
-      fit: BoxFit.cover,
-    );
-  }
-
-  Widget _buildProgressPercentage() {
-    return AnimatedBuilder(
-      animation: _progressAnimation,
-      builder: (context, _) {
-        final percent = (_progressAnimation.value * 100).toInt();
-        return Text(
-          '$percent%',
-          style: const TextStyle(
-            color: Color(0xFF10A37F),
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildUnmatchedProgressBar() {
-    return Container(
-      height: 12,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Stack(
-        children: [
-          AnimatedBuilder(
-            animation: _progressAnimation,
-            builder: (context, _) {
-              return FractionallySizedBox(
-                widthFactor: _progressAnimation.value,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF042F1F),
-                        Color(0xFF10A37F),
-                        Colors.white
-                      ],
-                      stops: [0.0, 0.7, 1.0],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF10A37F).withOpacity(0.6),
-                        blurRadius: 15,
-                        spreadRadius: 2,
+                      const SizedBox(height: 6),
+                      Opacity(
+                        opacity: _wordmark.value,
+                        child: const Text(
+                          'اشترِ الآن وادفع لاحقاً',
+                          style: TextStyle(
+                            fontSize: 14,
+                            height: 1.6,
+                            color: Color(0xFF3F7A4E),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  child: _buildShimmerEffect(),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildShimmerEffect() {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: -1.0, end: 2.0),
-      duration: const Duration(seconds: 2),
-      builder: (context, shine, _) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Transform.translate(
-            offset: Offset(shine * 200, 0),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.white.withOpacity(0),
-                    Colors.white.withOpacity(0.3),
-                    Colors.white.withOpacity(0)
-                  ],
-                  stops: const [0.3, 0.5, 0.7],
                 ),
               ),
             ),
-          ),
-        );
-      },
-      onEnd: () {},
+          );
+        },
+      ),
     );
   }
 }
