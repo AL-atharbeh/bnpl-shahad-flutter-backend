@@ -9,6 +9,7 @@ import { VendorAuthController } from './vendor-auth.controller';
 import { AdminAuthController } from './admin-auth.controller';
 import { AuthService } from './auth.service';
 import { OtpService } from './otp.service';
+import { SmsService } from './sms.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { RolesGuard } from './guards/roles.guard';
@@ -48,7 +49,7 @@ import { UsersModule } from '../users/users.module';
     UsersModule,
   ],
   controllers: [AuthController, VendorAuthController, AdminAuthController],
-  providers: [AuthService, OtpService, JwtStrategy, LocalStrategy, RolesGuard],
+  providers: [AuthService, OtpService, SmsService, JwtStrategy, LocalStrategy, RolesGuard],
   exports: [AuthService, OtpService, JwtStrategy, RolesGuard, PassportModule],
 })
 export class AuthModule { }

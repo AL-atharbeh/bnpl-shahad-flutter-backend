@@ -1,10 +1,16 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { OtpCode } from '../users/entities/otp-code.entity';
 import { User } from '../users/entities/user.entity';
+import { SmsService } from './sms.service';
 
 @Injectable()
 export class OtpService {
@@ -14,7 +20,10 @@ export class OtpService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private configService: ConfigService,
+    private smsService: SmsService,
   ) {}
+
+  private readonly logger = new Logger(OtpService.name);
 
   /**
    * Generate a 6-digit OTP code
@@ -58,9 +67,16 @@ export class OtpService {
     // The user record will be created during registration, and OTP verification
     // will be done through otp_codes table for new users
 
-    // TODO: Integrate with AWS SNS or SMS provider
-    console.log(`📱 OTP for ${phone}: ${code}`);
-    console.log(`⏰ Expires at: ${expiresAt.toISOString()}`);
+    try {
+      await this.smsService.sendOtp(phone, code);
+    } catch (err) {
+      // Telling the caller the code was sent when the provider rejected it
+      // leaves them waiting for a message that will never arrive.
+      this.logger.error(`Failed to send OTP to ${phone}: ${err.message}`);
+      throw new InternalServerErrorException(
+        'تعذّر إرسال رمز التحقق. حاول مرة أخرى بعد قليل.',
+      );
+    }
 
     return {
       message: 'تم إرسال رمز التحقق',
