@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:pinput/pinput.dart';
 import 'package:provider/provider.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../services/language_service.dart';
@@ -11,6 +10,7 @@ import '../../../../core/services/firebase_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/app_router.dart';
 import '../widgets/auth_scaffold.dart';
+import '../widgets/code_field.dart';
 
 class OTPVerificationPage extends StatefulWidget {
   final String phoneNumber;
@@ -243,44 +243,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
     final isRTL = languageService.isArabic;
     final size = MediaQuery.of(context).size;
 
-    final defaultPinTheme = PinTheme(
-      width: 50,
-      height: 56,
-      textStyle: TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-        color: AppColors.textPrimary,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.grey.shade300,
-        ),
-      ),
-    );
-
-    final focusedPinTheme = defaultPinTheme.copyWith(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.primary,
-          width: 2,
-        ),
-      ),
-    );
-
-    final submittedPinTheme = defaultPinTheme.copyWith(
-      decoration: BoxDecoration(
-        color: AppColors.financialGreen50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.primary,
-        ),
-      ),
-    );
-
     return AuthScaffold(
       step: 2,
       title: isRTL ? 'أدخل رمز التحقق' : 'Enter the code',
@@ -342,20 +304,9 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
               child: child,
             );
           },
-          child: Directionality(
-            // Codes are entered left to right in either language.
-            textDirection: TextDirection.ltr,
-            child: Pinput(
-              controller: _otpController,
-              length: 6,
-              autofocus: true,
-              defaultPinTheme: defaultPinTheme,
-              focusedPinTheme: focusedPinTheme,
-              submittedPinTheme: submittedPinTheme,
-              separatorBuilder: (_) => const SizedBox(width: 8),
-              onChanged: (_) => setState(() {}),
-              onCompleted: (_) => _handleVerify(),
-            ),
+          child: CodeField(
+            controller: _otpController,
+            onCompleted: (_) => _handleVerify(),
           ),
         ),
 
