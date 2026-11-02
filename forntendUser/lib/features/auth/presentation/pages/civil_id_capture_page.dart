@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/app_router.dart';
 import '../../../../core/services/id_ocr_service.dart';
 import 'civil_id_scanner_page.dart';
+import '../widgets/auth_scaffold.dart';
 
 class CivilIdCapturePage extends StatefulWidget {
   final String phoneNumber;
@@ -256,224 +257,77 @@ class _CivilIdCapturePageState extends State<CivilIdCapturePage> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            isRTL ? Icons.arrow_forward_rounded : Icons.arrow_back_rounded,
-            color: AppColors.textPrimary,
-          ),
-          onPressed: () {
-            if (_currentStep > 0) {
-              setState(() {
-                _currentStep--;
-              });
-            } else {
-              Navigator.pop(context);
-            }
-          },
-        ),
-        title: Text(
-          l10n.civilIdVerification,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          // Step Progress Bar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            child: Row(
-              children: [
-                _buildStepIndicator(0, isRTL ? 'الوجه الأمامي' : 'Front Side', _currentStep >= 0),
-                _buildStepLine(_currentStep >= 1),
-                _buildStepIndicator(1, isRTL ? 'الوجه الخلفي' : 'Back Side', _currentStep >= 1),
-                _buildStepLine(_currentStep >= 2),
-                _buildStepIndicator(2, isRTL ? 'المراجعة' : 'Review', _currentStep >= 2),
-              ],
-            ),
-          ),
-          
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  if (_currentStep == 0) _buildFrontStepView(isRTL)
-                  else if (_currentStep == 1) _buildBackStepView(isRTL)
-                  else _buildReviewStepView(isRTL, l10n),
-                ],
-              ),
-            ),
-          ),
+    final titles = [
+      isRTL ? 'صوّر وجه الهوية' : 'Photograph the front',
+      isRTL ? 'صوّر ظهر الهوية' : 'Photograph the back',
+      isRTL ? 'راجع الصورتين' : 'Check both photos',
+    ];
+    final subtitles = [
+      isRTL
+          ? 'ضع البطاقة داخل الإطار في ضوء جيد، وتجنّب انعكاس الضوء على السطح.'
+          : 'Place the card inside the frame in good light, and avoid glare.',
+      isRTL
+          ? 'اقلب البطاقة وصوّر الوجه الآخر بنفس الطريقة.'
+          : 'Turn the card over and photograph the other side the same way.',
+      isRTL
+          ? 'تأكد أن البيانات واضحة ومقروءة قبل المتابعة.'
+          : 'Make sure the details are sharp and readable before continuing.',
+    ];
 
-          // Action Button at the bottom
-          SafeArea(
-            top: false,
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _currentStep == 2 ? _handleContinue : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    disabledBackgroundColor: Colors.grey.shade300,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        isRTL ? 'بدء مسح الهوية رقمياً' : 'Start Digital ID Scan',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.qr_code_scanner_rounded, size: 20),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+    return AuthScaffold(
+      step: 3,
+      title: titles[_currentStep],
+      subtitle: subtitles[_currentStep],
+      // Back moves between the three sub-steps before it leaves the screen, so
+      // a mistaken photo does not cost the whole step.
+      onBack: () {
+        if (_currentStep > 0) {
+          setState(() => _currentStep--);
+        } else {
+          Navigator.of(context).pop();
+        }
+      },
+      action: AuthPrimaryButton(
+        label: l10n.continueButton,
+        isLoading: _isLoading,
+        onPressed: _canContinue ? _handleContinue : null,
       ),
-    );
-  }
-
-  Widget _buildStepIndicator(int step, String label, bool isActive) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: isActive ? AppColors.primary : Colors.grey.shade200,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: isActive ? AppColors.primary : Colors.grey.shade300,
-              width: 2,
-            ),
-          ),
-          child: Center(
-            child: step == 2 && _currentStep == 2
-                ? const Icon(Icons.check, size: 16, color: Colors.white)
-                : Text(
-                    '${step + 1}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: isActive ? Colors.white : Colors.grey.shade600,
-                    ),
-                  ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-            color: isActive ? AppColors.textPrimary : AppColors.textSecondary,
-          ),
-        ),
+        if (_currentStep == 0)
+          _buildFrontStepView(isRTL)
+        else if (_currentStep == 1)
+          _buildBackStepView(isRTL)
+        else
+          _buildReviewStepView(isRTL, l10n),
       ],
     );
   }
 
-  Widget _buildStepLine(bool isActive) {
-    return Expanded(
-      child: Container(
-        height: 2,
-        color: isActive ? AppColors.primary : Colors.grey.shade200,
-        margin: const EdgeInsets.only(bottom: 16),
-      ),
-    );
+  /// The action waits until the step it belongs to is actually done.
+  bool get _canContinue {
+    switch (_currentStep) {
+      case 0:
+        return _frontImage != null;
+      case 1:
+        return _backImage != null;
+      default:
+        return _frontImage != null && _backImage != null;
+    }
   }
 
   Widget _buildFrontStepView(bool isRTL) {
-    return Column(
-      children: [
-        const SizedBox(height: 16),
-        Icon(Icons.badge_rounded, size: 64, color: AppColors.primary),
-        const SizedBox(height: 16),
-        Text(
-          isRTL ? 'امسح وجه الهوية (الأمامي)' : 'Scan Front of ID',
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          isRTL 
-              ? 'يرجى وضع الجهة الأمامية للهوية داخل إطار المسح والتأكد من عدم وجود انعكاسات للضوء.' 
-              : 'Please place the front of your ID within the scanning frame. Avoid light reflections.',
-          style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 32),
-        _buildScannerFrame(
-          image: _frontImage,
-          label: isRTL ? 'اضغط لفتح الكاميرا ومسح الوجه الأمامي' : 'Tap to scan Front side',
-          onTap: _captureImage,
-        ),
-      ],
+    return _buildScannerFrame(
+      image: _frontImage,
+      label: isRTL ? 'اضغط لتصوير الوجه الأمامي' : 'Tap to photograph the front',
+      onTap: _captureImage,
     );
   }
 
   Widget _buildBackStepView(bool isRTL) {
-    return Column(
-      children: [
-        const SizedBox(height: 16),
-        Icon(Icons.crop_free_rounded, size: 64, color: AppColors.primary),
-        const SizedBox(height: 16),
-        Text(
-          isRTL ? 'امسح ظهر الهوية (الخلفي)' : 'Scan Back of ID',
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          isRTL 
-              ? 'يرجى مسح ظهر الهوية. سنقرأ منطقة الـ MRZ في الأسفل لاستخراج الاسم بدقة متناهية.' 
-              : 'Please scan the back of your ID. We will read the MRZ block at the bottom to extract details precisely.',
-          style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 32),
-        _buildScannerFrame(
-          image: _backImage,
-          label: isRTL ? 'اضغط لفتح الكاميرا ومسح الوجه الخلفي' : 'Tap to scan Back side',
-          onTap: _captureBackImage,
-        ),
-      ],
+    return _buildScannerFrame(
+      image: _backImage,
+      label: isRTL ? 'اضغط لتصوير الوجه الخلفي' : 'Tap to photograph the back',
+      onTap: _captureBackImage,
     );
   }
 
@@ -533,94 +387,72 @@ class _CivilIdCapturePageState extends State<CivilIdCapturePage> {
     required VoidCallback onTap,
   }) {
     return AspectRatio(
-      aspectRatio: 16 / 10,
+      // The ISO ID-1 ratio every national ID card is cut to, so the target is
+      // the shape of the thing being photographed.
+      aspectRatio: 1.585,
       child: GestureDetector(
         onTap: onTap,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.03),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppColors.primary.withOpacity(0.4),
-              width: 1.5,
-            ),
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(18),
           ),
+          clipBehavior: Clip.antiAlias,
           child: Stack(
+            fit: StackFit.expand,
             children: [
-              // Beautiful clipper overlay to darken outside and highlight the card cutout
-              ClipPath(
-                clipper: CardScannerClipper(),
-                child: Container(
-                  color: Colors.black.withOpacity(0.4),
-                ),
-              ),
+              if (image != null)
+                Image.file(File(image.path), fit: BoxFit.cover)
+              else ...[
+                // The laser belongs to a live frame; before capture it reads as
+                // a cue that scanning is what this area is for.
+                const Positioned.fill(child: _ScanLaserAnimation()),
 
-              // Glowing card green outline
-              Positioned.fill(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppColors.primary,
-                        width: 2.5,
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        // A card, not a QR glyph: this photographs an ID, and a
+                        // QR code is a different thing entirely.
+                        Icons.badge_outlined,
+                        size: 40,
+                        color: AppColors.primary.withOpacity(0.55),
                       ),
-                    ),
+                      const SizedBox(height: 14),
+                      Text(
+                        label,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          height: 1.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary.withOpacity(0.8),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              
-              // Moving scanner laser line animation
-              Positioned.fill(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: const _ScanLaserAnimation(),
-                  ),
-                ),
-              ),
+              ],
 
-              // Scanner Frame Corners (high visibility brackets)
+              // Brackets mark the edges to line the card up with; a full border
+              // would read as a container rather than a target.
               ..._buildFrameCorners(),
 
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.qr_code_scanner_rounded,
-                        size: 36,
-                        color: AppColors.primary,
-                      ),
+              if (image != null)
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
                     ),
-                    const SizedBox(height: 14),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        label,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
+                    child: const Icon(Icons.check_rounded,
+                        size: 16, color: Colors.white),
+                  ),
                 ),
-              ),
             ],
           ),
         ),
