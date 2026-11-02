@@ -151,9 +151,10 @@ class AuthService {
         if (innerData['userExists'] == true && innerData['token'] != null) {
           final token = innerData['token'].toString();
           final userId = innerData['user']?['id']?.toString() ?? '';
+          final phone = innerData['user']?['phone']?.toString() ?? phoneNumber;
           
           _apiService.setAuthToken(token);
-          await saveLoginState(token, userId);
+          await saveLoginState(token, userId, phone);
         }
         
         return {
@@ -267,7 +268,7 @@ class AuthService {
         
         // حفظ token وتسجيل الدخول
         _apiService.setAuthToken(token.toString());
-        await saveLoginState(token.toString(), userId);
+        await saveLoginState(token.toString(), userId, phoneNumber);
         
         return {
           'success': true,
@@ -301,13 +302,16 @@ class AuthService {
   }
 
   // Save login state to SharedPreferences
-  Future<void> saveLoginState(String token, [String? userId]) async {
+  Future<void> saveLoginState(String token, [String? userId, String? phone]) async {
     print('💾 Saving login state...');
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_isLoggedInKey, true);
     await prefs.setString(_userTokenKey, token);
-    if (userId != null) {
+    if (userId != null && userId.isNotEmpty) {
       await prefs.setString(_userIdKey, userId);
+    }
+    if (phone != null && phone.isNotEmpty) {
+      await prefs.setString('user_phone', phone);
     }
     print('✅ Login state saved successfully');
   }
@@ -319,6 +323,7 @@ class AuthService {
     await prefs.setBool(_isLoggedInKey, false);
     await prefs.remove(_userTokenKey);
     await prefs.remove(_userIdKey);
+    await prefs.remove('user_phone');
     print('✅ Login state cleared successfully');
   }
 

@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'ocr_engine.dart';
 
 class IdOcrResult {
   final String? fullName;
@@ -20,7 +20,10 @@ class IdOcrResult {
 }
 
 class IdOcrService {
-  final TextRecognizer _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+  final OcrEngine _engine = OcrEngine();
+
+  /// False when the app was built with ML Kit switched off for the simulator.
+  static bool get isOcrAvailable => OcrEngine.isAvailable;
 
   /// مسح الهوية واستخراج البيانات من الوجهين الأمامي والخلفي
   Future<IdOcrResult> extractData({
@@ -34,14 +37,13 @@ class IdOcrService {
     try {
       // 1. معالجة الوجه الخلفي أولاً (لأن الـ MRZ يحتوي على بيانات دقيقة ومكتملة باللغة الإنجليزية)
       if (backImagePath.isNotEmpty) {
-        final backInputImage = InputImage.fromFilePath(backImagePath);
-        final backRecognizedText = await _textRecognizer.processImage(backInputImage);
+        final backText = await _engine.recognize(backImagePath);
         
         debugPrint('--- OCR Back Text Raw ---');
-        debugPrint(backRecognizedText.text);
+        debugPrint(backText);
         
         // محاولة استخراج البيانات من الـ MRZ
-        final mrzResult = _parseMrz(backRecognizedText.text);
+        final mrzResult = _parseMrz(backText);
         if (mrzResult != null) {
           debugPrint('✅ Data extracted from MRZ successfully: $mrzResult');
           fullName = mrzResult.fullName;
@@ -49,36 +51,35 @@ class IdOcrService {
           dateOfBirth = mrzResult.dateOfBirth;
         } else {
           // استخراج احتياطي من النصوص العادية في الخلف
-          dateOfBirth = _extractDateOfBirth(backRecognizedText.text);
-          nationalId = _extractNationalId(backRecognizedText.text);
+          dateOfBirth = _extractDateOfBirth(backText);
+          nationalId = _extractNationalId(backText);
         }
       }
 
       // 2. معالجة الوجه الأمامي لاستخراج البيانات
       if (frontImagePath.isNotEmpty) {
-        final frontInputImage = InputImage.fromFilePath(frontImagePath);
-        final frontRecognizedText = await _textRecognizer.processImage(frontInputImage);
+        final frontText = await _engine.recognize(frontImagePath);
         
         debugPrint('--- OCR Front Text Raw ---');
-        debugPrint(frontRecognizedText.text);
+        debugPrint(frontText);
         
         // استخراج الاسم العربي
-        final arabicName = _extractArabicName(frontRecognizedText.text);
+        final arabicName = _extractArabicName(frontText);
         if (arabicName != null) {
           fullName = arabicName; // نفضل الاسم العربي للمستخدمين المحليين
         } else if (fullName == null) {
           // إذا لم نجد الاسم العربي ولم نجد اسم الـ MRZ، نبحث عن الاسم الإنجليزي من الأمام
-          fullName = _extractEnglishNameFromFront(frontRecognizedText.text);
+          fullName = _extractEnglishNameFromFront(frontText);
         }
 
         // ملء الرقم الوطني إذا لم يستخرج من الخلف (وهو أمر مهم جداً في الأردن حيث الرقم الوطني على وجه البطاقة)
         if (nationalId == null) {
-          nationalId = _extractNationalId(frontRecognizedText.text);
+          nationalId = _extractNationalId(frontText);
         }
 
         // ملء تاريخ الميلاد من الأمام (تاريخ الميلاد موجود في وجه الهوية الأردنية أيضاً)
         if (dateOfBirth == null) {
-          dateOfBirth = _extractDateOfBirthFromFront(frontRecognizedText.text);
+          dateOfBirth = _extractDateOfBirthFromFront(frontText);
         }
       }
     } catch (e) {
@@ -366,6 +367,6 @@ class IdOcrService {
   }
 
   void dispose() {
-    _textRecognizer.close();
+    _engine.dispose();
   }
 }

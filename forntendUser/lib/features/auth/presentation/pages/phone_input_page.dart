@@ -43,6 +43,26 @@ class _PhoneInputPageState extends State<PhoneInputPage> with SingleTickerProvid
     super.dispose();
   }
 
+  /// Firebase reports failures by code; these are the ones a user can act on.
+  String _firebaseErrorMessage(dynamic error) {
+    final text = error.toString();
+
+    if (text.contains('invalid-phone-number')) {
+      return 'رقم الهاتف غير صحيح';
+    }
+    if (text.contains('too-many-requests')) {
+      return 'محاولات كثيرة. حاول بعد قليل';
+    }
+    if (text.contains('quota-exceeded')) {
+      return 'تعذّر إرسال الرمز حالياً. حاول لاحقاً';
+    }
+    if (text.contains('network')) {
+      return 'تحقق من اتصالك بالإنترنت';
+    }
+
+    return 'فشل إرسال رمز التحقق. حاول مرة أخرى';
+  }
+
   void _handleContinue() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -76,14 +96,17 @@ class _PhoneInputPageState extends State<PhoneInputPage> with SingleTickerProvid
 
       final userExists = checkResult['exists'] ?? false;
 
-      // إرسال OTP عبر الباك إند (بدلاً من Firebase)
-      final otpResult = await authService.sendOTPToPhone(phoneNumber);
+      // إرسال رمز التحقق عبر Firebase. الباك إند يولّد الرمز ويحفظه لكنه لا
+      // يرسله فعلياً (لا يوجد مزوّد رسائل)، فينتظر المستخدم رسالة لا تصل.
+      var navigated = false;
 
-      if (mounted) {
-        setState(() => _isLoading = false);
+      await authService.sendFirebaseOTP(
+        phoneNumber: phoneNumber,
+        onCodeSent: (_) {
+          if (!mounted || navigated) return;
+          navigated = true;
+          setState(() => _isLoading = false);
 
-        if (otpResult['success']) {
-          // الانتقال إلى صفحة التحقق من OTP
           Navigator.pushNamed(
             context,
             AppRouter.otpVerification,
@@ -92,17 +115,21 @@ class _PhoneInputPageState extends State<PhoneInputPage> with SingleTickerProvid
               'userExists': userExists,
             },
           );
-        } else {
+        },
+        onError: (error) {
+          if (!mounted || navigated) return;
+          setState(() => _isLoading = false);
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(otpResult['error'] ?? 'فشل إرسال رمز التحقق'),
+              content: Text(_firebaseErrorMessage(error)),
               backgroundColor: Colors.red.shade400,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
           );
-        }
-      }
+        },
+      );
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);

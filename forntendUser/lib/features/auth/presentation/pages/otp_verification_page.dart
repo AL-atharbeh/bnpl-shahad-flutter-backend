@@ -91,32 +91,40 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
       setState(() => _isLoading = true);
       
       try {
-        final result = await authService.sendOTPToPhone(widget.phoneNumber);
-        
-        if (result['success']) {
-      _startTimer();
-          if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('تم إرسال الرمز مرة أخرى'),
-          backgroundColor: AppColors.primary,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-          }
-        } else {
-          if (mounted) {
+        var handled = false;
+
+        await authService.sendFirebaseOTP(
+          phoneNumber: widget.phoneNumber,
+          onCodeSent: (_) {
+            if (!mounted || handled) return;
+            handled = true;
+            _startTimer();
+            setState(() => _isLoading = false);
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(result['error'] ?? 'فشل إرسال الرمز'),
+                content: Text('تم إرسال الرمز مرة أخرى'),
+                backgroundColor: AppColors.primary,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            );
+          },
+          onError: (error) {
+            if (!mounted || handled) return;
+            handled = true;
+            setState(() => _isLoading = false);
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('فشل إرسال الرمز. حاول مرة أخرى'),
                 backgroundColor: Colors.red.shade400,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             );
-          }
-        }
+          },
+        );
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -152,8 +160,10 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
     final authService = Provider.of<AuthService>(context, listen: false);
 
     try {
-      // التحقق من OTP عبر الباك إند
-      final verifyResult = await authService.verifyOTPCode(widget.phoneNumber, otp);
+      // يتحقق Firebase من الرمز، ثم يُرسل رمز الهوية إلى الباك إند الذي ينشئ
+      // المستخدم أو يحدّثه ويُصدر JWT. شكل النتيجة هو نفسه الذي كانت تُرجعه
+      // verifyOTPCode، فلا يتغيّر ما بعده.
+      final verifyResult = await authService.verifyFirebaseOTP(otp);
 
       if (!verifyResult['success']) {
         if (mounted) {

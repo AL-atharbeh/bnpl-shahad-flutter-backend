@@ -46,7 +46,7 @@ dependencies:
   path_provider: ^2.1.1
   
   # Google Fonts for Arabic fonts
-  google_fonts: ^6.1.0
+  google_fonts: ^8.1.0
   intl: ^0.20.2
   url_launcher: ^6.3.0
   app_links: ^6.3.2  # Deep linking support
