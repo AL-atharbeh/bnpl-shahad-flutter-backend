@@ -49,20 +49,31 @@ class _OtpVerificationDialogState extends State<OtpVerificationDialog> {
     });
 
     try {
-      final response = await _authService.sendOTPToPhone(widget.phoneNumber);
+      var handled = false;
 
-      if (response['success']) {
-        setState(() {
-          _otpSent = true;
-          _isSendingOtp = false;
-        });
-        _startResendCountdown();
-      } else {
-        setState(() {
-          _errorMessage = response['error'] ?? 'فشل إرسال رمز التحقق';
-          _isSendingOtp = false;
-        });
-      }
+      await _authService.sendPurchaseOtp(
+        phoneNumber: widget.phoneNumber,
+        onCodeSent: () {
+          if (!mounted || handled) return;
+          handled = true;
+          setState(() {
+            _otpSent = true;
+            _isSendingOtp = false;
+          });
+          _startResendCountdown();
+        },
+        onError: (error) {
+          if (!mounted || handled) return;
+          handled = true;
+          final text = error.toString();
+          setState(() {
+            _errorMessage = text.contains('too-many-requests')
+                ? 'محاولات كثيرة. حاول بعد قليل'
+                : 'فشل إرسال رمز التحقق';
+            _isSendingOtp = false;
+          });
+        },
+      );
     } catch (e) {
       setState(() {
         _errorMessage = 'حدث خطأ: ${e.toString()}';
@@ -92,7 +103,8 @@ class _OtpVerificationDialogState extends State<OtpVerificationDialog> {
     });
 
     try {
-      final response = await _authService.verifyOTPCode(widget.phoneNumber, otp);
+      // Confirms identity only. The session is untouched, unlike signing in.
+      final response = await _authService.confirmPurchaseOtp(otp);
 
       if (response['success']) {
         // OTP correct

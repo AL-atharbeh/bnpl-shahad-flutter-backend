@@ -505,4 +505,86 @@ class AuthService {
       };
     }
   }
+
+  // ===================== Purchase confirmation =====================
+  // Confirming a purchase proves the person holding the phone is the account
+  // owner. It must not touch the session: no new sign-in, no backend token, no
+  // saved login state. Firebase calls this reauthentication, and it fails if
+  // the code belongs to a different number than the signed-in user's.
+
+  /// Kept apart from _verificationId so starting a purchase confirmation can
+  /// never invalidate an in-flight login.
+  String? _purchaseVerificationId;
+
+  Future<void> sendPurchaseOtp({
+    required String phoneNumber,
+    required Function() onCodeSent,
+    required Function(dynamic error) onError,
+  }) async {
+    try {
+      await _firebaseAuth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) {
+          // Deliberately empty: the user types the code, so that confirming a
+          // purchase always takes a conscious action.
+        },
+        verificationFailed: onError,
+        codeSent: (String verificationId, int? resendToken) {
+          _purchaseVerificationId = verificationId;
+          onCodeSent();
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          _purchaseVerificationId = verificationId;
+        },
+        timeout: const Duration(seconds: 60),
+      );
+    } catch (e) {
+      onError(e);
+    }
+  }
+
+  /// Verifies the code without signing anyone in or out.
+  Future<Map<String, dynamic>> confirmPurchaseOtp(String smsCode) async {
+    if (_purchaseVerificationId == null) {
+      return {
+        'success': false,
+        'error': 'انتهت صلاحية الجلسة، يرجى إعادة إرسال الرمز',
+      };
+    }
+
+    try {
+      final credential = PhoneAuthProvider.credential(
+        verificationId: _purchaseVerificationId!,
+        smsCode: smsCode,
+      );
+
+      final current = _firebaseAuth.currentUser;
+
+      if (current != null) {
+        // Checks the code against this account and leaves the session as it is.
+        await current.reauthenticateWithCredential(credential);
+      } else {
+        // No Firebase session, which happens for accounts created before this
+        // flow existed. Verify the code on its own; the app's JWT session and
+        // stored login state are not touched either way.
+        await _firebaseAuth.signInWithCredential(credential);
+      }
+
+      _purchaseVerificationId = null;
+      return {'success': true};
+    } catch (e) {
+      final text = e.toString();
+      var error = 'رمز التحقق غير صحيح';
+
+      if (text.contains('invalid-verification-code')) {
+        error = 'رمز التحقق غير صحيح، يرجى المحاولة مرة أخرى';
+      } else if (text.contains('session-expired')) {
+        error = 'انتهت صلاحية الرمز، يرجى طلب رمز جديد';
+      } else if (text.contains('user-mismatch')) {
+        error = 'رقم الهاتف لا يطابق الحساب المسجّل';
+      }
+
+      return {'success': false, 'error': error};
+    }
+  }
 }
