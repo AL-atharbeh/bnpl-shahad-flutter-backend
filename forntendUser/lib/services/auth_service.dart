@@ -493,12 +493,29 @@ class AuthService {
       };
     } catch (e) {
       print('❌ Error in verifyFirebaseOTP: $e');
-      String errorMsg = 'رمز التحقق المدخل غير صحيح';
-      if (e.toString().contains('invalid-verification-code')) {
+      final text = e.toString();
+
+      // Only blame the code when Firebase actually rejected it. Everything else
+      // - a backend that is down or misconfigured, a dropped connection - used
+      // to surface as "wrong code", which sends the user to re-read an SMS
+      // while the real fault is on the server.
+      String errorMsg;
+
+      if (text.contains('invalid-verification-code')) {
         errorMsg = 'رمز التحقق غير صحيح، يرجى المحاولة مرة أخرى';
-      } else if (e.toString().contains('session-expired')) {
+      } else if (text.contains('session-expired') ||
+          text.contains('code-expired')) {
         errorMsg = 'انتهت صلاحية الرمز، يرجى طلب رمز جديد';
+      } else if (text.contains('too-many-requests')) {
+        errorMsg = 'محاولات كثيرة. حاول بعد قليل';
+      } else if (text.contains('SocketException') ||
+          text.contains('TimeoutException') ||
+          text.contains('Failed host lookup')) {
+        errorMsg = 'تعذّر الاتصال بالخادم. تحقق من الإنترنت';
+      } else {
+        errorMsg = 'تعذّر إكمال التحقق. حدثت مشكلة في الخادم';
       }
+
       return {
         'success': false,
         'error': errorMsg,
