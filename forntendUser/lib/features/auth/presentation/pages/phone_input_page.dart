@@ -6,6 +6,7 @@ import '../../../../services/language_service.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/app_router.dart';
+import '../widgets/auth_scaffold.dart';
 
 class PhoneInputPage extends StatefulWidget {
   const PhoneInputPage({super.key});
@@ -14,32 +15,31 @@ class PhoneInputPage extends StatefulWidget {
   State<PhoneInputPage> createState() => _PhoneInputPageState();
 }
 
-class _PhoneInputPageState extends State<PhoneInputPage> with SingleTickerProviderStateMixin {
+class _PhoneInputPageState extends State<PhoneInputPage> {
   final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
+
+  /// The action stays disabled until the number could plausibly be complete, so
+  /// nobody taps it only to be told the number is too short.
+  bool get _isComplete {
+    var digits = _phoneController.text;
+    if (digits.startsWith('0')) digits = digits.substring(1);
+    return digits.length == 9;
+  }
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
-    );
-
-    _animationController.forward();
+    _phoneController.addListener(_onPhoneChanged);
   }
+
+  void _onPhoneChanged() => setState(() {});
 
   @override
   void dispose() {
+    _phoneController.removeListener(_onPhoneChanged);
     _phoneController.dispose();
-    _animationController.dispose();
     super.dispose();
   }
 
@@ -159,303 +159,130 @@ class _PhoneInputPageState extends State<PhoneInputPage> with SingleTickerProvid
     final l10n = AppLocalizations.of(context)!;
     final languageService = Provider.of<LanguageService>(context);
     final isRTL = languageService.isArabic;
-    final size = MediaQuery.of(context).size;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(height: size.height * 0.08),
+    return AuthScaffold(
+      step: 1,
+      title: isRTL ? 'ما رقم هاتفك؟' : 'What is your phone number?',
+      subtitle: isRTL
+          ? 'سنرسل لك رمز تحقق من ست خانات للتأكد من أن الرقم لك.'
+          : 'We will text you a six digit code to confirm the number is yours.',
+      action: AuthPrimaryButton(
+        label: l10n.continueButton,
+        isLoading: _isLoading,
+        onPressed: _isComplete ? _handleContinue : null,
+      ),
+      footer: AuthFooterNote(
+        text: isRTL
+            ? 'لا نشارك رقمك مع أي جهة.'
+            : 'We never share your number.',
+      ),
+      children: [
+        Form(
+          key: _formKey,
+          child: _PhoneField(
+            controller: _phoneController,
+            isRTL: isRTL,
+          ),
+        ),
+      ],
+    );
+  }
+}
 
-                  // Logo
-                  Center(
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withOpacity(0.2),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.phone_android_rounded,
-                        size: 40,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
+/// The number is the only thing on this screen, so it gets the full width and a
+/// type size that stays readable while typing.
+class _PhoneField extends StatelessWidget {
+  const _PhoneField({required this.controller, required this.isRTL});
 
-                  SizedBox(height: size.height * 0.05),
+  final TextEditingController controller;
+  final bool isRTL;
 
-                  // Title
-                  Text(
-                    isRTL ? 'مرحباً بك' : 'Welcome',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Text(
-                    l10n.enterPhoneToStart,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-
-                  SizedBox(height: size.height * 0.06),
-
-                  // Phone Input Card
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Colors.grey.shade200,
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.phone_rounded,
-                              color: AppColors.primary,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              l10n.phoneNumber,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // Phone Input
-                        TextFormField(
-                          controller: _phoneController,
-                          keyboardType: TextInputType.phone,
-                          textDirection: TextDirection.ltr,
-                          autofocus: true,
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                            letterSpacing: 1,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: '7XXXXXXXX',
-                            hintStyle: TextStyle(
-                              color: Colors.grey.shade400,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            prefixIcon: Padding(
-                              padding: const EdgeInsets.only(left: 16, right: 8),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary,
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: const Text(
-                                      '962+',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                      textDirection: TextDirection.ltr,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                ],
-                              ),
-                            ),
-                            filled: true,
-                            fillColor: Colors.grey.shade50,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade300,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade300,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: AppColors.primary,
-                                width: 2,
-                              ),
-                            ),
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.red.shade400,
-                              ),
-                            ),
-                            focusedErrorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.red.shade400,
-                                width: 2,
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                          ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(10),
-                          ],
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return isRTL 
-                                  ? 'الرجاء إدخال رقم الهاتف'
-                                  : 'Please enter phone number';
-                            }
-                            String normalized = value;
-                            if (normalized.startsWith('0')) {
-                              normalized = normalized.substring(1);
-                            }
-                            if (normalized.length != 9) {
-                              return isRTL
-                                  ? 'رقم الهاتف يجب أن يكون 9 أرقام'
-                                  : 'Phone number must be 9 digits';
-                            }
-                            return null;
-                          },
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Continue Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _handleContinue,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              disabledBackgroundColor: AppColors.primary.withOpacity(0.5),
-                            ),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                    ),
-                                  )
-                                : Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        l10n.continueButton,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Icon(
-                                        isRTL
-                                            ? Icons.arrow_back_rounded
-                                            : Icons.arrow_forward_rounded,
-                                        size: 20,
-                                      ),
-                                    ],
-                                  ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Info
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.verified_user_rounded,
-                        size: 18,
-                        color: AppColors.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.secureAndFast,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+  @override
+  Widget build(BuildContext context) {
+    // The prefix, the digits and the hint are one left-to-right unit. Without
+    // this the prefix is pushed to the far side of the field in Arabic.
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: TextFormField(
+      controller: controller,
+      keyboardType: TextInputType.phone,
+      // Phone numbers read left to right whatever the app language is.
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.left,
+      autofocus: true,
+      style: const TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 1.5,
+        color: AppColors.textPrimary,
+      ),
+      decoration: InputDecoration(
+        hintText: '7 9123 4567',
+        hintStyle: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 1.5,
+          color: Colors.grey.shade300,
+        ),
+        // Reads as part of the field rather than a badge floating inside it.
+        prefix: Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: Text(
+            '+962',
+            textDirection: TextDirection.ltr,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade500,
             ),
           ),
         ),
+        filled: true,
+        fillColor: AppColors.surface,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+        border: _border(AppColors.surface),
+        enabledBorder: _border(AppColors.surface),
+        focusedBorder: _border(AppColors.primary, width: 1.6),
+        errorBorder: _border(Colors.red.shade300),
+        focusedErrorBorder: _border(Colors.red.shade400, width: 1.6),
+        errorStyle: const TextStyle(fontSize: 13, height: 1.5),
       ),
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        LengthLimitingTextInputFormatter(10),
+      ],
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return isRTL ? 'الرجاء إدخال رقم الهاتف' : 'Please enter phone number';
+        }
+
+        var normalized = value;
+        if (normalized.startsWith('0')) {
+          normalized = normalized.substring(1);
+        }
+
+        if (normalized.length != 9) {
+          return isRTL
+              ? 'الرقم يجب أن يتكوّن من 9 خانات بعد الصفر'
+              : 'The number must be 9 digits';
+        }
+
+        if (!normalized.startsWith('7')) {
+          return isRTL
+              ? 'أرقام الهواتف الأردنية تبدأ بـ 7'
+              : 'Jordanian mobile numbers start with 7';
+        }
+
+          return null;
+        },
+      ),
+    );
+  }
+
+  OutlineInputBorder _border(Color color, {double width = 1.4}) {
+    return OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide(color: color, width: width),
     );
   }
 }

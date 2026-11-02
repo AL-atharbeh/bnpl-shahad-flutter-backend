@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
@@ -9,6 +10,7 @@ import '../../../../services/auth_service.dart';
 import '../../../../core/services/firebase_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/app_router.dart';
+import '../widgets/auth_scaffold.dart';
 
 class OTPVerificationPage extends StatefulWidget {
   final String phoneNumber;
@@ -279,191 +281,111 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
       ),
     );
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            isRTL ? Icons.arrow_forward_rounded : Icons.arrow_back_rounded,
-            color: AppColors.textPrimary,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
+    return AuthScaffold(
+      step: 2,
+      title: isRTL ? 'أدخل رمز التحقق' : 'Enter the code',
+      subtitle: isRTL
+          ? 'أرسلنا رمزاً إلى الرقم أدناه. أدخله لتأكيد ملكيتك له.'
+          : 'We sent a code to the number below. Enter it to confirm the number is yours.',
+      action: AuthPrimaryButton(
+        label: l10n.verify,
+        isLoading: _isLoading,
+        onPressed: _otpController.text.length == 6 ? _handleVerify : null,
       ),
-      body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                SizedBox(height: size.height * 0.02),
-
-                // Icon
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.sms_rounded,
-                    size: 40,
-                    color: AppColors.primary,
-                  ),
+      children: [
+        // The number is shown so a mistyped digit can be caught here instead of
+        // after waiting for a code that cannot arrive.
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: Text(
+                widget.phoneNumber,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
                 ),
-
-                const SizedBox(height: 32),
-
-                // Title
-                Text(
-                  l10n.verificationCode,
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                  textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: Text(
+                isRTL ? 'تعديل' : 'Edit',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                  decoration: TextDecoration.underline,
+                  decorationColor: AppColors.primary,
                 ),
+              ),
+            ),
+          ],
+        ),
 
-                const SizedBox(height: 12),
+        const SizedBox(height: 32),
 
-                // Subtitle
-                Column(
-                  children: [
-                    Text(
-                      l10n.enterCodeSentTo,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                        height: 1.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 6),
-                    Directionality(
-                      textDirection: TextDirection.ltr,
-                      child: Text(
-                        widget.phoneNumber,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 40),
-
-                // OTP Input
-                AnimatedBuilder(
-                  animation: _shakeController,
-                  builder: (context, child) {
-                    final offset = _shakeController.value;
-                    final shakeValue = (offset * 10 * (1 - offset)).toDouble();
-                    return Transform.translate(
-                      offset: Offset(isRTL ? -shakeValue : shakeValue, 0),
-                      child: child,
-                    );
-                  },
-                  child: Directionality(
-                    textDirection: TextDirection.ltr,
-                    child: Pinput(
-                      controller: _otpController,
-                      focusNode: _focusNode,
-                      length: 6,
-                      defaultPinTheme: defaultPinTheme,
-                      focusedPinTheme: focusedPinTheme,
-                      submittedPinTheme: submittedPinTheme,
-                      errorPinTheme: defaultPinTheme.copyWith(
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.red.shade400,
-                          ),
-                        ),
-                      ),
-                      pinAnimationType: PinAnimationType.fade,
-                      onCompleted: (_) => _handleVerify(),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-
-                // Resend
-                if (_resendTimer > 0)
-                  Text(
-                    '${l10n.resendIn} $_resendTimer ${l10n.seconds}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                    ),
-                  )
-                else
-                  TextButton(
-                    onPressed: _resendOTP,
-                    child: Text(
-                      l10n.resendCode,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-
-                const SizedBox(height: 40),
-
-                // Verify Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _handleVerify,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      disabledBackgroundColor: AppColors.primary.withOpacity(0.5),
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : Text(
-                            l10n.verify,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                  ),
-                ),
-              ],
+        AnimatedBuilder(
+          animation: _shakeController,
+          builder: (context, child) {
+            return Transform.translate(
+              // Three quick swings that settle back to centre.
+              offset: Offset(
+                math.sin(_shakeController.value * math.pi * 3) *
+                    12 *
+                    (1 - _shakeController.value),
+                0,
+              ),
+              child: child,
+            );
+          },
+          child: Directionality(
+            // Codes are entered left to right in either language.
+            textDirection: TextDirection.ltr,
+            child: Pinput(
+              controller: _otpController,
+              length: 6,
+              autofocus: true,
+              defaultPinTheme: defaultPinTheme,
+              focusedPinTheme: focusedPinTheme,
+              submittedPinTheme: submittedPinTheme,
+              separatorBuilder: (_) => const SizedBox(width: 8),
+              onChanged: (_) => setState(() {}),
+              onCompleted: (_) => _handleVerify(),
             ),
           ),
         ),
-      ),
+
+        const SizedBox(height: 28),
+
+        Center(
+          child: _resendTimer > 0
+              ? Text(
+                  '${l10n.resendIn} $_resendTimer ${l10n.seconds}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textHint,
+                  ),
+                )
+              : TextButton(
+                  onPressed: _resendOTP,
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  child: Text(
+                    l10n.resendCode,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+        ),
+      ],
     );
   }
 }
