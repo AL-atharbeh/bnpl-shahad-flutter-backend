@@ -139,11 +139,19 @@ export default function POSPage() {
         if (!activeSession) return;
         try {
             const res = await getBnplSession(activeSession.session_id);
-            setSessionStatus(res.data.status);
-            if (res.data.status === "APPROVED" || res.data.status === "COMPLETED") {
+            // The backend stores statuses in lowercase; compare in one case.
+            const status = String(res.data.status || "").toUpperCase();
+            setSessionStatus(status);
+            if (status === "APPROVED" || status === "COMPLETED") {
                 if (statusInterval.current) clearInterval(statusInterval.current);
             }
-        } catch (err) {
+        } catch (err: any) {
+            // An expired session comes back as a 400.
+            if (err.response?.status === 400) {
+                if (statusInterval.current) clearInterval(statusInterval.current);
+                setSessionStatus("EXPIRED");
+                return;
+            }
             console.error("Polling failed", err);
         }
     };
@@ -340,6 +348,24 @@ export default function POSPage() {
                                     {t("clearCart")}
                                 </button>
                             </>
+                        ) : sessionStatus !== "APPROVED" && sessionStatus !== "COMPLETED" ? (
+                            <>
+                                <div className="flex justify-center">
+                                    <div className="h-24 w-24 rounded-full bg-red-500 flex items-center justify-center shadow-lg shadow-red-500/20">
+                                        <X className="h-12 w-12 text-white" />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <h2 className="text-3xl font-black text-white">{language === "ar" ? "لم تتم عملية الدفع" : "Payment Not Completed"}</h2>
+                                    <p className="text-slate-400">{language === "ar" ? "رفض العميل الطلب أو انتهت صلاحيته. يمكنك المحاولة مرة أخرى." : "The customer declined or the request expired. You can try again."}</p>
+                                </div>
+                                <button
+                                    onClick={() => setActiveSession(null)}
+                                    className="btn-financial px-12 py-4 rounded-2xl w-full text-lg font-black"
+                                >
+                                    {t("backToPOS")}
+                                </button>
+                            </>
                         ) : (
                             <>
                                 <div className="flex justify-center">
@@ -473,10 +499,10 @@ export default function POSPage() {
                                                     <td className="px-6 py-4 text-xs text-emerald-400 border-none">{session.totalAmount} {session.currency}</td>
                                                     <td className="px-6 py-4 border-none">
                                                         <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-black ${
-                                                            session.status === 'APPROVED' || session.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-500' :
-                                                            session.status === 'REJECTED' ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'
+                                                            ['APPROVED', 'COMPLETED'].includes(String(session.status).toUpperCase()) ? 'bg-emerald-500/10 text-emerald-500' :
+                                                            ['REJECTED', 'EXPIRED', 'CANCELLED'].includes(String(session.status).toUpperCase()) ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'
                                                         }`}>
-                                                            {session.status}
+                                                            {String(session.status).toUpperCase()}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 text-[10px] text-slate-500 border-none">

@@ -4,6 +4,7 @@ import { Repository, Like } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { Store } from '../stores/entities/store.entity';
 import { Category } from '../categories/entities/category.entity';
+import { SessionStatus } from '../bnpl-sessions/entities/bnpl-session.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
@@ -62,9 +63,12 @@ export class ProductsService {
       .leftJoin('bnpl_sessions', 's', 's.id = si.session_id')
       .select([
         'product.*',
-        'COUNT(CASE WHEN s.status = \'APPROVED\' THEN si.id ELSE NULL END) as real_sales_count',
-        'SUM(CASE WHEN s.status = \'APPROVED\' THEN COALESCE(si.price * si.quantity, 0) ELSE 0 END) as real_total_revenue'
+        // Bound from the enum: Postgres rejects a literal that isn't one of the
+        // enum's (lowercase) values, which failed the whole query.
+        'COUNT(CASE WHEN s.status = :approved THEN si.id ELSE NULL END) as real_sales_count',
+        'SUM(CASE WHEN s.status = :approved THEN COALESCE(si.price * si.quantity, 0) ELSE 0 END) as real_total_revenue'
       ])
+      .setParameter('approved', SessionStatus.APPROVED)
       .where('product.store_id = :storeId', { storeId })
       .andWhere('product.is_active = true')
       .groupBy('product.id');
