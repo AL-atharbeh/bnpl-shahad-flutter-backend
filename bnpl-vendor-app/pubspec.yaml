@@ -1,0 +1,32 @@
+name: shahed_merchant
+description: "Shahed merchant app: point of sale, products, sales and payouts for partner stores."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  fl_chart: ^1.3.0
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  google_fonts: ^8.2.1
+  http: ^1.6.0
+  image_picker: ^1.2.4
+  intl: ^0.20.2
+  provider: ^6.1.5+1
+  qr_flutter: ^4.1.0
+  share_plus: ^13.3.1
+  shared_preferences: ^2.5.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
