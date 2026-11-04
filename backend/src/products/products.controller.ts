@@ -5,10 +5,8 @@ import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { memoryStorage } from 'multer';
-import { extname, join } from 'path';
 import { Response } from 'express';
-import { existsSync } from 'fs';
-import { put } from '@vercel/blob';
+import { storeUpload, uploadedFilePath } from '../common/upload-storage';
 
 @ApiTags('products')
 @Controller('products')
@@ -44,27 +42,7 @@ export class ProductsController {
     }
 
     try {
-      const filename = `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`;
-      const token = process.env.BLOB_READ_WRITE_TOKEN;
-
-      if (!token) {
-        throw new BadRequestException(
-          'BLOB_READ_WRITE_TOKEN is not configured - image uploads are disabled.',
-        );
-      }
-
-      const blob = await put(`products/${filename}`, file.buffer, {
-        access: 'public',
-        addRandomSuffix: true,
-      });
-
-      return {
-        success: true,
-        data: {
-          url: blob.url,
-          filename: filename,
-        },
-      };
+      return { success: true, data: await storeUpload('products', file) };
     } catch (error) {
       throw new BadRequestException(`Failed to upload image: ${error.message}`);
     }
@@ -73,8 +51,8 @@ export class ProductsController {
   @Get('uploads/:filename')
   @ApiOperation({ summary: 'Get product image' })
   async getProductImage(@Param('filename') filename: string, @Res() res: Response) {
-    const filePath = join(process.cwd(), 'uploads/products', filename);
-    if (existsSync(filePath)) {
+    const filePath = uploadedFilePath('products', filename);
+    if (filePath) {
       res.sendFile(filePath);
     } else {
       res.status(404).json({

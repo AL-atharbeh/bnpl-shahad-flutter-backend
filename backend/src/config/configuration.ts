@@ -7,6 +7,11 @@ export default () => ({
       process.env.POSTGRES_URL ||
       process.env.POSTGRES_PRISMA_URL,
     sync: process.env.DB_SYNC || 'false',
+    // Neon needs TLS; a database on the same Docker network does not offer it.
+    ssl: process.env.DB_SSL !== 'false',
+    // One connection suits a serverless instance; a long-running server can
+    // hold a small pool.
+    poolMax: parseInt(process.env.DB_POOL_MAX, 10) || 1,
   },
   jwt: {
     secret: process.env.JWT_SECRET,

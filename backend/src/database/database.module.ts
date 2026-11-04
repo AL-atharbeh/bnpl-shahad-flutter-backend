@@ -10,15 +10,18 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get<string>('database.url'),
-        ssl: { rejectUnauthorized: false },
+        ssl: configService.get<boolean>('database.ssl')
+          ? { rejectUnauthorized: false }
+          : false,
         autoLoadEntities: true,
         // Set DB_SYNC=true for the very first deploy to create the tables,
         // then switch it back to false so schema changes go through migrations.
         synchronize: configService.get<string>('database.sync') === 'true',
         // Serverless functions are short lived: keep one connection per instance
-        // so the database does not run out of slots under load.
+        // so the database does not run out of slots under load. DB_POOL_MAX
+        // raises it on a long-running server.
         extra: {
-          max: 1,
+          max: configService.get<number>('database.poolMax'),
           connectionTimeoutMillis: 10000,
           idleTimeoutMillis: 10000,
         },

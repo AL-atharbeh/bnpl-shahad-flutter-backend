@@ -21,12 +21,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { memoryStorage } from 'multer';
-import { extname, join } from 'path';
 import { Response } from 'express';
-import { existsSync } from 'fs';
 import { BannersService } from './banners.service';
 import { Banner } from './entities/banner.entity';
-import { put } from '@vercel/blob';
+import { storeUpload, uploadedFilePath } from '../common/upload-storage';
 
 @ApiTags('banners')
 @Controller('banners')
@@ -178,29 +176,7 @@ export class BannersController {
     }
 
     try {
-      const filename = `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`;
-      
-      // Check if Vercel Blob Token is present
-      const token = process.env.BLOB_READ_WRITE_TOKEN;
-      
-      if (!token) {
-        throw new BadRequestException(
-          'BLOB_READ_WRITE_TOKEN is not configured - image uploads are disabled.',
-        );
-      }
-
-      const blob = await put(`banners/${filename}`, file.buffer, {
-        access: 'public',
-        addRandomSuffix: true,
-      });
-
-      return {
-        success: true,
-        data: {
-          url: blob.url,
-          filename: filename,
-        },
-      };
+      return { success: true, data: await storeUpload('banners', file) };
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
@@ -217,8 +193,8 @@ export class BannersController {
   @Get('uploads/:filename')
   @ApiOperation({ summary: 'Get banner image' })
   async getBannerImage(@Param('filename') filename: string, @Res() res: Response) {
-    const filePath = join(process.cwd(), 'uploads/banners', filename);
-    if (existsSync(filePath)) {
+    const filePath = uploadedFilePath('banners', filename);
+    if (filePath) {
       res.sendFile(filePath);
     } else {
       res.status(404).json({

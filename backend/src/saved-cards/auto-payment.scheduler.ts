@@ -25,9 +25,20 @@ export class AutoPaymentScheduler {
   ) { }
 
   /**
-   * Daily task at 9:00 AM to process due payments
+   * Daily 9:00 AM trigger for a long-running server. Off unless
+   * AUTO_PAYMENTS_IN_PROCESS=true, so two deployments sharing customers (say,
+   * the old host and the new one during a move) never both charge the same
+   * cards. Serverless hosts call handleDailyPayments through CronController.
    */
   @Cron('0 9 * * *')
+  async runScheduledPayments() {
+    if (process.env.AUTO_PAYMENTS_IN_PROCESS !== 'true') return;
+    await this.handleDailyPayments();
+  }
+
+  /**
+   * Processes the payments due today and retries recent failures.
+   */
   async handleDailyPayments() {
     this.logger.log('🚀 Starting daily auto-payment processing...');
 
