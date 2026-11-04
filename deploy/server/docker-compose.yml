@@ -1,0 +1,223 @@
+# Shahed on its own: every service lives under /home/shahed and on the
+# private "shahed" network. Only the web-facing services also join the
+# server's existing proxy network ("coolify"), and only through labels: no
+# proxy settings are changed. The database and backups never leave "shahed".
+#
+# Layout on the server:
+#   /home/shahed/stack     this folder (compose, Dockerfiles, .env files)
+#   /home/shahed/backend   NestJS API        -> api.shahedapp.com
+#   /home/shahed/admin     admin panel       -> admin.shahedapp.com
+#   /home/shahed/vendor    merchant site     -> vendor.shahedapp.com
+#   /home/shahed/site      landing site      -> shahedapp.com, www
+#   /home/shahed/waitlist  waitlist          -> waitlist.shahedapp.com
+#   /home/shahed/uploads   product and banner images
+#   /home/shahed/backups   daily database dumps
+
+name: shahed
+
+# The http->https redirect is declared on every web service rather than one,
+# so stopping any single service leaves the others' redirects in place.
+x-web: &web
+  restart: unless-stopped
+  networks: [shahed, proxy]
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: shahed-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: shahed
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: shahed
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shahed -d shahed"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [shahed]
+
+  backend:
+    <<: *web
+    container_name: shahed-backend
+    build:
+      context: ../backend
+      dockerfile: ../stack/backend.Dockerfile
+    env_file: backend.env
+    # These win over backend.env: they describe this server, not Vercel.
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: postgres://shahed:${POSTGRES_PASSWORD}@db:5432/shahed
+      DB_SSL: "false"
+      DB_POOL_MAX: "10"
+      DB_SYNC: "false"
+      UPLOAD_STORAGE: disk
+      UPLOAD_DIR: /app/uploads
+      PUBLIC_URL: https://api.shahedapp.com
+      # Off until the switch-over, so Vercel and this server never both
+      # charge the same saved cards. See README.
+      AUTO_PAYMENTS_IN_PROCESS: ${AUTO_PAYMENTS_IN_PROCESS:-false}
+    volumes:
+      - ../uploads:/app/uploads
+    depends_on:
+      db: { condition: service_healthy }
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: coolify
+      traefik.http.routers.shahed-api.rule: Host(`api.shahedapp.com`)
+      traefik.http.routers.shahed-api.entrypoints: https
+      traefik.http.routers.shahed-api.tls: "true"
+      traefik.http.routers.shahed-api.tls.certresolver: letsencrypt
+      traefik.http.routers.shahed-api.tls.domains[0].main: api.shahedapp.com
+      traefik.http.routers.shahed-api-http.rule: Host(`api.shahedapp.com`)
+      traefik.http.routers.shahed-api-http.entrypoints: http
+      traefik.http.routers.shahed-api-http.middlewares: shahed-https
+      traefik.http.middlewares.shahed-https.redirectscheme.scheme: https
+      traefik.http.services.shahed-api.loadbalancer.server.port: "3000"
+
+  admin:
+    <<: *web
+    container_name: shahed-admin
+    build:
+      context: ../admin
+      dockerfile: ../stack/next.Dockerfile
+      args: { NEXT_PUBLIC_API_URL: https://api.shahedapp.com/api/v1 }
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: coolify
+      traefik.http.routers.shahed-admin.rule: Host(`admin.shahedapp.com`)
+      traefik.http.routers.shahed-admin.entrypoints: https
+      traefik.http.routers.shahed-admin.tls: "true"
+      traefik.http.routers.shahed-admin.tls.certresolver: letsencrypt
+      traefik.http.routers.shahed-admin.tls.domains[0].main: admin.shahedapp.com
+      traefik.http.routers.shahed-admin-http.rule: Host(`admin.shahedapp.com`)
+      traefik.http.routers.shahed-admin-http.entrypoints: http
+      traefik.http.routers.shahed-admin-http.middlewares: shahed-https
+      traefik.http.middlewares.shahed-https.redirectscheme.scheme: https
+      traefik.http.services.shahed-admin.loadbalancer.server.port: "3000"
+
+  vendor:
+    <<: *web
+    container_name: shahed-vendor
+    build:
+      context: ../vendor
+      dockerfile: ../stack/next.Dockerfile
+      args: { NEXT_PUBLIC_API_URL: https://api.shahedapp.com/api/v1 }
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: coolify
+      traefik.http.routers.shahed-vendor.rule: Host(`vendor.shahedapp.com`)
+      traefik.http.routers.shahed-vendor.entrypoints: https
+      traefik.http.routers.shahed-vendor.tls: "true"
+      traefik.http.routers.shahed-vendor.tls.certresolver: letsencrypt
+      traefik.http.routers.shahed-vendor.tls.domains[0].main: vendor.shahedapp.com
+      traefik.http.routers.shahed-vendor-http.rule: Host(`vendor.shahedapp.com`)
+      traefik.http.routers.shahed-vendor-http.entrypoints: http
+      traefik.http.routers.shahed-vendor-http.middlewares: shahed-https
+      traefik.http.middlewares.shahed-https.redirectscheme.scheme: https
+      traefik.http.services.shahed-vendor.loadbalancer.server.port: "3000"
+
+  site:
+    <<: *web
+    container_name: shahed-site
+    build:
+      context: ../site
+      dockerfile: ../stack/next.Dockerfile
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: coolify
+      traefik.http.routers.shahed-site.rule: Host(`shahedapp.com`) || Host(`www.shahedapp.com`)
+      traefik.http.routers.shahed-site.entrypoints: https
+      traefik.http.routers.shahed-site.tls: "true"
+      traefik.http.routers.shahed-site.tls.certresolver: letsencrypt
+      traefik.http.routers.shahed-site.tls.domains[0].main: shahedapp.com
+      traefik.http.routers.shahed-site.tls.domains[0].sans: www.shahedapp.com
+      traefik.http.routers.shahed-site-http.rule: Host(`shahedapp.com`) || Host(`www.shahedapp.com`)
+      traefik.http.routers.shahed-site-http.entrypoints: http
+      traefik.http.routers.shahed-site-http.middlewares: shahed-https
+      traefik.http.middlewares.shahed-https.redirectscheme.scheme: https
+      traefik.http.services.shahed-site.loadbalancer.server.port: "3000"
+
+  waitlist:
+    <<: *web
+    container_name: shahed-waitlist
+    build:
+      context: ../waitlist
+      dockerfile: ../stack/next.Dockerfile
+    env_file: waitlist.env
+    # The waitlist table lives in the same database as the app, as on Neon.
+    environment:
+      DATABASE_URL: postgres://shahed:${POSTGRES_PASSWORD}@db:5432/shahed
+      DB_SSL: "false"
+    depends_on:
+      db: { condition: service_healthy }
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: coolify
+      traefik.http.routers.shahed-waitlist.rule: Host(`waitlist.shahedapp.com`)
+      traefik.http.routers.shahed-waitlist.entrypoints: https
+      traefik.http.routers.shahed-waitlist.tls: "true"
+      traefik.http.routers.shahed-waitlist.tls.certresolver: letsencrypt
+      traefik.http.routers.shahed-waitlist.tls.domains[0].main: waitlist.shahedapp.com
+      traefik.http.routers.shahed-waitlist-http.rule: Host(`waitlist.shahedapp.com`)
+      traefik.http.routers.shahed-waitlist-http.entrypoints: http
+      traefik.http.routers.shahed-waitlist-http.middlewares: shahed-https
+      traefik.http.middlewares.shahed-https.redirectscheme.scheme: https
+      traefik.http.services.shahed-waitlist.loadbalancer.server.port: "3000"
+
+  # The database in the browser, like phpMyAdmin. Sign in with user "shahed"
+  # and POSTGRES_PASSWORD; it only reaches Shahed's own databases.
+  adminer:
+    <<: *web
+    image: adminer:5
+    container_name: shahed-adminer
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+      ADMINER_DESIGN: pepa-linha
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: coolify
+      traefik.http.routers.shahed-db.rule: Host(`db.shahedapp.com`)
+      traefik.http.routers.shahed-db.entrypoints: https
+      traefik.http.routers.shahed-db.tls: "true"
+      traefik.http.routers.shahed-db.tls.certresolver: letsencrypt
+      traefik.http.routers.shahed-db.tls.domains[0].main: db.shahedapp.com
+      traefik.http.routers.shahed-db-http.rule: Host(`db.shahedapp.com`)
+      traefik.http.routers.shahed-db-http.entrypoints: http
+      traefik.http.routers.shahed-db-http.middlewares: shahed-https
+      traefik.http.middlewares.shahed-https.redirectscheme.scheme: https
+      traefik.http.services.shahed-db.loadbalancer.server.port: "8080"
+
+  # A dump of the database every night at 03:00 UTC into ../backups,
+  # keeping the last 14 days.
+  backups:
+    image: postgres:18-alpine
+    container_name: shahed-backups
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGUSER: shahed
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ../backups:/backups
+      - ./backup.sh:/backup.sh:ro
+    entrypoint: ["/bin/sh", "-c", "echo '0 3 * * * /bin/sh /backup.sh' | crontab - && exec crond -f -l 8"]
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [shahed]
+
+volumes:
+  pgdata:
+
+networks:
+  shahed:
+    name: shahed
+  proxy:
+    name: coolify
+    external: true
