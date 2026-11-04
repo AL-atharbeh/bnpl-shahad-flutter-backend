@@ -48,9 +48,19 @@ export class StoresService {
   }
 
   async getAllAdminStores(): Promise<Store[]> {
-    return this.storeRepository.find({
+    const stores = await this.storeRepository.find({
+      relations: ['categoryRelation'],
       order: { createdAt: 'DESC' },
     });
+
+    // The admin panel shows the old free-text `category`, which stores now
+    // leave empty since they pick a category by id. Show the picked one.
+    for (const store of stores) {
+      if (store.categoryRelation) {
+        store.category = store.categoryRelation.nameAr || store.categoryRelation.name;
+      }
+    }
+    return stores;
   }
 
   async updateStoreStatus(id: number, status: string): Promise<Store> {
