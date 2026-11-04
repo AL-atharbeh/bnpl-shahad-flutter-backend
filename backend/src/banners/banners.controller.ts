@@ -13,9 +13,13 @@ import {
   Res,
   Req,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiQuery, ApiResponse, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery, ApiResponse, ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { memoryStorage } from 'multer';
 import { extname, join } from 'path';
 import { Response } from 'express';
@@ -42,6 +46,9 @@ export class BannersController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @Get('admin')
   @ApiOperation({ summary: 'Get all banners (including inactive) - Admin only' })
   @ApiResponse({ status: 200, description: 'List of all banners' })
@@ -65,6 +72,9 @@ export class BannersController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @Post()
   @ApiOperation({ summary: 'Create a new banner' })
   @ApiResponse({ status: 201, description: 'Banner created successfully' })
@@ -78,6 +88,9 @@ export class BannersController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @Put(':id')
   @ApiOperation({ summary: 'Update banner' })
   @ApiResponse({ status: 200, description: 'Banner updated successfully' })
@@ -94,6 +107,9 @@ export class BannersController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @Delete(':id')
   @ApiOperation({ summary: 'Delete banner' })
   @ApiResponse({ status: 200, description: 'Banner deleted successfully' })
@@ -126,6 +142,9 @@ export class BannersController {
       data: banners,
     };
   }
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @Post('upload')
   @ApiOperation({ summary: 'Upload banner image' })
   @ApiConsumes('multipart/form-data')
