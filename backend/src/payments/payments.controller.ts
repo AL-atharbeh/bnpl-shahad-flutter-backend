@@ -20,6 +20,9 @@ import { PaymentsService } from './payments.service';
 import { MyFatoorahService } from './myfatoorah.service';
 import { PostponementsService } from '../postponements/postponements.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { scopedStoreId } from '../auth/store-access';
 import { UsersService } from '../users/users.service';
 import { BnplSessionsService } from '../bnpl-sessions/bnpl-sessions.service';
 import { StripeService } from './stripe.service';
@@ -984,39 +987,56 @@ export class PaymentsController {
 
   
   // Admin endpoints
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @Get('admin/stats')
   @ApiOperation({ summary: 'Get payments statistics for admin' })
   async getAdminStats() {
     return this.paymentsService.getAdminStats();
   }
 
+  // Vendors read their own store's payments here too (transactions, profits),
+  // so they are let in but held to their store whatever storeId they send.
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'vendor')
+  @ApiBearerAuth()
   @Get('admin/all')
   @ApiOperation({ summary: 'Get all payments for admin' })
-  async getAllPaymentsForAdmin(@Query() query: any) {
+  async getAllPaymentsForAdmin(@Query() query: any, @Request() req) {
     const { page = 1, limit = 10, status, userId, storeId, startDate, endDate } = query;
     return this.paymentsService.getAllPaymentsForAdmin({
       page: parseInt(page),
       limit: parseInt(limit),
       status,
       userId: userId ? parseInt(userId) : undefined,
-      storeId: storeId ? parseInt(storeId) : undefined,
+      storeId: scopedStoreId(req.user, storeId),
       startDate,
       endDate,
     });
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @Get('admin/upcoming')
   @ApiOperation({ summary: 'Get upcoming payments for admin dashboard' })
   async getUpcomingPayments() {
     return this.paymentsService.getUpcomingPayments();
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @Post('admin/:id/collect')
   @ApiOperation({ summary: 'Manually mark payment as collected' })
   async manualCollectPayment(@Param('id') id: string) {
     return this.paymentsService.manualCollect(parseInt(id));
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @Post('admin/:id/send-reminder')
   @ApiOperation({ summary: 'Send payment reminder to user' })
   async sendPaymentReminder(@Param('id') id: string) {

@@ -1,11 +1,12 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import * as express from 'express';
 import * as path from 'path';
 import { AppModule } from './app.module';
+import { HideStoreCredentialsInterceptor } from './common/hide-store-credentials.interceptor';
 
 /**
  * Shared application setup used by both the local server (main.ts) and the
@@ -50,6 +51,9 @@ export async function createApp(
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
+
+  // Store API keys never leave the API unless a route opts in.
+  app.useGlobalInterceptors(new HideStoreCredentialsInterceptor(app.get(Reflector)));
 
   app.useGlobalPipes(
     new ValidationPipe({

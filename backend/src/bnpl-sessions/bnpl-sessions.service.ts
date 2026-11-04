@@ -54,13 +54,11 @@ export class BnplSessionsService {
 
         // Validate API Key or Bearer Token
         let isAuthorized = false;
-        console.log(`[BnplSessionsService] createSession: apiKey="${apiKey}", authHeader="${authHeader ? authHeader.substring(0, 30) + '...' : 'none'}"`);
         
         if (authHeader && authHeader.startsWith('Bearer ')) {
             try {
                 const token = authHeader.substring(7);
                 const payload = this.jwtService.verify(token);
-                console.log(`[BnplSessionsService] Decoded Token Payload:`, payload);
                 if (payload && payload.role === 'vendor' && Number(payload.storeId) === Number(createSessionDto.store_id)) {
                     isAuthorized = true;
                     console.log(`[BnplSessionsService] POS Vendor Authorized successfully via JWT token.`);
@@ -73,7 +71,6 @@ export class BnplSessionsService {
         }
 
         if (!isAuthorized) {
-            console.log(`[BnplSessionsService] Falling back to API Key check. Store API Key="${store.apiKey}"`);
             if (store.apiKey !== apiKey) {
                 throw new UnauthorizedException('Invalid API Key for this store');
             }
@@ -150,7 +147,7 @@ export class BnplSessionsService {
                             },
                             'urgent'
                         );
-                        console.log(`✅ POS OTP sent to user ${user.id} for session ${sessionId}: ${otp}`);
+                        console.log(`✅ POS OTP sent to user ${user.id} for session ${sessionId}`);
                     }
                 }
             } catch (error) {
@@ -265,7 +262,7 @@ export class BnplSessionsService {
                     },
                     'urgent'
                 );
-                console.log(`✅ OTP sent to user ${user.id} for session ${sessionId}: ${session.otp}`);
+                console.log(`✅ OTP sent to user ${user.id} for session ${sessionId}`);
             } else {
                 console.log(`ℹ️ OTP generated but user with phone ${normalizedPhone} not found in system.`);
             }

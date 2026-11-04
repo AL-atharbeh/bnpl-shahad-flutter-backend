@@ -1,18 +1,25 @@
-import { Controller, Get, Param, Query, ParseIntPipe, Post, Body, Put, Delete, UseInterceptors, UploadedFile, Res, Req, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Param, Query, ParseIntPipe, Post, Body, Put, Delete, UseInterceptors, UploadedFile, Res, Req, BadRequestException, UseGuards } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery, ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { memoryStorage } from 'multer';
 import { Response } from 'express';
 import { storeUpload, uploadedFilePath } from '../common/upload-storage';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { assertStoreAccess } from '../auth/store-access';
 
 @ApiTags('products')
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) { }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'vendor')
+  @ApiBearerAuth()
   @Post('upload')
   @ApiOperation({ summary: 'Upload product image' })
   @ApiConsumes('multipart/form-data')
@@ -89,9 +96,13 @@ export class ProductsController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'vendor')
+  @ApiBearerAuth()
   @Post()
   @ApiOperation({ summary: 'Create new product' })
-  async createProduct(@Body() dto: CreateProductDto) {
+  async createProduct(@Body() dto: CreateProductDto, @Req() req: any) {
+    assertStoreAccess(req.user, dto.store_id);
     const product = await this.productsService.create(dto);
     return {
       success: true,
@@ -99,12 +110,19 @@ export class ProductsController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'vendor')
+  @ApiBearerAuth()
   @Put(':id')
   @ApiOperation({ summary: 'Update product' })
   async updateProduct(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateProductDto,
+    @Req() req: any,
   ) {
+    // The product must be the vendor's now, and stay theirs after the edit.
+    assertStoreAccess(req.user, await this.productsService.getProductStoreId(id));
+    if (dto.store_id !== undefined) assertStoreAccess(req.user, dto.store_id);
     const product = await this.productsService.update(id, dto);
     return {
       success: true,
@@ -112,9 +130,13 @@ export class ProductsController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'vendor')
+  @ApiBearerAuth()
   @Delete(':id')
   @ApiOperation({ summary: 'Delete product' })
-  async deleteProduct(@Param('id', ParseIntPipe) id: number) {
+  async deleteProduct(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
+    assertStoreAccess(req.user, await this.productsService.getProductStoreId(id));
     await this.productsService.remove(id);
     return {
       success: true,

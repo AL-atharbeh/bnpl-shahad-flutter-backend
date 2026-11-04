@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Put, Body, Param, Query, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Query, ParseIntPipe, UseGuards, Req, BadRequestException } from '@nestjs/common';
 import { ApiOperation, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { SettlementsService } from './settlements.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { scopedStoreId } from '../auth/store-access';
 
 @ApiTags('Settlements')
 @Controller('settlements')
@@ -11,11 +12,14 @@ export class SettlementsController {
     constructor(private readonly settlementsService: SettlementsService) { }
 
     @Get('stats')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin', 'vendor')
+    @ApiBearerAuth()
     @ApiOperation({ summary: 'Get settlement stats (pending balance, last transfer)' })
-    async getStats(
-        @Query('storeId', ParseIntPipe) storeId: number,
-    ) {
-        return this.settlementsService.getSettlementStats(storeId);
+    async getStats(@Query('storeId') storeId: string, @Req() req: any) {
+        const id = scopedStoreId(req.user, storeId);
+        if (id === undefined) throw new BadRequestException('storeId مطلوب');
+        return this.settlementsService.getSettlementStats(id);
     }
 
     @Get('admin/stores-balances')
@@ -77,12 +81,20 @@ export class SettlementsController {
         return this.settlementsService.getSettlementById(id);
     }
     
+    // A vendor can only ask for their own store's money, whatever storeId the
+    // body names.
     @Post('request')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin', 'vendor')
+    @ApiBearerAuth()
     @ApiOperation({ summary: 'Request immediate settlement' })
     async requestSettlement(
         @Body() data: { storeId: number; vendorName: string },
+        @Req() req: any,
     ) {
-        return this.settlementsService.requestSettlement(data.storeId, data.vendorName);
+        const id = scopedStoreId(req.user, data.storeId);
+        if (id === undefined) throw new BadRequestException('storeId مطلوب');
+        return this.settlementsService.requestSettlement(id, data.vendorName);
     }
 
     @Put('admin/:id/status')

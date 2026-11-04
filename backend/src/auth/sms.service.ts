@@ -43,7 +43,13 @@ export class SmsService {
     const body = `رمز التحقق الخاص بك في شِهد هو: ${code}`;
 
     if (!this.client) {
-      this.logger.warn(`📱 OTP for ${phone}: ${code} (not sent - no SMS provider)`);
+      // Printing the code helps on a developer machine; in production it would
+      // put every customer's code in the server log.
+      if (process.env.NODE_ENV === 'production') {
+        this.logger.warn(`OTP for ${phone} not sent - no SMS provider configured`);
+      } else {
+        this.logger.warn(`📱 OTP for ${phone}: ${code} (not sent - no SMS provider)`);
+      }
       return false;
     }
 

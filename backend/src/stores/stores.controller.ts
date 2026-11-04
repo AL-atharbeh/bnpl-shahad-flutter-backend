@@ -1,9 +1,28 @@
-import { Controller, Get, Put, Post, Delete, Body, Param, Query, ParseIntPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { Controller, Get, Put, Post, Delete, Body, Param, Query, ParseIntPipe, UseGuards, Req, ForbiddenException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { StoresService } from './stores.service';
 import { ProductsService } from '../products/products.service';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { assertStoreAccess, publicStore } from '../auth/store-access';
+import { ShowStoreCredentials } from '../common/hide-store-credentials.interceptor';
+
+/** Fields only an admin may set: money, approval and placement. */
+const ADMIN_ONLY_STORE_FIELDS = [
+  'rating',
+  'commissionRate',
+  'bankCommissionRate',
+  'platformCommissionRate',
+  'isActive',
+  'topStore',
+  'vendorId',
+  'status',
+  'payoutCycle',
+] as const;
 
 @ApiTags('stores')
 @Controller('stores')
@@ -33,6 +52,10 @@ export class StoresController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @ShowStoreCredentials()
   @Get('admin/all')
   @ApiOperation({ summary: 'Get all stores for admin (includes pending/inactive)' })
   async getAllAdminStores() {
@@ -43,6 +66,9 @@ export class StoresController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @Put('admin/:id/status')
   @ApiOperation({ summary: 'Update store status (approve/reject)' })
   async updateStoreStatus(
@@ -56,6 +82,9 @@ export class StoresController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @Get('admin/vendors')
   @ApiOperation({ summary: 'Get all vendors for admin dropdown' })
   async getAllVendors() {
@@ -66,6 +95,9 @@ export class StoresController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @Post()
   @ApiOperation({ summary: 'Create new store' })
   async createStore(@Body() createStoreDto: CreateStoreDto) {
@@ -76,6 +108,9 @@ export class StoresController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @Delete(':id')
   @ApiOperation({ summary: 'Delete store' })
   async deleteStore(@Param('id', ParseIntPipe) id: number) {
@@ -124,6 +159,9 @@ export class StoresController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @Put(':id/top-store')
   @ApiOperation({ summary: 'Toggle top store status' })
   async toggleTopStore(@Param('id', ParseIntPipe) id: number) {
@@ -134,13 +172,22 @@ export class StoresController {
     };
   }
 
+  /**
+   * Public, since the customer app opens store pages. The store's own vendor
+   * and admins also get its API keys, for the credentials screen.
+   */
+  @UseGuards(OptionalJwtAuthGuard)
+  @ShowStoreCredentials()
   @Get(':id')
   @ApiOperation({ summary: 'Get store by ID' })
-  async getStore(@Param('id') id: number) {
+  async getStore(@Param('id') id: number, @Req() req: any) {
     const store = await this.storesService.getStoreById(id);
+    const isOwnerOrAdmin =
+      req.user?.role === 'admin' ||
+      (req.user?.role === 'vendor' && Number(req.user.storeId) === Number(id));
     return {
       success: true,
-      data: store,
+      data: isOwnerOrAdmin ? store : publicStore(store),
     };
   }
 
@@ -159,12 +206,25 @@ export class StoresController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'vendor')
+  @ApiBearerAuth()
   @Put(':id')
   @ApiOperation({ summary: 'Update store details' })
   async updateStore(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateStoreDto: UpdateStoreDto,
+    @Req() req: any,
   ) {
+    assertStoreAccess(req.user, id);
+
+    if (req.user.role === 'vendor') {
+      const blocked = ADMIN_ONLY_STORE_FIELDS.filter((f) => updateStoreDto[f] !== undefined);
+      if (blocked.length) {
+        throw new ForbiddenException(`هذه الحقول يعدّلها المشرف فقط: ${blocked.join(', ')}`);
+      }
+    }
+
     const store = await this.storesService.updateStore(id, updateStoreDto);
     return {
       success: true,
@@ -172,4 +232,3 @@ export class StoresController {
     };
   }
 }
-

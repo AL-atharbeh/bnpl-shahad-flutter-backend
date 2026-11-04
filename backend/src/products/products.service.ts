@@ -99,6 +99,18 @@ export class ProductsService {
     }));
   }
 
+  /** The store a product belongs to, active or not, for access checks. */
+  async getProductStoreId(id: number): Promise<number> {
+    const product = await this.productRepository.findOne({
+      where: { id },
+      select: ['id', 'storeId'],
+    });
+    if (!product) {
+      throw new NotFoundException('المنتج غير موجود');
+    }
+    return product.storeId;
+  }
+
   async getProductById(id: number): Promise<Product> {
     const product = await this.productRepository.findOne({
       where: { id, isActive: true },

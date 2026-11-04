@@ -19,6 +19,7 @@ import { CreateSessionDto } from './dto/create-session.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { assertStoreAccess } from '../auth/store-access';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Request as ExpressRequest } from 'express';
 
@@ -45,12 +46,18 @@ export class BnplSessionsController {
         return this.sessionsService.sendOtp(sessionId, phone);
     }
 
+    // Recent sessions carry customers' names and phone numbers, so only the
+    // store itself and admins may read them.
     @Get('store/:storeId/recent')
-    async getRecentStoreSessions(@Param('storeId') storeId: string) {
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin', 'vendor')
+    @ApiBearerAuth()
+    async getRecentStoreSessions(@Param('storeId') storeId: string, @Request() req: any) {
         const parsedStoreId = parseInt(storeId);
         if (isNaN(parsedStoreId)) {
             return [];
         }
+        assertStoreAccess(req.user, parsedStoreId);
         return this.sessionsService.getRecentSessionsByStoreId(parsedStoreId);
     }
 
