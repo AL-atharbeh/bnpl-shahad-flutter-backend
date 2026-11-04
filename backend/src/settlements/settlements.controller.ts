@@ -1,6 +1,9 @@
-import { Controller, Get, Post, Put, Body, Param, Query, ParseIntPipe } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Body, Param, Query, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { ApiOperation, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { SettlementsService } from './settlements.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('Settlements')
 @Controller('settlements')
@@ -16,12 +19,18 @@ export class SettlementsController {
     }
 
     @Get('admin/stores-balances')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin')
+    @ApiBearerAuth()
     @ApiOperation({ summary: 'Get all stores accounting and balance tracking summary' })
     async getStoresBalances() {
         return this.settlementsService.getStoresBalances();
     }
 
     @Get('admin/all')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin')
+    @ApiBearerAuth()
     @ApiOperation({ summary: 'Get all settlements' })
     async getAllSettlements(
         @Query('page') page: number = 1,
@@ -34,6 +43,9 @@ export class SettlementsController {
     }
 
     @Post('admin/create')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin')
+    @ApiBearerAuth()
     @ApiOperation({ summary: 'Create a new settlement' })
     async createSettlement(
         @Body() data: {
@@ -46,6 +58,9 @@ export class SettlementsController {
     }
 
     @Get('admin/stores/:id/outstanding-orders')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin')
+    @ApiBearerAuth()
     @ApiOperation({ summary: 'Get outstanding approved orders for a store that are not settled yet' })
     async getStoreOutstandingOrders(
         @Param('id', ParseIntPipe) id: number,
@@ -54,6 +69,9 @@ export class SettlementsController {
     }
 
     @Get('admin/:id')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin')
+    @ApiBearerAuth()
     @ApiOperation({ summary: 'Get settlement by ID' })
     async getSettlementById(@Param('id') id: number) {
         return this.settlementsService.getSettlementById(id);
@@ -68,6 +86,9 @@ export class SettlementsController {
     }
 
     @Put('admin/:id/status')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin')
+    @ApiBearerAuth()
     @ApiOperation({ summary: 'Update settlement status' })
     async updateSettlementStatus(
         @Param('id', ParseIntPipe) id: number,

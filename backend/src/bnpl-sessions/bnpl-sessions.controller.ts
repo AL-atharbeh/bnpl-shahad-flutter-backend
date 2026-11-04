@@ -17,6 +17,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { Request as ExpressRequest } from 'express';
 
 @Controller('sessions')
@@ -110,11 +113,17 @@ export class BnplSessionsController {
 
     // Admin endpoints
     @Get('admin/stats')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin')
+    @ApiBearerAuth()
     async getAdminStats() {
         return this.sessionsService.getAdminStats();
     }
 
     @Get('admin/all')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin')
+    @ApiBearerAuth()
     async getAllSessions(
         @Request() req,
     ) {
@@ -131,6 +140,9 @@ export class BnplSessionsController {
     }
 
     @Get('admin/chart-data')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin')
+    @ApiBearerAuth()
     async getChartData() {
         return this.sessionsService.getChartData();
     }
