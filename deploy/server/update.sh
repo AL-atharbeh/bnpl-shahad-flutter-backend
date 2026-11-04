@@ -18,7 +18,9 @@ done
 
 echo "Building: $services"
 docker compose build $services
-docker compose up -d --no-deps $services
+# Recreate even when compose thinks nothing changed: with the containerd image
+# store it can keep the old container running on the previous image.
+docker compose up -d --no-deps --force-recreate $services
 docker image prune -f >/dev/null
 docker compose ps
 echo "Done."
