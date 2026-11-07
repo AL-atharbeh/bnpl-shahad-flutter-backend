@@ -7,7 +7,10 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/glass_bottom_nav.dart';
 import '../../core/widgets/ui.dart';
 import '../finance/finance_page.dart';
+import '../finance/settlements_page.dart';
+import '../notifications/notifications_page.dart';
 import 'api_credentials_page.dart';
+import 'profile_page.dart';
 import 'store_settings_page.dart';
 
 class AccountPage extends StatelessWidget {
@@ -121,6 +124,18 @@ class AccountPage extends StatelessWidget {
                 onTap: () => _push(context, const FinancePage()),
               ),
               _MenuTile(
+                icon: Icons.account_balance_outlined,
+                title: context.tr('settlementHistory'),
+                subtitle: context.tr('settlementHistoryDetail'),
+                onTap: () => _push(context, const SettlementsPage()),
+              ),
+              _MenuTile(
+                icon: Icons.notifications_none_rounded,
+                title: context.tr('notifications'),
+                subtitle: context.tr('notificationsDetail'),
+                onTap: () => _push(context, const NotificationsPage()),
+              ),
+              _MenuTile(
                 icon: Icons.storefront_outlined,
                 title: context.tr('storeSettings'),
                 subtitle: context.tr('manageProfile'),
@@ -137,6 +152,12 @@ class AccountPage extends StatelessWidget {
           const SizedBox(height: 12),
           _MenuGroup(
             children: [
+              _MenuTile(
+                icon: Icons.person_outline_rounded,
+                title: context.tr('myProfile'),
+                subtitle: context.tr('myProfileDetail'),
+                onTap: () => _push(context, const ProfilePage()),
+              ),
               _MenuTile(
                 icon: Icons.translate_rounded,
                 title: context.tr('switchLanguage'),

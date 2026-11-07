@@ -22,6 +22,15 @@ export class SettlementsController {
         return this.settlementsService.getSettlementStats(id);
     }
 
+    @Get('mine')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('vendor')
+    @ApiBearerAuth()
+    @ApiOperation({ summary: "The signed-in vendor's settlement history" })
+    async getMySettlements(@Req() req: any, @Query('page') page?: string, @Query('limit') limit?: string) {
+        return this.settlementsService.getStoreSettlementHistory(req.user.storeId, Number(page) || 1, Number(limit) || 20);
+    }
+
     @Get('admin/stores-balances')
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles('admin')

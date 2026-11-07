@@ -1,3 +1,4 @@
+import { VendorsModule } from '../vendors/vendors.module';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { StoresController } from './stores.controller';
@@ -18,6 +19,7 @@ import { UsersModule } from '../users/users.module';
     ProductsModule,
     NotificationsModule,
     UsersModule,
+    VendorsModule,
   ],
   controllers: [StoresController, ReviewsController],
   providers: [StoresService, ReviewsService],

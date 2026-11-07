@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/l10n/language_service.dart';
 import '../../core/session/session_service.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/widgets/ui.dart';
 import 'auth_frame.dart';
 import 'signup_page.dart';
@@ -105,11 +106,45 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton(
+                    onPressed: _showForgot,
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.textMuted,
+                    ),
+                    child: Text(context.tr('forgotPassword')),
+                  ),
+                ),
               ],
             ),
           ),
         ),
       ],
+    );
+  }
+
+  /// No SMS or email goes out yet, so a locked-out merchant asks Shahed,
+  /// who issues a temporary password from the admin panel.
+  void _showForgot() {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(context.tr('forgotPassword')),
+        content: Text(
+          context.tr('forgotPasswordBody'),
+          style: const TextStyle(height: 1.6),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.tr('gotIt')),
+          ),
+        ],
+      ),
     );
   }
 }

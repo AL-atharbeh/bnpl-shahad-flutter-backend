@@ -10,6 +10,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showForgot, setShowForgot] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const router = useRouter();
@@ -93,6 +94,23 @@ export default function LoginPage() {
                                     placeholder="••••••••"
                                 />
                             </div>
+                        </div>
+
+                        <div className="-mt-2">
+                            <button
+                                type="button"
+                                onClick={() => setShowForgot((v) => !v)}
+                                className="text-xs text-slate-500 hover:text-emerald-400"
+                            >
+                                {language === "ar" ? "نسيت كلمة المرور؟" : "Forgot your password?"}
+                            </button>
+                            {showForgot && (
+                                <p className="mt-2 rounded-xl border border-emerald-900/40 bg-emerald-500/5 p-3 text-xs leading-6 text-slate-300">
+                                    {language === "ar"
+                                        ? "تواصل مع إدارة شهد من رقم الهاتف أو البريد المسجّل في حسابك، وستعطيك كلمة مرور مؤقتة. بعد الدخول غيّرها من صفحة «حسابي»."
+                                        : "Contact Shahed from the phone or email on your account and you will get a temporary password. After signing in, change it on the My account page."}
+                                </p>
+                            )}
                         </div>
 
                         <button

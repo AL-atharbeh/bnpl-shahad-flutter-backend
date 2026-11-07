@@ -1,3 +1,4 @@
+import { VendorsModule } from '../vendors/vendors.module';
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BnplSessionsController } from './bnpl-sessions.controller';
@@ -21,6 +22,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         UsersModule,
         RewardsModule,
         NotificationsModule,
+        VendorsModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],
             useFactory: (configService: ConfigService) => {

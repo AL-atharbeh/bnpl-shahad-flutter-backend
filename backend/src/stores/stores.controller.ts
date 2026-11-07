@@ -282,6 +282,18 @@ export class StoresController {
     };
   }
 
+  /** New API keys for the store's own merchant or an admin; the old ones stop working. */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'vendor')
+  @ApiBearerAuth()
+  @ShowPrivateStoreFields()
+  @Post(':id/api-keys/regenerate')
+  @ApiOperation({ summary: 'Regenerate store API keys' })
+  async regenerateApiKeys(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
+    assertStoreAccess(req.user, id);
+    return { success: true, data: await this.storesService.regenerateApiKeys(id) };
+  }
+
   /** Uploads a merchant document: commercial-registration, trade-license or owner-id. */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'vendor')

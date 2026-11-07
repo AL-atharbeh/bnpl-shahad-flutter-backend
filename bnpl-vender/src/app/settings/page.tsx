@@ -17,7 +17,7 @@ import {
     EyeOff,
     Copy
 } from "lucide-react";
-import { getStoreSettings, updateStoreSettings, getCategories } from "@/services/api";
+import { getStoreSettings, updateStoreSettings, getCategories, regenerateApiKeys } from "@/services/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function SettingsPage() {
@@ -30,6 +30,25 @@ export default function SettingsPage() {
     const [success, setSuccess] = useState(false);
     const [showSecret, setShowSecret] = useState(false);
     const [categories, setCategories] = useState<any[]>([]);
+    const [regenerating, setRegenerating] = useState(false);
+
+    // For a leaked secret: the old keys stop working at once.
+    const handleRegenerate = async () => {
+        const ar = language === "ar";
+        if (!confirm(ar
+            ? "إصدار مفاتيح جديدة؟ ستتوقف المفاتيح الحالية فوراً، ويجب تحديث موقعك أو نظامك بالمفاتيح الجديدة."
+            : "Issue new keys? The current keys stop working at once, and your website or system must switch to the new ones.")) return;
+        setRegenerating(true);
+        try {
+            const res = await regenerateApiKeys(store.id);
+            setStore((prev: any) => ({ ...prev, ...res.data.data }));
+            setShowSecret(true);
+        } catch (err: any) {
+            alert(err.response?.data?.message || (ar ? "تعذر إصدار مفاتيح جديدة" : "Could not issue new keys"));
+        } finally {
+            setRegenerating(false);
+        }
+    };
 
     const genderCategories = [
         { id: 1, name: t("women") },
@@ -439,6 +458,17 @@ export default function SettingsPage() {
                                             : "* Never share your secret key with anyone."}
                                     </p>
                                 </div>
+
+                                {store?.apiKey && store?.status === "approved" && (
+                                    <button
+                                        onClick={handleRegenerate}
+                                        disabled={regenerating}
+                                        className="flex items-center gap-2 rounded-xl border border-amber-500/30 px-4 py-2 text-xs font-bold text-amber-400 hover:bg-amber-500/10 disabled:opacity-50"
+                                    >
+                                        {regenerating && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                                        {language === "ar" ? "إصدار مفاتيح جديدة" : "Issue new keys"}
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

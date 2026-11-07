@@ -9,6 +9,7 @@ import '../../core/utils/format.dart';
 import '../../core/widgets/glass_bottom_nav.dart';
 import '../../core/widgets/ui.dart';
 import '../finance/finance_page.dart';
+import '../notifications/notifications_page.dart';
 import '../shell/merchant_shell.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -301,6 +302,8 @@ class _Header extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
+          const NotificationBell(),
+          const SizedBox(width: 8),
           Container(
             width: 46,
             height: 46,

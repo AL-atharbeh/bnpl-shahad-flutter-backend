@@ -11,7 +11,8 @@ import {
     LogOut,
     Package,
     TrendingUp,
-    ShoppingCart
+    ShoppingCart,
+    UserRound
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -27,6 +28,7 @@ export default function Sidebar({ onLogout }: { onLogout?: () => void }) {
         { name: t("transactions"), href: "/transactions", icon: Receipt },
         { name: t("finance"), href: "/finance", icon: CreditCard },
         { name: t("settings"), href: "/settings", icon: Settings },
+        { name: language === "ar" ? "حسابي" : "My account", href: "/account", icon: UserRound },
     ];
 
     return (

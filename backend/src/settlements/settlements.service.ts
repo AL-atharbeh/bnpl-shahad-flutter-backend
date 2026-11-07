@@ -1,3 +1,4 @@
+import { VendorNotificationsService } from '../vendors/vendor-notifications.service';
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, IsNull } from 'typeorm';
@@ -23,6 +24,7 @@ export class SettlementsService {
         private usersService: UsersService,
         private notificationsService: NotificationsService,
         private commissionSettingsService: CommissionSettingsService,
+        private readonly vendorNotifications: VendorNotificationsService,
     ) { }
 
     private normalizeRate(val: any, fallback: number) {
@@ -82,6 +84,40 @@ export class SettlementsService {
                     date: lastSettlement.settlementDate
                 } : null
             }
+        };
+    }
+
+    /** A store's own settlements, newest first, with what it received from each. */
+    async getStoreSettlementHistory(storeId: number, page = 1, limit = 20) {
+        page = Math.max(1, page || 1);
+        limit = Math.min(Math.max(1, limit || 20), 100);
+        const [settlements, total] = await this.settlementRepository.findAndCount({
+            where: { storeId },
+            relations: ['sessions'],
+            order: { createdAt: 'DESC' },
+            skip: (page - 1) * limit,
+            take: limit,
+        });
+        return {
+            success: true,
+            data: {
+                settlements: settlements.map((s) => ({
+                    id: s.id,
+                    status: s.status,
+                    requestedAt: s.createdAt,
+                    settlementDate: s.settlementDate,
+                    totalCollected: Number(s.totalCollected),
+                    bankShare: Number(s.bankShare),
+                    platformShare: Number(s.platformShare),
+                    netAmount: Number((Number(s.totalCollected) - Number(s.bankShare) - Number(s.platformShare)).toFixed(2)),
+                    ordersCount: s.sessions?.length || 0,
+                    notes: s.notes,
+                })),
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+            },
         };
     }
 
@@ -382,6 +418,7 @@ export class SettlementsService {
             throw new BadRequestException('التسوية غير موجودة');
         }
 
+        const previousStatus = settlement.status;
         settlement.status = status;
         if (notes) {
             settlement.notes = notes;
@@ -392,6 +429,27 @@ export class SettlementsService {
         }
 
         await this.settlementRepository.save(settlement);
+
+        if (settlement.storeId && previousStatus !== status && (status === 'completed' || status === 'failed')) {
+            const net = (Number(settlement.totalCollected) - Number(settlement.bankShare) - Number(settlement.platformShare)).toFixed(2);
+            await this.vendorNotifications.notifyStore(settlement.storeId, status === 'completed'
+                ? {
+                    type: 'settlement_completed',
+                    title: 'تم تحويل مستحقاتك 💰',
+                    body: `حُوّل ${net} دينار إلى حسابك البنكي (تسوية رقم ${settlement.id}).`,
+                    titleEn: 'Your payout was sent 💰',
+                    bodyEn: `JOD ${net} was transferred to your bank account (settlement #${settlement.id}).`,
+                    data: { settlementId: settlement.id, amount: Number(net) },
+                }
+                : {
+                    type: 'settlement_failed',
+                    title: 'تعذّر تحويل التسوية',
+                    body: `لم يكتمل تحويل التسوية رقم ${settlement.id}${notes ? `: ${notes}` : ''}. ستعود الطلبات لرصيدك المعلّق.`,
+                    titleEn: 'A payout could not be sent',
+                    bodyEn: `Settlement #${settlement.id} was not transferred${notes ? `: ${notes}` : ''}. Its orders return to your pending balance.`,
+                    data: { settlementId: settlement.id },
+                });
+        }
 
         // If settlement failed or was rejected, release the sessions back into the pool
         if (status === 'failed' || status === 'rejected') {

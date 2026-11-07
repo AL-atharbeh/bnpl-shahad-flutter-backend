@@ -52,6 +52,37 @@ class MerchantApi {
   Future<Map<String, dynamic>> me() async =>
       _map(_data(await client.get('/auth/vendor/me')));
 
+  /// Saves the signed-in vendor's name, email or phone; returns the vendor.
+  Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async =>
+      _map(_data(await client.put('/auth/vendor/me', data)));
+
+  Future<void> changePassword(String current, String next) => client.put(
+    '/auth/vendor/password',
+    {'currentPassword': current, 'newPassword': next},
+  );
+
+  /// Newest first, with the unread count: `{items, unread}`.
+  Future<Map<String, dynamic>> notifications() async => _map(
+    _data(await client.get('/auth/vendor/notifications', query: {'limit': 50})),
+  );
+
+  /// Marks one notification read, or all of them without an id.
+  Future<void> markNotificationsRead([int? id]) => client.post(
+    '/auth/vendor/notifications/read',
+    id == null ? <String, dynamic>{} : {'id': id},
+  );
+
+  /// New API keys; the old ones stop working at once.
+  Future<Map<String, dynamic>> regenerateApiKeys(int storeId) async =>
+      _map(_data(await client.post('/stores/$storeId/api-keys/regenerate')));
+
+  /// The store's own settlements: `{settlements, total, page, totalPages}`.
+  Future<Map<String, dynamic>> mySettlements({int page = 1}) async => _map(
+    _data(
+      await client.get('/settlements/mine', query: {'page': page, 'limit': 20}),
+    ),
+  );
+
   // Dashboard & reports
   Future<Map<String, dynamic>> dashboardStats(int storeId) async => _map(
     _data(await client.get('/reports/stats', query: {'storeId': storeId})),

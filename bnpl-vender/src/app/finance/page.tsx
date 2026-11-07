@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { getVendorTransactions, getCurrentCommissionSettings, getStoreSettings } from "@/services/api";
 import { useLanguage } from "@/contexts/LanguageContext";
+import SettlementHistory from "@/components/finance/SettlementHistory";
 
 // ─── Helper: safe number ────────────────────────────────────────────
 const n = (v: any): number => {
@@ -304,6 +305,8 @@ export default function FinancePage() {
             </div>
           </div>
         </div>
+
+        <SettlementHistory />
       </div>
     </DashboardLayout>
   );

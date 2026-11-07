@@ -62,6 +62,15 @@ class SessionService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Keeps the saved vendor in step after they edit their own details.
+  Future<void> updateVendor(Map<String, dynamic> user) async {
+    if (_vendor == null) return;
+    _vendor = {..._vendor!, ...user};
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_userKey, jsonEncode(_vendor));
+    notifyListeners();
+  }
+
   Future<void> logout() async {
     if (_vendor == null && api.client.token == null) return;
     api.client.token = null;

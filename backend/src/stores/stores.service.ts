@@ -18,6 +18,7 @@ import { Store } from './entities/store.entity';
 import { Deal } from '../deals/entities/deal.entity';
 import { Vendor } from '../vendors/entities/vendor.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+import { VendorNotificationsService } from '../vendors/vendor-notifications.service';
 import { UsersService } from '../users/users.service';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
@@ -34,6 +35,7 @@ export class StoresService {
     private vendorRepository: Repository<Vendor>,
     private notificationsService: NotificationsService,
     private usersService: UsersService,
+    private vendorNotifications: VendorNotificationsService,
   ) { }
 
   async getAllStores(categoryId?: number, topStore?: boolean, genderCategoryId?: number): Promise<Store[]> {
@@ -90,6 +92,7 @@ export class StoresService {
       throw new BadRequestException('يمكن إيقاف المتاجر المفعّلة فقط');
     }
 
+    const previous = store.status;
     store.status = status;
     store.isActive = status === 'approved';
     // The merchant sees why they were turned down or stopped; approval clears it.
@@ -102,7 +105,76 @@ export class StoresService {
       store.apiSecret = apiSecret;
     }
     
-    return this.storeRepository.save(store);
+    const saved = await this.storeRepository.save(store);
+    if (previous !== status) await this.notifyDecision(saved, previous);
+    return saved;
+  }
+
+  /** Tells the merchant what the admin decided, with the reason when there is one. */
+  private async notifyDecision(store: Store, previous?: string) {
+    const name = store.nameAr || store.name;
+    const reason = store.reviewNote;
+    const messages: Record<string, { title: string; body: string; titleEn: string; bodyEn: string }> = {
+      approved:
+        previous === 'suspended'
+          ? {
+              title: 'تمت إعادة تفعيل متجرك',
+              body: `عاد متجر «${name}» للبيع عبر شهد.`,
+              titleEn: 'Your store is active again',
+              bodyEn: `${store.name} can sell through Shahed again.`,
+            }
+          : {
+              title: 'تمت الموافقة على متجرك 🎉',
+              body: `متجر «${name}» مفعّل الآن، ويمكنك البدء بالبيع عبر شهد.`,
+              titleEn: 'Your store is approved 🎉',
+              bodyEn: `${store.name} is live. You can start selling through Shahed.`,
+            },
+      rejected: {
+        title: 'لم تتم الموافقة على طلبك',
+        body: reason ? `السبب: ${reason}. صحّح الطلب وأعد إرساله.` : 'راجع طلبك وأعد إرساله.',
+        titleEn: 'Your application was not approved',
+        bodyEn: reason ? `Reason: ${reason}. Fix it and submit again.` : 'Review your application and submit again.',
+      },
+      suspended: {
+        title: 'تم إيقاف متجرك',
+        body: reason ? `السبب: ${reason}. تواصل مع إدارة شهد.` : 'تواصل مع إدارة شهد لإعادة تفعيله.',
+        titleEn: 'Your store is suspended',
+        bodyEn: reason ? `Reason: ${reason}. Contact Shahed.` : 'Contact Shahed to restore it.',
+      },
+    };
+    const message = messages[store.status];
+    if (message) {
+      await this.vendorNotifications.notifyStore(store.id, {
+        type: `store_${store.status}`,
+        ...message,
+        data: { storeId: store.id },
+      });
+    }
+  }
+
+  /**
+   * Replaces a live store's API keys, for a merchant whose secret leaked. The
+   * old keys stop working at once, so their website must switch to the new ones.
+   */
+  async regenerateApiKeys(id: number): Promise<{ apiKey: string; apiSecret: string }> {
+    const store = await this.storeRepository.findOne({ where: { id } });
+    if (!store) throw new NotFoundException('المتجر غير موجود');
+    if (store.status !== 'approved') {
+      throw new BadRequestException('مفاتيح الربط تُصدر للمتاجر المفعّلة فقط');
+    }
+    const keys = this.generateApiCredentials();
+    store.apiKey = keys.apiKey;
+    store.apiSecret = keys.apiSecret;
+    await this.storeRepository.save(store);
+    await this.vendorNotifications.notifyStore(id, {
+      type: 'api_keys_regenerated',
+      title: 'تم إصدار مفاتيح ربط جديدة',
+      body: 'توقفت المفاتيح القديمة عن العمل. حدّث موقعك بالمفاتيح الجديدة.',
+      titleEn: 'New API keys issued',
+      bodyEn: 'The old keys no longer work. Update your website with the new ones.',
+      data: { storeId: id },
+    });
+    return keys;
   }
 
   private generateApiCredentials(): { apiKey: string; apiSecret: string } {

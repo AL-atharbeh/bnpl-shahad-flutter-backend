@@ -19,6 +19,33 @@ class _ApiCredentialsPageState extends State<ApiCredentialsPage> {
   Map<String, dynamic>? _store;
   Object? _error;
   bool _showSecret = false;
+  bool _regenerating = false;
+
+  /// For a leaked secret: the old keys stop working at once.
+  Future<void> _regenerate() async {
+    final confirmed = await confirmDialog(
+      context,
+      message: context.trNow('regenerateKeysConfirm'),
+      confirmLabel: context.trNow('regenerateKeys'),
+      destructive: true,
+    );
+    if (!confirmed || !mounted) return;
+    final session = context.read<SessionService>();
+    setState(() => _regenerating = true);
+    try {
+      final keys = await session.api.regenerateApiKeys(session.storeId);
+      if (!mounted) return;
+      setState(() {
+        _store = {...?_store, ...keys};
+        _showSecret = true;
+      });
+      showToast(context, context.trNow('keysRegenerated'));
+    } catch (e) {
+      if (mounted) showToast(context, errorMessage(context, e), isError: true);
+    } finally {
+      if (mounted) setState(() => _regenerating = false);
+    }
+  }
 
   @override
   void initState() {
@@ -115,6 +142,28 @@ class _ApiCredentialsPageState extends State<ApiCredentialsPage> {
                     ),
                   ],
                 ),
+                if (secret != null && _store?['status'] == 'approved') ...[
+                  const SizedBox(height: 20),
+                  OutlinedButton.icon(
+                    onPressed: _regenerating ? null : _regenerate,
+                    icon: _regenerating
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.autorenew_rounded),
+                    label: Text(context.tr('regenerateKeys')),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.warning,
+                      side: const BorderSide(color: AppColors.warning),
+                      minimumSize: const Size.fromHeight(48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
     );

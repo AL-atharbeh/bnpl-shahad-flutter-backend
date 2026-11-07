@@ -4,6 +4,7 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { VendorsModule } from '../vendors/vendors.module';
 
 import { AuthController } from './auth.controller';
 import { VendorAuthController } from './vendor-auth.controller';
@@ -25,6 +26,7 @@ import { UsersModule } from '../users/users.module';
   imports: [
     TypeOrmModule.forFeature([User, OtpCode, Store, Vendor]),
     NotificationsModule,
+    VendorsModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],

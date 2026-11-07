@@ -40,6 +40,14 @@ api.interceptors.response.use(
 export const vendorLogin = (data: any) => api.post('/auth/vendor/login', data);
 export const vendorRegister = (data: any) => api.post('/auth/vendor/register', data);
 export const getVendorAccount = () => api.get('/auth/vendor/me');
+export const updateVendorProfile = (data: { name?: string; email?: string; phone?: string }) => api.put('/auth/vendor/me', data);
+export const changeVendorPassword = (currentPassword: string, newPassword: string) =>
+    api.put('/auth/vendor/password', { currentPassword, newPassword });
+export const getVendorNotifications = () => api.get('/auth/vendor/notifications', { params: { limit: 30 } });
+// Without an id, marks every notification read.
+export const markVendorNotificationsRead = (id?: number) => api.post('/auth/vendor/notifications/read', id ? { id } : {});
+export const regenerateApiKeys = (storeId: number) => api.post(`/stores/${storeId}/api-keys/regenerate`);
+export const getMySettlements = (page = 1) => api.get('/settlements/mine', { params: { page, limit: 20 } });
 
 // Merchant application
 export type DocumentType = 'commercial-registration' | 'trade-license' | 'owner-id';

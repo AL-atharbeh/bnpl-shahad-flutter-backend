@@ -1,3 +1,4 @@
+import { VendorNotificationsService } from '../vendors/vendor-notifications.service';
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException, UnauthorizedException, HttpCode, HttpStatus, Headers } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -38,6 +39,7 @@ export class BnplSessionsService {
         private notificationsService: NotificationsService,
         private stripeService: StripeService,
         private jwtService: JwtService,
+        private readonly vendorNotifications: VendorNotificationsService,
     ) { }
 
     async createSession(
@@ -418,6 +420,16 @@ export class BnplSessionsService {
 
             await this.sessionRepository.save(session);
             console.log('✅ Session approved (PAYMENT_PENDING → APPROVED):', sessionId);
+
+            const amount = Number(session.totalAmount).toFixed(2);
+            await this.vendorNotifications.notifyStore(session.storeId, {
+                type: 'sale_approved',
+                title: 'عملية بيع جديدة ✅',
+                body: `اكتمل طلب بقيمة ${amount} ${session.currency || 'JOD'} عبر شهد${session.customerName ? ` للعميل ${session.customerName}` : ''}.`,
+                titleEn: 'New sale ✅',
+                bodyEn: `An order of ${session.currency || 'JOD'} ${amount} was completed through Shahed${session.customerName ? ` for ${session.customerName}` : ''}.`,
+                data: { sessionId: session.sessionId, amount: Number(amount) },
+            });
 
             // Create installments if they don't exist yet
             try {

@@ -374,6 +374,49 @@ export class AuthService {
     }
   }
 
+  /** The vendor edits their own name, email or phone; both must stay unique. */
+  async updateVendorProfile(vendorId: number, dto: { name?: string; email?: string; phone?: string }) {
+    const vendor = await this.validateVendorById(vendorId);
+    const email = dto.email?.trim();
+    const phone = dto.phone?.replace(/[\s-]/g, '');
+    if (phone !== undefined && !/^\+?\d{9,15}$/.test(phone)) {
+      throw new BadRequestException('رقم الهاتف غير صحيح');
+    }
+
+    const clash = [
+      email && email !== vendor.email ? { email } : null,
+      phone && phone !== vendor.phone ? { phone } : null,
+    ].filter(Boolean);
+    if (clash.length) {
+      const taken = await this.vendorRepository.findOne({ where: clash as any[] });
+      if (taken && taken.id !== vendor.id) {
+        throw new ConflictException(
+          taken.phone === phone ? 'رقم الهاتف مستخدم لحساب تاجر آخر' : 'البريد الإلكتروني مستخدم لحساب تاجر آخر',
+        );
+      }
+    }
+
+    if (dto.name !== undefined) vendor.name = dto.name.trim();
+    if (email) vendor.email = email;
+    if (phone) vendor.phone = phone;
+    const saved = await this.vendorRepository.save(vendor);
+    return { success: true, message: 'تم حفظ بياناتك', data: this.sanitizeVendor(saved) };
+  }
+
+  /** Needs the current password, so a session left open cannot lock the owner out. */
+  async changeVendorPassword(vendorId: number, currentPassword: string, newPassword: string) {
+    const vendor = await this.validateVendorById(vendorId);
+    if (!(await bcrypt.compare(currentPassword, vendor.passwordHash))) {
+      throw new BadRequestException('كلمة المرور الحالية غير صحيحة');
+    }
+    if (currentPassword === newPassword) {
+      throw new BadRequestException('اختر كلمة مرور مختلفة عن الحالية');
+    }
+    vendor.passwordHash = await bcrypt.hash(newPassword, 10);
+    await this.vendorRepository.save(vendor);
+    return { success: true, message: 'تم تغيير كلمة المرور' };
+  }
+
   /**
    * Vendor Login via Email and Password
    */

@@ -1,3 +1,4 @@
+import { VendorsModule } from '../vendors/vendors.module';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SettlementsController } from './settlements.controller';
@@ -16,6 +17,7 @@ import { CommissionSettingsModule } from '../commission-settings/commission-sett
         UsersModule,
         NotificationsModule,
         CommissionSettingsModule,
+        VendorsModule,
     ],
     controllers: [SettlementsController],
     providers: [SettlementsService],
