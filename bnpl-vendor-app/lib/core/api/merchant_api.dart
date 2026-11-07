@@ -37,6 +37,17 @@ class MerchantApi {
   Future<Map<String, dynamic>> register(Map<String, dynamic> data) async =>
       _map(_data(await client.post('/auth/vendor/register', data)));
 
+  /// Uploads a merchant document: commercial-registration, trade-license or
+  /// owner-id.
+  Future<void> uploadDocument(int storeId, String type, String filePath) =>
+      client.upload('/stores/$storeId/documents/$type', filePath);
+
+  /// Sends the completed application, with the terms accepted, for review.
+  Future<void> submitApplication(int storeId) => client.post(
+    '/stores/$storeId/application/submit',
+    {'termsAccepted': true},
+  );
+
   /// The signed-in vendor and their store's review status.
   Future<Map<String, dynamic>> me() async =>
       _map(_data(await client.get('/auth/vendor/me')));

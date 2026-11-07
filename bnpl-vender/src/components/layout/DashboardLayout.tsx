@@ -17,6 +17,7 @@ export default function DashboardLayout({
 }) {
     const [vendor, setVendor] = useState<any>(null);
     const [review, setReview] = useState<Review>("checking");
+    const [application, setApplication] = useState<{ submittedAt?: string; missing?: string[]; reviewNote?: string }>({});
     const [refreshing, setRefreshing] = useState(false);
     const router = useRouter();
     const { language, setLanguage, t } = useLanguage();
@@ -44,6 +45,7 @@ export default function DashboardLayout({
         try {
             const res = await getVendorAccount();
             const store = res.data?.data?.store;
+            setApplication(res.data?.data?.application || {});
             if (store?.status === "approved" && store?.isActive) setReview("live");
             else if (store?.status === "rejected") setReview("rejected");
             else setReview("pending");
@@ -86,6 +88,7 @@ export default function DashboardLayout({
     if (review !== "live") {
         const ar = language === "ar";
         const pending = review === "pending";
+        const submitted = Boolean(application.submittedAt);
         return (
             <div className="flex min-h-screen items-center justify-center bg-[#01160e] p-6 relative" dir={ar ? "rtl" : "ltr"}>
                 <button
@@ -105,32 +108,55 @@ export default function DashboardLayout({
 
                     <div className="space-y-2">
                         <h1 className="text-2xl font-black text-white">
-                            {pending
-                                ? (ar ? "متجرك قيد المراجعة" : "Your store is under review")
-                                : (ar ? "لم تتم الموافقة على متجرك" : "Your store was not approved")}
+                            {!pending
+                                ? (ar ? "لم تتم الموافقة على متجرك" : "Your store was not approved")
+                                : submitted
+                                    ? (ar ? "طلبك قيد المراجعة" : "Your application is under review")
+                                    : (ar ? "أكمل طلب الانضمام" : "Complete your application")}
                         </h1>
                         <p className="text-sm leading-7 text-slate-400">
-                            {pending
+                            {!pending
                                 ? (ar
-                                    ? "استلمنا طلب انضمامك. ستراجع إدارة شهد بيانات متجرك، وتفتح لك لوحة التحكم ونقطة البيع فور الموافقة. تُحدَّث هذه الصفحة تلقائياً."
-                                    : "We received your request. Shahed will review your store and open your dashboard and point of sale once approved. This page updates on its own.")
-                                : (ar
-                                    ? "راجعت الإدارة طلبك ولم تتم الموافقة عليه. للاستفسار أو لتقديم الطلب من جديد، تواصل مع إدارة شهد."
-                                    : "Shahed reviewed your request and did not approve it. To ask why or apply again, contact the Shahed team.")}
+                                    ? "راجعت الإدارة طلبك ولم توافق عليه بعد. صحّح ما يلزم وأعد إرسال الطلب."
+                                    : "Shahed reviewed your application and did not approve it yet. Fix what is needed and submit again.")
+                                : submitted
+                                    ? (ar
+                                        ? "استلمنا طلبك ومستنداتك. ستراجعه إدارة شهد، وتُفتح لك لوحة التحكم ونقطة البيع فور الموافقة. تُحدَّث هذه الصفحة تلقائياً."
+                                        : "We have your application and documents. Shahed will review them and open your dashboard and point of sale once approved. This page updates on its own.")
+                                    : (ar
+                                        ? "قبل أن تبدأ البيع، أرسل بيانات منشأتك وحسابك البنكي والمستندات لتراجعها إدارة شهد."
+                                        : "Before you can sell, send your business details, bank account and documents for Shahed to review.")}
                         </p>
                     </div>
+
+                    {!pending && application.reviewNote && (
+                        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-start text-sm text-red-300">
+                            <div className="font-black mb-1">{ar ? "سبب الرفض" : "Reason"}</div>
+                            {application.reviewNote}
+                        </div>
+                    )}
 
                     <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 text-start text-sm text-slate-300 flex items-center gap-3">
                         <Store className="h-5 w-5 text-emerald-400 flex-shrink-0" />
                         <span>{vendor.name}</span>
                     </div>
 
-                    {pending && (
+                    {(!submitted || !pending) && (
                         <Link
-                            href="/auth/store-setup"
-                            className="block w-full rounded-xl border border-emerald-500/30 bg-emerald-500/10 py-3 text-sm font-bold text-emerald-400 hover:bg-emerald-500/20 transition-all"
+                            href="/application"
+                            className="btn-financial block w-full rounded-xl py-3 text-sm font-bold"
                         >
-                            {ar ? "أكمل بيانات متجرك لتسريع المراجعة" : "Complete your store details to speed up review"}
+                            {!pending
+                                ? (ar ? "تعديل الطلب وإعادة الإرسال" : "Fix and resubmit")
+                                : (ar ? "إكمال طلب الانضمام" : "Complete application")}
+                            {pending && (application.missing?.length || 0) > 0 && (
+                                <span className="opacity-70"> · {ar ? `${application.missing!.length} متبقٍ` : `${application.missing!.length} left`}</span>
+                            )}
+                        </Link>
+                    )}
+                    {submitted && pending && (
+                        <Link href="/application" className="block text-xs text-slate-500 hover:text-slate-300">
+                            {ar ? "عرض طلبك" : "View your application"}
                         </Link>
                     )}
 

@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 /// Same backend as the portal. Override at build time with
 /// `--dart-define=API_URL=http://localhost:3000/api/v1`.
@@ -13,10 +14,13 @@ const String kApiBaseUrl = String.fromEnvironment(
 );
 
 class ApiException implements Exception {
-  ApiException(this.message, {this.statusCode});
+  ApiException(this.message, {this.statusCode, this.body});
 
   final String message;
   final int? statusCode;
+
+  /// The decoded error response, for details beyond the message.
+  final dynamic body;
 
   @override
   String toString() => message;
@@ -78,9 +82,28 @@ class ApiClient {
           'Accept': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
         })
-        ..files.add(await http.MultipartFile.fromPath(field, filePath));
+        ..files.add(
+          await http.MultipartFile.fromPath(
+            field,
+            filePath,
+            contentType: _contentTypeFor(filePath),
+          ),
+        );
       return http.Response.fromStream(await _client.send(request));
     });
+  }
+
+  /// The server checks a file's declared type, and without one the request
+  /// says application/octet-stream and every image or PDF is refused.
+  static MediaType _contentTypeFor(String filePath) {
+    final ext = filePath.split('.').last.toLowerCase();
+    return switch (ext) {
+      'png' => MediaType('image', 'png'),
+      'jpg' || 'jpeg' => MediaType('image', 'jpeg'),
+      'heic' => MediaType('image', 'heic'),
+      'pdf' => MediaType('application', 'pdf'),
+      _ => MediaType('application', 'octet-stream'),
+    };
   }
 
   Future<dynamic> _send(Future<http.Response> Function() request) async {
@@ -107,7 +130,11 @@ class ApiClient {
     if (response.statusCode >= 200 && response.statusCode < 300) return body;
 
     if (response.statusCode == 401 && token != null) onUnauthorized?.call();
-    throw ApiException(_messageFrom(body), statusCode: response.statusCode);
+    throw ApiException(
+      _messageFrom(body),
+      statusCode: response.statusCode,
+      body: body,
+    );
   }
 
   static String _messageFrom(dynamic body) {

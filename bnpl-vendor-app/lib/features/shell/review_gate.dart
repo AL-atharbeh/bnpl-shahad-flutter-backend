@@ -9,6 +9,7 @@ import '../../core/session/session_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/ui.dart';
 import '../auth/store_setup_page.dart';
+import '../settings/application_page.dart';
 import 'merchant_shell.dart';
 
 enum _Review { checking, live, pending, rejected }
@@ -26,6 +27,9 @@ class ReviewGate extends StatefulWidget {
 class _ReviewGateState extends State<ReviewGate> {
   _Review _review = _Review.checking;
   bool _refreshing = false;
+  bool _submitted = false;
+  int _missing = 0;
+  String? _reviewNote;
   Timer? _poll;
 
   @override
@@ -47,6 +51,12 @@ class _ReviewGateState extends State<ReviewGate> {
       final store = account['store'] is Map
           ? account['store'] as Map
           : const {};
+      final application = account['application'] is Map
+          ? account['application'] as Map
+          : const {};
+      _submitted = application['submittedAt'] != null;
+      _missing = (application['missing'] as List? ?? const []).length;
+      _reviewNote = application['reviewNote']?.toString();
       if (store['status'] == 'approved' && store['isActive'] == true) {
         next = _Review.live;
       } else if (store['status'] == 'rejected') {
@@ -68,6 +78,13 @@ class _ReviewGateState extends State<ReviewGate> {
     if (next == _Review.pending) {
       _poll = Timer.periodic(const Duration(seconds: 30), (_) => _check());
     }
+  }
+
+  Future<void> _openApplication() async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const ApplicationPage()));
+    if (mounted) _check();
   }
 
   Future<void> _refresh() async {
@@ -147,7 +164,11 @@ class _ReviewGateState extends State<ReviewGate> {
                   const SizedBox(height: 28),
                   Text(
                     context.tr(
-                      pending ? 'reviewPendingTitle' : 'reviewRejectedTitle',
+                      !pending
+                          ? 'reviewRejectedTitle'
+                          : _submitted
+                          ? 'reviewSubmittedTitle'
+                          : 'reviewStartTitle',
                     ),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
@@ -159,7 +180,11 @@ class _ReviewGateState extends State<ReviewGate> {
                   const SizedBox(height: 12),
                   Text(
                     context.tr(
-                      pending ? 'reviewPendingBody' : 'reviewRejectedBody',
+                      !pending
+                          ? 'reviewRejectedBody'
+                          : _submitted
+                          ? 'reviewPendingBody'
+                          : 'reviewStartBody',
                     ),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
@@ -168,6 +193,23 @@ class _ReviewGateState extends State<ReviewGate> {
                       color: AppColors.textSecondary,
                     ),
                   ),
+                  if (!pending && (_reviewNote ?? '').isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withValues(alpha: 0.07),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Text(
+                        '${context.tr('rejectionReason')}: $_reviewNote',
+                        style: const TextStyle(
+                          color: AppColors.error,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 24),
                   SectionCard(
                     child: Row(
@@ -195,26 +237,34 @@ class _ReviewGateState extends State<ReviewGate> {
                       ],
                     ),
                   ),
-                  if (pending) ...[
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
+                  const SizedBox(height: 12),
+                  if (!_submitted || !pending)
+                    PrimaryButton(
+                      label: !pending
+                          ? context.tr('fixAndResubmit')
+                          : _missing > 0
+                          ? '${context.tr('completeApplication')} · $_missing ${context.tr('itemsLeft')}'
+                          : context.tr('completeApplication'),
+                      icon: Icons.assignment_outlined,
+                      onPressed: _openApplication,
+                    )
+                  else
+                    TextButton(
+                      onPressed: _openApplication,
+                      child: Text(context.tr('viewApplication')),
+                    ),
+                  if (pending)
+                    TextButton(
                       onPressed: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => const StoreSetupPage(),
                         ),
                       ),
-                      icon: const Icon(Icons.edit_note_rounded),
-                      label: Text(context.tr('completeStoreDetails')),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        side: const BorderSide(color: AppColors.green100),
-                        minimumSize: const Size.fromHeight(50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.textMuted,
                       ),
+                      child: Text(context.tr('storeSetupTitle')),
                     ),
-                  ],
                 ],
               ),
             ),

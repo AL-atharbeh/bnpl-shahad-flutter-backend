@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import ApplicationReview from "@/components/stores/ApplicationReview";
 import { Store, storesService, StoreStats } from "@/services/stores.service";
 import StoreModal from "@/components/modals/StoreModal";
 import ReviewManagement from "@/components/stores/ReviewManagement";
@@ -111,8 +112,16 @@ export default function StoresPage() {
 
   const handleUpdateStatus = async (id: number, status: string) => {
     try {
-      if (!confirm(`هل أنت متأكد من تغيير حالة المتجر إلى ${status === 'approved' ? 'نشط' : 'مرفوض'}؟`)) return;
-      await storesService.updateStatus(id, status);
+      let note: string | undefined;
+      if (status === 'rejected') {
+        // The merchant sees this in their app, so say what to fix.
+        const reason = prompt('سبب الرفض (يظهر للتاجر ليصحّح طلبه):');
+        if (reason === null) return;
+        note = reason.trim();
+      } else if (!confirm('هل أنت متأكد من تفعيل هذا المتجر؟ سيتمكن من البيع فوراً.')) {
+        return;
+      }
+      await storesService.updateStatus(id, status, note);
       await fetchStores();
       fetchStats();
     } catch (error) {
@@ -718,6 +727,14 @@ export default function StoresPage() {
 
             {/* Content */}
             <div className="p-6 space-y-6">
+              <ApplicationReview
+                store={selectedStore}
+                onDecide={async (status) => {
+                  await handleUpdateStatus(selectedStore.id, status);
+                  setShowStoreModal(false);
+                }}
+              />
+
               {/* API Credentials */}
               <section className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
                 <h3 className="text-sm font-semibold text-emerald-400 mb-3 flex items-center gap-2">

@@ -41,6 +41,21 @@ export const vendorLogin = (data: any) => api.post('/auth/vendor/login', data);
 export const vendorRegister = (data: any) => api.post('/auth/vendor/register', data);
 export const getVendorAccount = () => api.get('/auth/vendor/me');
 
+// Merchant application
+export type DocumentType = 'commercial-registration' | 'trade-license' | 'owner-id';
+export const uploadStoreDocument = (storeId: number, type: DocumentType, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post(`/stores/${storeId}/documents/${type}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+};
+// Documents are private, so they come back as a blob over the signed-in session.
+export const getStoreDocument = (storeId: number, type: DocumentType) =>
+    api.get(`/stores/${storeId}/documents/${type}`, { responseType: 'blob' });
+export const submitStoreApplication = (storeId: number) =>
+    api.post(`/stores/${storeId}/application/submit`, { termsAccepted: true });
+
 // Vendor Specific APIs
 export const getVendorDashboardStats = (storeId: number) => api.get(`/reports/stats?storeId=${storeId}`);
 export const getVendorPerformance = (storeId: number) => api.get(`/reports/performance?storeId=${storeId}`);

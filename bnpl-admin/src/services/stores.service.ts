@@ -2,6 +2,21 @@ import api from './api';
 
 export interface Store {
     id: number;
+    legalName?: string;
+    commercialRegistrationNo?: string;
+    tradeLicenseNo?: string;
+    city?: string;
+    ownerNationalId?: string;
+    bankName?: string;
+    bankAccountHolder?: string;
+    iban?: string;
+    docCommercialRegistration?: string;
+    docTradeLicense?: string;
+    docOwnerId?: string;
+    termsAcceptedAt?: string;
+    termsVersion?: string;
+    applicationSubmittedAt?: string;
+    reviewNote?: string;
     name: string;
     nameAr?: string;
     description?: string;
@@ -98,9 +113,16 @@ export const storesService = {
         return response.data;
     },
 
-    updateStatus: async (id: number, status: string) => {
-        const response = await api.put<{ success: boolean; data: Store }>(`/stores/admin/${id}/status`, { status });
+    // A rejection carries a note the merchant sees in their app.
+    updateStatus: async (id: number, status: string, note?: string) => {
+        const response = await api.put<{ success: boolean; data: Store }>(`/stores/admin/${id}/status`, { status, note });
         return response.data;
+    },
+
+    // Merchant documents are private: fetched over the admin's session.
+    getDocument: async (id: number, type: 'commercial-registration' | 'trade-license' | 'owner-id') => {
+        const response = await api.get(`/stores/${id}/documents/${type}`, { responseType: 'blob' });
+        return response.data as Blob;
     },
 
     createStore: async (data: Partial<Store>) => {
