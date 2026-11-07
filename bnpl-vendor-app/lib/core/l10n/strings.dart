@@ -251,6 +251,14 @@ const Map<String, Map<String, String>> kStrings = {
     'verifiedPartner': 'شريك معتمد',
     'logout': 'تسجيل الخروج',
     'logoutConfirm': 'هل تريد تسجيل الخروج من حسابك؟',
+    'reviewPendingTitle': 'متجرك قيد المراجعة',
+    'reviewPendingBody':
+        'استلمنا طلب انضمامك. ستراجع إدارة شهد بيانات متجرك، وتفتح لك لوحة التحكم ونقطة البيع فور الموافقة. تُحدَّث هذه الشاشة تلقائياً.',
+    'reviewRejectedTitle': 'لم تتم الموافقة على متجرك',
+    'reviewRejectedBody':
+        'راجعت الإدارة طلبك ولم تتم الموافقة عليه. للاستفسار أو لتقديم الطلب من جديد، تواصل مع إدارة شهد.',
+    'completeStoreDetails': 'أكمل بيانات متجرك لتسريع المراجعة',
+    'checkAgain': 'تحديث الحالة',
     'switchLanguage': 'تغيير اللغة',
     'orderLimits': 'حدود الطلب',
   },
@@ -497,6 +505,14 @@ const Map<String, Map<String, String>> kStrings = {
     'verifiedPartner': 'Verified partner',
     'logout': 'Sign out',
     'logoutConfirm': 'Sign out of your account?',
+    'reviewPendingTitle': 'Your store is under review',
+    'reviewPendingBody':
+        'We received your request. Shahed will review your store and open your dashboard and point of sale once approved. This screen updates on its own.',
+    'reviewRejectedTitle': 'Your store was not approved',
+    'reviewRejectedBody':
+        'Shahed reviewed your request and did not approve it. To ask why or apply again, contact the Shahed team.',
+    'completeStoreDetails': 'Complete your store details to speed up review',
+    'checkAgain': 'Check again',
     'switchLanguage': 'Change language',
     'orderLimits': 'Order limits',
   },

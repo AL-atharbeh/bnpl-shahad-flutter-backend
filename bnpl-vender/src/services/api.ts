@@ -39,6 +39,7 @@ api.interceptors.response.use(
 // Vendor Auth APIs
 export const vendorLogin = (data: any) => api.post('/auth/vendor/login', data);
 export const vendorRegister = (data: any) => api.post('/auth/vendor/register', data);
+export const getVendorAccount = () => api.get('/auth/vendor/me');
 
 // Vendor Specific APIs
 export const getVendorDashboardStats = (storeId: number) => api.get(`/reports/stats?storeId=${storeId}`);

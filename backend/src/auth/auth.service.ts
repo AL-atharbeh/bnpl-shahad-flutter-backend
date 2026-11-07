@@ -3,6 +3,9 @@ import {
   UnauthorizedException,
   BadRequestException,
   ConflictException,
+  ForbiddenException,
+  Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as admin from 'firebase-admin';
@@ -14,6 +17,8 @@ import { Store } from '../stores/entities/store.entity';
 import { User } from '../users/entities/user.entity';
 import { Vendor } from '../vendors/entities/vendor.entity';
 import { OtpService } from './otp.service';
+import { UsersService } from '../users/users.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CheckPhoneDto } from './dto/check-phone.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
@@ -24,6 +29,8 @@ import { VendorLoginDto } from './dto/vendor-login.dto';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
@@ -33,6 +40,8 @@ export class AuthService {
     private vendorRepository: Repository<Vendor>,
     private jwtService: JwtService,
     private otpService: OtpService,
+    private usersService: UsersService,
+    private notificationsService: NotificationsService,
   ) { }
 
   /**
@@ -314,18 +323,17 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(password, 10);
 
     try {
-      // 1. Create the store
-      const { apiKey, apiSecret } = this.generateApiCredentials();
+      // 1. Create the store. It waits for an admin: no sales, no API keys and
+      // no listing in the customer app until it is approved, which is also
+      // when updateStoreStatus issues its keys.
       const store = this.storeRepository.create({
         name: storeName,
         nameAr: storeName,
-        isActive: true,
-        status: 'approved',
+        isActive: false,
+        status: 'pending',
         commissionRate: 2.5,
         bankCommissionRate: 1.5,
         platformCommissionRate: 1.0,
-        apiKey,
-        apiSecret,
       });
       const savedStore = await this.storeRepository.save(store);
 
@@ -345,11 +353,13 @@ export class AuthService {
       savedStore.vendorId = savedVendor.id;
       await this.storeRepository.save(savedStore);
 
+      await this.notifyAdminsOfNewStore(savedStore, name);
+
       const token = this.generateToken(savedVendor, 'vendor');
 
       return {
         success: true,
-        message: 'تم إنشاء حساب المورد والمتجر بنجاح',
+        message: 'تم إنشاء الحساب، ومتجرك الآن قيد مراجعة الإدارة',
         data: {
           token,
           user: this.sanitizeVendor(savedVendor),
@@ -381,6 +391,13 @@ export class AuthService {
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+    }
+
+    // Checked after the password, so a wrong guess learns nothing about the
+    // account. A store still under review may sign in to see its status; a
+    // suspended account may not.
+    if (!vendor.isActive) {
+      throw new ForbiddenException('تم إيقاف هذا الحساب. تواصل مع إدارة شهد.');
     }
 
     const token = this.generateToken(vendor, 'vendor');
@@ -461,6 +478,49 @@ export class AuthService {
   /**
    * Remove sensitive data from vendor object
    */
+  /**
+   * The signed-in vendor's account and store review state, so the apps know
+   * whether to open the dashboard or the "under review" screen.
+   */
+  async getVendorAccount(vendorId: number) {
+    const vendor = await this.validateVendorById(vendorId);
+    const store = await this.storeRepository.findOne({ where: { id: vendor.storeId } });
+    if (!store) {
+      throw new NotFoundException('المتجر غير موجود');
+    }
+    return {
+      success: true,
+      data: {
+        user: this.sanitizeVendor(vendor),
+        store: {
+          id: store.id,
+          name: store.name,
+          nameAr: store.nameAr,
+          status: store.status,
+          isActive: store.isActive,
+        },
+      },
+    };
+  }
+
+  /** Tells every admin a store is waiting. A failure here must not undo the sign-up. */
+  private async notifyAdminsOfNewStore(store: Store, vendorName: string) {
+    try {
+      const admins = await this.usersService.findAllAdmins();
+      for (const admin of admins) {
+        await this.notificationsService.sendToUser(
+          admin.id,
+          'طلب انضمام تاجر جديد',
+          `${vendorName} سجّل متجر «${store.nameAr || store.name}» وينتظر المراجعة`,
+          { type: 'new_store_request', storeId: String(store.id), storeName: store.name },
+          'urgent',
+        );
+      }
+    } catch (err) {
+      this.logger.warn(`Could not notify admins of store ${store.id}: ${err.message}`);
+    }
+  }
+
   private sanitizeVendor(vendor: Vendor) {
     const { passwordHash, ...sanitized } = vendor;
     return sanitized;

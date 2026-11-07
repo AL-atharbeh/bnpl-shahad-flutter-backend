@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { Product } from './entities/product.entity';
@@ -97,6 +97,17 @@ export class ProductsService {
        salesCount: parseInt(p.real_sales_count) || 0,
        totalRevenue: parseFloat(p.real_total_revenue) || 0
     }));
+  }
+
+  /** Refuses vendor product changes until an admin has approved the store. */
+  async assertStoreLive(storeId: number): Promise<void> {
+    const store = await this.storeRepository.findOne({
+      where: { id: storeId },
+      select: ['id', 'status', 'isActive'],
+    });
+    if (!store || store.status !== 'approved' || !store.isActive) {
+      throw new ForbiddenException('المتجر غير مفعّل بعد، بانتظار موافقة إدارة شهد');
+    }
   }
 
   /** The store a product belongs to, active or not, for access checks. */

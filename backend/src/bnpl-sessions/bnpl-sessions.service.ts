@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, UnauthorizedException, HttpCode, HttpStatus, Headers } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, UnauthorizedException, HttpCode, HttpStatus, Headers } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BnplSession, SessionStatus } from './entities/bnpl-session.entity';
@@ -50,6 +50,12 @@ export class BnplSessionsService {
         });
         if (!store) {
             throw new NotFoundException(`Store with ID ${createSessionDto.store_id} not found`);
+        }
+
+        // Only a store the admin approved, and has not suspended, may charge
+        // customers, whether from its own website or the vendor's till.
+        if (store.status !== 'approved' || !store.isActive) {
+            throw new ForbiddenException('المتجر غير مفعّل بعد، بانتظار موافقة إدارة شهد');
         }
 
         // Validate API Key or Bearer Token

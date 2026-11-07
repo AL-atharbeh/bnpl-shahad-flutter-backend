@@ -89,9 +89,14 @@ export class StoresService {
     return { apiKey, apiSecret };
   }
 
-  async getStoreById(id: number): Promise<Store> {
+  /**
+   * A store as the public sees it: only once it is live. Its own vendor and
+   * admins pass includeInactive to reach it while it is under review,
+   * rejected or suspended.
+   */
+  async getStoreById(id: number, includeInactive = false): Promise<Store> {
     const store = await this.storeRepository.findOne({
-      where: { id, isActive: true },
+      where: includeInactive ? { id } : { id, isActive: true },
       relations: ['categoryRelation', 'products'],
     });
 

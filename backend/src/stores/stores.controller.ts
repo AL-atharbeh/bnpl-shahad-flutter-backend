@@ -181,10 +181,10 @@ export class StoresController {
   @Get(':id')
   @ApiOperation({ summary: 'Get store by ID' })
   async getStore(@Param('id') id: number, @Req() req: any) {
-    const store = await this.storesService.getStoreById(id);
     const isOwnerOrAdmin =
       req.user?.role === 'admin' ||
       (req.user?.role === 'vendor' && Number(req.user.storeId) === Number(id));
+    const store = await this.storesService.getStoreById(id, isOwnerOrAdmin);
     return {
       success: true,
       data: isOwnerOrAdmin ? store : publicStore(store),

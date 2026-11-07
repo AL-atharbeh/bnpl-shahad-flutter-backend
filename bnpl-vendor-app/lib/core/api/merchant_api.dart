@@ -37,6 +37,10 @@ class MerchantApi {
   Future<Map<String, dynamic>> register(Map<String, dynamic> data) async =>
       _map(_data(await client.post('/auth/vendor/register', data)));
 
+  /// The signed-in vendor and their store's review status.
+  Future<Map<String, dynamic>> me() async =>
+      _map(_data(await client.get('/auth/vendor/me')));
+
   // Dashboard & reports
   Future<Map<String, dynamic>> dashboardStats(int storeId) async => _map(
     _data(await client.get('/reports/stats', query: {'storeId': storeId})),

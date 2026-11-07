@@ -10,7 +10,7 @@ import 'core/l10n/language_service.dart';
 import 'core/session/session_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/login_page.dart';
-import 'features/shell/merchant_shell.dart';
+import 'features/shell/review_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,7 +53,7 @@ class MerchantApp extends StatelessWidget {
       ],
       // Keyed on the account so signing out drops every tab's state.
       home: signedIn
-          ? MerchantShell(key: ValueKey(context.read<SessionService>().storeId))
+          ? ReviewGate(key: ValueKey(context.read<SessionService>().storeId))
           : const LoginPage(),
     );
   }

@@ -103,6 +103,7 @@ export class ProductsController {
   @ApiOperation({ summary: 'Create new product' })
   async createProduct(@Body() dto: CreateProductDto, @Req() req: any) {
     assertStoreAccess(req.user, dto.store_id);
+    if (req.user.role === 'vendor') await this.productsService.assertStoreLive(dto.store_id);
     const product = await this.productsService.create(dto);
     return {
       success: true,
@@ -121,8 +122,10 @@ export class ProductsController {
     @Req() req: any,
   ) {
     // The product must be the vendor's now, and stay theirs after the edit.
-    assertStoreAccess(req.user, await this.productsService.getProductStoreId(id));
+    const storeId = await this.productsService.getProductStoreId(id);
+    assertStoreAccess(req.user, storeId);
     if (dto.store_id !== undefined) assertStoreAccess(req.user, dto.store_id);
+    if (req.user.role === 'vendor') await this.productsService.assertStoreLive(storeId);
     const product = await this.productsService.update(id, dto);
     return {
       success: true,
@@ -136,7 +139,9 @@ export class ProductsController {
   @Delete(':id')
   @ApiOperation({ summary: 'Delete product' })
   async deleteProduct(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
-    assertStoreAccess(req.user, await this.productsService.getProductStoreId(id));
+    const storeId = await this.productsService.getProductStoreId(id);
+    assertStoreAccess(req.user, storeId);
+    if (req.user.role === 'vendor') await this.productsService.assertStoreLive(storeId);
     await this.productsService.remove(id);
     return {
       success: true,

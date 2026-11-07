@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Sidebar from "./Sidebar";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Languages } from "lucide-react";
+import { Languages, Clock, XCircle, RefreshCw, LogOut, Store } from "lucide-react";
+import { getVendorAccount } from "@/services/api";
+
+type Review = "checking" | "live" | "pending" | "rejected";
 
 export default function DashboardLayout({
     children,
@@ -12,6 +16,8 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     const [vendor, setVendor] = useState<any>(null);
+    const [review, setReview] = useState<Review>("checking");
+    const [refreshing, setRefreshing] = useState(false);
     const router = useRouter();
     const { language, setLanguage, t } = useLanguage();
 
@@ -32,6 +38,33 @@ export default function DashboardLayout({
         }
     }, [router]);
 
+    // A new store waits for an admin before it can sell. Ask the server rather
+    // than trusting what was saved at sign-in, so approval shows up on its own.
+    const checkReview = useCallback(async () => {
+        try {
+            const res = await getVendorAccount();
+            const store = res.data?.data?.store;
+            if (store?.status === "approved" && store?.isActive) setReview("live");
+            else if (store?.status === "rejected") setReview("rejected");
+            else setReview("pending");
+        } catch {
+            // The server still refuses an unapproved store's sales, so a failed
+            // check should not lock an approved merchant out of the dashboard.
+            setReview("live");
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!vendor) return;
+        checkReview();
+    }, [vendor, checkReview]);
+
+    useEffect(() => {
+        if (review !== "pending") return;
+        const timer = setInterval(checkReview, 30000);
+        return () => clearInterval(timer);
+    }, [review, checkReview]);
+
     const handleLogout = () => {
         localStorage.removeItem("vendor_token");
         localStorage.removeItem("vendor_user");
@@ -42,7 +75,86 @@ export default function DashboardLayout({
         setLanguage(language === "ar" ? "en" : "ar");
     };
 
-    if (!vendor) return null;
+    const refresh = async () => {
+        setRefreshing(true);
+        await checkReview();
+        setRefreshing(false);
+    };
+
+    if (!vendor || review === "checking") return null;
+
+    if (review !== "live") {
+        const ar = language === "ar";
+        const pending = review === "pending";
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-[#01160e] p-6 relative" dir={ar ? "rtl" : "ltr"}>
+                <button
+                    onClick={toggleLanguage}
+                    className={`absolute top-8 ${ar ? "left-8" : "right-8"} flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-[#011f18]/80 px-4 py-2 text-xs font-bold text-emerald-400 hover:bg-emerald-500/10 transition-all`}
+                >
+                    <Languages className="h-4 w-4" />
+                    {ar ? "English" : "العربية"}
+                </button>
+
+                <div className="w-full max-w-lg glass rounded-3xl p-10 text-center space-y-6">
+                    <div className="flex justify-center">
+                        <div className={`h-20 w-20 rounded-full flex items-center justify-center ${pending ? "bg-amber-500/10 border border-amber-500/30" : "bg-red-500/10 border border-red-500/30"}`}>
+                            {pending ? <Clock className="h-10 w-10 text-amber-400" /> : <XCircle className="h-10 w-10 text-red-400" />}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <h1 className="text-2xl font-black text-white">
+                            {pending
+                                ? (ar ? "متجرك قيد المراجعة" : "Your store is under review")
+                                : (ar ? "لم تتم الموافقة على متجرك" : "Your store was not approved")}
+                        </h1>
+                        <p className="text-sm leading-7 text-slate-400">
+                            {pending
+                                ? (ar
+                                    ? "استلمنا طلب انضمامك. ستراجع إدارة شهد بيانات متجرك، وتفتح لك لوحة التحكم ونقطة البيع فور الموافقة. تُحدَّث هذه الصفحة تلقائياً."
+                                    : "We received your request. Shahed will review your store and open your dashboard and point of sale once approved. This page updates on its own.")
+                                : (ar
+                                    ? "راجعت الإدارة طلبك ولم تتم الموافقة عليه. للاستفسار أو لتقديم الطلب من جديد، تواصل مع إدارة شهد."
+                                    : "Shahed reviewed your request and did not approve it. To ask why or apply again, contact the Shahed team.")}
+                        </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 text-start text-sm text-slate-300 flex items-center gap-3">
+                        <Store className="h-5 w-5 text-emerald-400 flex-shrink-0" />
+                        <span>{vendor.name}</span>
+                    </div>
+
+                    {pending && (
+                        <Link
+                            href="/auth/store-setup"
+                            className="block w-full rounded-xl border border-emerald-500/30 bg-emerald-500/10 py-3 text-sm font-bold text-emerald-400 hover:bg-emerald-500/20 transition-all"
+                        >
+                            {ar ? "أكمل بيانات متجرك لتسريع المراجعة" : "Complete your store details to speed up review"}
+                        </Link>
+                    )}
+
+                    <div className="flex gap-3">
+                        <button
+                            onClick={refresh}
+                            disabled={refreshing}
+                            className="btn-financial flex-1 rounded-xl py-3 text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                            {ar ? "تحديث الحالة" : "Check again"}
+                        </button>
+                        <button
+                            onClick={handleLogout}
+                            className="flex-1 rounded-xl border border-slate-800 py-3 text-sm font-bold text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all flex items-center justify-center gap-2"
+                        >
+                            <LogOut className="h-4 w-4" />
+                            {t("logout")}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen bg-[#01160e] text-slate-50 overflow-hidden" dir={language === "ar" ? "rtl" : "ltr"}>
