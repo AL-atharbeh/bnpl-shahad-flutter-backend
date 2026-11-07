@@ -8,7 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Languages, Clock, XCircle, RefreshCw, LogOut, Store } from "lucide-react";
 import { getVendorAccount } from "@/services/api";
 
-type Review = "checking" | "live" | "pending" | "rejected";
+type Review = "checking" | "live" | "pending" | "rejected" | "suspended";
 
 export default function DashboardLayout({
     children,
@@ -48,6 +48,7 @@ export default function DashboardLayout({
             setApplication(res.data?.data?.application || {});
             if (store?.status === "approved" && store?.isActive) setReview("live");
             else if (store?.status === "rejected") setReview("rejected");
+            else if (store?.status === "suspended") setReview("suspended");
             else setReview("pending");
         } catch {
             // The server still refuses an unapproved store's sales, so a failed
@@ -62,7 +63,7 @@ export default function DashboardLayout({
     }, [vendor, checkReview]);
 
     useEffect(() => {
-        if (review !== "pending") return;
+        if (review !== "pending" && review !== "suspended") return;
         const timer = setInterval(checkReview, 30000);
         return () => clearInterval(timer);
     }, [review, checkReview]);
@@ -88,6 +89,7 @@ export default function DashboardLayout({
     if (review !== "live") {
         const ar = language === "ar";
         const pending = review === "pending";
+        const suspended = review === "suspended";
         const submitted = Boolean(application.submittedAt);
         return (
             <div className="flex min-h-screen items-center justify-center bg-[#01160e] p-6 relative" dir={ar ? "rtl" : "ltr"}>
@@ -108,14 +110,20 @@ export default function DashboardLayout({
 
                     <div className="space-y-2">
                         <h1 className="text-2xl font-black text-white">
-                            {!pending
+                            {suspended
+                                ? (ar ? "تم إيقاف متجرك" : "Your store is suspended")
+                                : !pending
                                 ? (ar ? "لم تتم الموافقة على متجرك" : "Your store was not approved")
                                 : submitted
                                     ? (ar ? "طلبك قيد المراجعة" : "Your application is under review")
                                     : (ar ? "أكمل طلب الانضمام" : "Complete your application")}
                         </h1>
                         <p className="text-sm leading-7 text-slate-400">
-                            {!pending
+                            {suspended
+                                ? (ar
+                                    ? "أوقفت إدارة شهد متجرك مؤقتاً، فلا يمكنه البيع الآن. تواصل مع إدارة شهد لإعادة تفعيله. تُحدَّث هذه الصفحة تلقائياً."
+                                    : "Shahed has suspended your store, so it cannot sell for now. Contact Shahed to restore it. This page updates on its own.")
+                                : !pending
                                 ? (ar
                                     ? "راجعت الإدارة طلبك ولم توافق عليه بعد. صحّح ما يلزم وأعد إرسال الطلب."
                                     : "Shahed reviewed your application and did not approve it yet. Fix what is needed and submit again.")
@@ -131,7 +139,7 @@ export default function DashboardLayout({
 
                     {!pending && application.reviewNote && (
                         <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-start text-sm text-red-300">
-                            <div className="font-black mb-1">{ar ? "سبب الرفض" : "Reason"}</div>
+                            <div className="font-black mb-1">{ar ? (suspended ? "سبب الإيقاف" : "سبب الرفض") : "Reason"}</div>
                             {application.reviewNote}
                         </div>
                     )}
@@ -141,7 +149,7 @@ export default function DashboardLayout({
                         <span>{vendor.name}</span>
                     </div>
 
-                    {(!submitted || !pending) && (
+                    {!suspended && (!submitted || !pending) && (
                         <Link
                             href="/application"
                             className="btn-financial block w-full rounded-xl py-3 text-sm font-bold"

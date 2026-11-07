@@ -12,7 +12,7 @@ import '../auth/store_setup_page.dart';
 import '../settings/application_page.dart';
 import 'merchant_shell.dart';
 
-enum _Review { checking, live, pending, rejected }
+enum _Review { checking, live, pending, rejected, suspended }
 
 /// A new store waits for an admin before it can sell. Until then the merchant
 /// sees where their request stands instead of the dashboard, and the screen
@@ -61,6 +61,8 @@ class _ReviewGateState extends State<ReviewGate> {
         next = _Review.live;
       } else if (store['status'] == 'rejected') {
         next = _Review.rejected;
+      } else if (store['status'] == 'suspended') {
+        next = _Review.suspended;
       } else {
         next = _Review.pending;
       }
@@ -75,7 +77,7 @@ class _ReviewGateState extends State<ReviewGate> {
     setState(() => _review = next);
 
     _poll?.cancel();
-    if (next == _Review.pending) {
+    if (next == _Review.pending || next == _Review.suspended) {
       _poll = Timer.periodic(const Duration(seconds: 30), (_) => _check());
     }
   }
@@ -115,6 +117,7 @@ class _ReviewGateState extends State<ReviewGate> {
         return const MerchantShell();
       case _Review.pending:
       case _Review.rejected:
+      case _Review.suspended:
         return _buildReview(context, pending: _review == _Review.pending);
     }
   }
@@ -123,6 +126,7 @@ class _ReviewGateState extends State<ReviewGate> {
     final session = context.watch<SessionService>();
     final language = context.watch<LanguageService>();
     final color = pending ? AppColors.warning : AppColors.error;
+    final suspended = _review == _Review.suspended;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -164,7 +168,9 @@ class _ReviewGateState extends State<ReviewGate> {
                   const SizedBox(height: 28),
                   Text(
                     context.tr(
-                      !pending
+                      suspended
+                          ? 'reviewSuspendedTitle'
+                          : !pending
                           ? 'reviewRejectedTitle'
                           : _submitted
                           ? 'reviewSubmittedTitle'
@@ -180,7 +186,9 @@ class _ReviewGateState extends State<ReviewGate> {
                   const SizedBox(height: 12),
                   Text(
                     context.tr(
-                      !pending
+                      suspended
+                          ? 'reviewSuspendedBody'
+                          : !pending
                           ? 'reviewRejectedBody'
                           : _submitted
                           ? 'reviewPendingBody'
@@ -202,7 +210,7 @@ class _ReviewGateState extends State<ReviewGate> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Text(
-                        '${context.tr('rejectionReason')}: $_reviewNote',
+                        '${context.tr(suspended ? 'suspensionReason' : 'rejectionReason')}: $_reviewNote',
                         style: const TextStyle(
                           color: AppColors.error,
                           height: 1.5,
@@ -229,7 +237,13 @@ class _ReviewGateState extends State<ReviewGate> {
                           ),
                         ),
                         StatusChip(
-                          label: context.tr(pending ? 'pending' : 'rejected'),
+                          label: context.tr(
+                            pending
+                                ? 'pending'
+                                : suspended
+                                ? 'suspended'
+                                : 'rejected',
+                          ),
                           tone: pending
                               ? StatusTone.warning
                               : StatusTone.danger,
@@ -238,7 +252,9 @@ class _ReviewGateState extends State<ReviewGate> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  if (!_submitted || !pending)
+                  if (suspended)
+                    const SizedBox.shrink()
+                  else if (!_submitted || !pending)
                     PrimaryButton(
                       label: !pending
                           ? context.tr('fixAndResubmit')

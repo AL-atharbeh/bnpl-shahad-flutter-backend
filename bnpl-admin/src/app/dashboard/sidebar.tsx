@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { storesService } from "@/services/stores.service";
 
 const navItems = [
   { href: "/dashboard", label: "الرئيسية" },
   { href: "/dashboard/users", label: "المستخدمون" },
   { href: "/dashboard/stores", label: "المتاجر" },
+  { href: "/dashboard/vendors", label: "حسابات التجار" },
   { href: "/dashboard/categories", label: "التصنيفات" },
   { href: "/dashboard/offers", label: "العروض" },
   { href: "/dashboard/banners", label: "البانرات" },
@@ -26,6 +29,19 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  // Applications merchants sent that wait on an admin's decision.
+  const [awaitingReview, setAwaitingReview] = useState(0);
+
+  useEffect(() => {
+    storesService
+      .getAll()
+      .then((res) =>
+        setAwaitingReview(
+          (res.data || []).filter((s) => s.status === "pending" && s.applicationSubmittedAt).length,
+        ),
+      )
+      .catch(() => undefined);
+  }, [pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -59,6 +75,14 @@ export function Sidebar() {
                 }`}
             >
               <span>{item.label}</span>
+              {item.href === "/dashboard/stores" && awaitingReview > 0 && (
+                <span
+                  className="rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-amber-950"
+                  title="طلبات تجار بانتظار القرار"
+                >
+                  {awaitingReview}
+                </span>
+              )}
               {isActive && (
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
               )}

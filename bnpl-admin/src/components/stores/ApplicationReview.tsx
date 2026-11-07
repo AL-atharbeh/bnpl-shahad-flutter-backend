@@ -23,7 +23,7 @@ export default function ApplicationReview({
   onDecide,
 }: {
   store: Store;
-  onDecide: (status: "approved" | "rejected") => Promise<void>;
+  onDecide: (status: "approved" | "rejected" | "suspended") => Promise<void>;
 }) {
   const [opening, setOpening] = useState<DocType | null>(null);
   const [error, setError] = useState("");
@@ -103,28 +103,38 @@ export default function ApplicationReview({
       </div>
       {error && <p className="text-xs text-red-400">{error}</p>}
 
-      {store.status === "rejected" && store.reviewNote && (
+      {(store.status === "rejected" || store.status === "suspended") && store.reviewNote && (
         <p className="rounded-lg border border-red-500/20 bg-red-500/5 p-3 text-xs text-red-300">
-          سبب الرفض السابق: {store.reviewNote}
+          {store.status === "suspended" ? "سبب الإيقاف" : "سبب الرفض السابق"}: {store.reviewNote}
         </p>
       )}
 
-      {store.status !== "approved" && (
-        <div className="flex gap-2 border-t border-slate-800 pt-4">
+      <div className="flex flex-wrap gap-2 border-t border-slate-800 pt-4">
+        {store.status === "approved" && (
+          <button
+            onClick={() => onDecide("suspended")}
+            className="rounded-lg border border-amber-500/40 px-4 py-2 text-sm font-semibold text-amber-300 hover:bg-amber-500/10"
+          >
+            ⏸ إيقاف المتجر مع ذكر السبب
+          </button>
+        )}
+        {store.status !== "approved" && (
           <button
             onClick={() => onDecide("approved")}
             className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
           >
-            ✓ قبول وتفعيل المتجر
+            {store.status === "suspended" ? "▶ إعادة تفعيل المتجر" : "✓ قبول وتفعيل المتجر"}
           </button>
+        )}
+        {(store.status === "pending" || store.status === "rejected" || !store.status) && (
           <button
             onClick={() => onDecide("rejected")}
             className="rounded-lg border border-red-500/40 px-4 py-2 text-sm font-semibold text-red-300 hover:bg-red-500/10"
           >
             ✕ رفض مع ذكر السبب
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </section>
   );
 }

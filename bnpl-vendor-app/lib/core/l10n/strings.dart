@@ -292,6 +292,11 @@ const Map<String, Map<String, String>> kStrings = {
     'applicationIncomplete': 'أكمل الحقول المعلّمة بالأحمر قبل الإرسال',
     'invalidValue': 'غير صحيح',
     'rejectionReason': 'سبب الرفض',
+    'suspensionReason': 'سبب الإيقاف',
+    'suspended': 'موقوف',
+    'reviewSuspendedTitle': 'تم إيقاف متجرك',
+    'reviewSuspendedBody':
+        'أوقفت إدارة شهد متجرك مؤقتاً، فلا يمكنه البيع الآن. تواصل مع إدارة شهد لإعادة تفعيله. تتحدّث هذه الشاشة تلقائياً.',
     'applicationLocked':
         'متجرك مفعّل. لتعديل بيانات المالك أو الحساب البنكي تواصل مع إدارة شهد.',
     'completeApplication': 'إكمال طلب الانضمام',
@@ -592,6 +597,11 @@ const Map<String, Map<String, String>> kStrings = {
         'Complete the fields marked in red before submitting',
     'invalidValue': 'invalid',
     'rejectionReason': 'Reason',
+    'suspensionReason': 'Reason',
+    'suspended': 'Suspended',
+    'reviewSuspendedTitle': 'Your store is suspended',
+    'reviewSuspendedBody':
+        'Shahed has suspended your store, so it cannot sell for now. Contact Shahed to restore it. This screen updates on its own.',
     'applicationLocked':
         'Your store is active. To change owner or bank details, contact Shahed.',
     'completeApplication': 'Complete application',

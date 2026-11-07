@@ -1,11 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { unlink } from 'fs/promises';
+import { randomInt } from 'crypto';
+import * as bcrypt from 'bcrypt';
 import { privateDocumentPath, storePrivateDocument } from '../common/upload-storage';
 import {
   DOCUMENT_TYPES,
   DocumentType,
   TERMS_VERSION,
   applicationMissing,
+  hasBeenApproved,
   normalizeIban,
 } from './merchant-application';
 import { v4 as uuidv4 } from 'uuid';
@@ -74,19 +77,23 @@ export class StoresService {
   }
 
   async updateStoreStatus(id: number, status: string, note?: string): Promise<Store> {
-    if (!['approved', 'rejected', 'pending'].includes(status)) {
-      throw new BadRequestException('status must be approved, rejected or pending');
+    if (!['approved', 'rejected', 'pending', 'suspended'].includes(status)) {
+      throw new BadRequestException('status must be approved, rejected, pending or suspended');
     }
     const store = await this.storeRepository.findOne({ where: { id } });
 
     if (!store) {
       throw new NotFoundException('المتجر غير موجود');
     }
+    // Suspending stops a live store; one that never went live is rejected instead.
+    if (status === 'suspended' && store.status !== 'approved') {
+      throw new BadRequestException('يمكن إيقاف المتاجر المفعّلة فقط');
+    }
 
     store.status = status;
     store.isActive = status === 'approved';
-    // The merchant sees why they were turned down; an approval clears it.
-    store.reviewNote = status === 'rejected' ? (note || '').trim() || null : null;
+    // The merchant sees why they were turned down or stopped; approval clears it.
+    store.reviewNote = ['rejected', 'suspended'].includes(status) ? (note || '').trim() || null : null;
     
     // Generate credentials if they don't exist and store is being approved
     if (status === 'approved' && (!store.apiKey || !store.apiSecret)) {
@@ -342,8 +349,10 @@ export class StoresService {
    */
   async submitApplication(storeId: number, termsAccepted: boolean): Promise<Store> {
     const store = await this.getStoreById(storeId, true);
-    if (store.status === 'approved') {
-      throw new BadRequestException('المتجر مفعّل بالفعل');
+    if (hasBeenApproved(store.status)) {
+      throw new BadRequestException(
+        store.status === 'suspended' ? 'المتجر موقوف من الإدارة' : 'المتجر مفعّل بالفعل',
+      );
     }
     const missing = applicationMissing(store);
     if (missing.length) {
@@ -391,10 +400,54 @@ export class StoresService {
   /**
    * Get all vendors for admin dropdown
    */
-  async getAllVendors(): Promise<Vendor[]> {
-    return this.vendorRepository.find({
+  /** Every merchant account with its store's standing, without password hashes. */
+  async getAllVendors() {
+    const vendors = await this.vendorRepository.find({
+      relations: ['store'],
       order: { name: 'ASC' },
     });
+    return vendors.map((v) => this.vendorSummary(v));
+  }
+
+  async setVendorActive(id: number, isActive: boolean) {
+    const vendor = await this.vendorRepository.findOne({ where: { id }, relations: ['store'] });
+    if (!vendor) throw new NotFoundException('التاجر غير موجود');
+    vendor.isActive = isActive;
+    await this.vendorRepository.save(vendor);
+    return this.vendorSummary(vendor);
+  }
+
+  async resetVendorPassword(id: number) {
+    const vendor = await this.vendorRepository.findOne({ where: { id } });
+    if (!vendor) throw new NotFoundException('التاجر غير موجود');
+    // Unambiguous characters, since the admin reads it out to the merchant.
+    const alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    const temporaryPassword = Array.from({ length: 12 }, () => alphabet[randomInt(alphabet.length)]).join('');
+    vendor.passwordHash = await bcrypt.hash(temporaryPassword, 10);
+    await this.vendorRepository.save(vendor);
+    return { id: vendor.id, temporaryPassword };
+  }
+
+  private vendorSummary(v: Vendor) {
+    return {
+      id: v.id,
+      name: v.name,
+      email: v.email,
+      phone: v.phone,
+      isActive: v.isActive,
+      createdAt: v.createdAt,
+      storeId: v.storeId,
+      store: v.store
+        ? {
+            id: v.store.id,
+            name: v.store.name,
+            nameAr: v.store.nameAr,
+            status: v.store.status,
+            isActive: v.store.isActive,
+            applicationSubmittedAt: v.store.applicationSubmittedAt,
+          }
+        : null,
+    };
   }
 }
 

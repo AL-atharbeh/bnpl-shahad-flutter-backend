@@ -3,7 +3,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { Response } from 'express';
 import { documentContentType } from '../common/upload-storage';
-import { DOCUMENT_TYPES, DocumentType, LOCKED_AFTER_APPROVAL } from './merchant-application';
+import { DOCUMENT_TYPES, DocumentType, LOCKED_AFTER_APPROVAL, hasBeenApproved } from './merchant-application';
 import { ApiTags, ApiOperation, ApiQuery, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { StoresService } from './stores.service';
 import { ProductsService } from '../products/products.service';
@@ -99,6 +99,35 @@ export class StoresController {
       success: true,
       data: vendors,
     };
+  }
+
+  /** Suspends or restores a merchant's account: a suspended one cannot sign in. */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @Put('admin/vendors/:id/status')
+  @ApiOperation({ summary: 'Suspend or restore a vendor account (admin)' })
+  async setVendorActive(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('isActive') isActive: unknown,
+  ) {
+    if (typeof isActive !== 'boolean') {
+      throw new BadRequestException('isActive must be true or false');
+    }
+    return { success: true, data: await this.storesService.setVendorActive(id, isActive) };
+  }
+
+  /**
+   * Gives a merchant a new one-time password, shown to the admin once, for a
+   * merchant who is locked out. Their old password stops working.
+   */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @Post('admin/vendors/:id/reset-password')
+  @ApiOperation({ summary: 'Reset a vendor password (admin)' })
+  async resetVendorPassword(@Param('id', ParseIntPipe) id: number) {
+    return { success: true, data: await this.storesService.resetVendorPassword(id) };
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -234,7 +263,7 @@ export class StoresController {
       // Once approved, the owner and bank details only change through an
       // admin, so a stolen login cannot redirect the store's money.
       const current = await this.storesService.getStoreById(id, true);
-      if (current.status === 'approved') {
+      if (hasBeenApproved(current.status)) {
         const locked = LOCKED_AFTER_APPROVAL.filter(
           (f) => updateStoreDto[f] !== undefined && updateStoreDto[f] !== current[f],
         );
@@ -273,7 +302,7 @@ export class StoresController {
 
     if (req.user.role === 'vendor') {
       const current = await this.storesService.getStoreById(id, true);
-      if (current.status === 'approved') {
+      if (hasBeenApproved(current.status)) {
         throw new ForbiddenException('لتغيير مستندات متجر مفعّل تواصل مع إدارة شهد');
       }
     }

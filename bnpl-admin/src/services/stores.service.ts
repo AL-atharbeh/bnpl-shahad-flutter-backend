@@ -78,6 +78,14 @@ export interface Vendor {
     storeId: number;
     isActive: boolean;
     createdAt: string;
+    store?: {
+        id: number;
+        name: string;
+        nameAr?: string;
+        status?: string;
+        isActive: boolean;
+        applicationSubmittedAt?: string;
+    } | null;
 }
 
 export interface StoreStats {
@@ -113,7 +121,7 @@ export const storesService = {
         return response.data;
     },
 
-    // A rejection carries a note the merchant sees in their app.
+    // A rejection or suspension carries a note the merchant sees in their app.
     updateStatus: async (id: number, status: string, note?: string) => {
         const response = await api.put<{ success: boolean; data: Store }>(`/stores/admin/${id}/status`, { status, note });
         return response.data;
@@ -142,6 +150,18 @@ export const storesService = {
 
     getVendors: async () => {
         const response = await api.get<{ success: boolean; data: Vendor[] }>('/stores/admin/vendors');
+        return response.data;
+    },
+
+    // A suspended merchant cannot sign in until restored.
+    setVendorActive: async (id: number, isActive: boolean) => {
+        const response = await api.put<{ success: boolean; data: Vendor }>(`/stores/admin/vendors/${id}/status`, { isActive });
+        return response.data;
+    },
+
+    // Returns a one-time password the admin hands to the merchant.
+    resetVendorPassword: async (id: number) => {
+        const response = await api.post<{ success: boolean; data: { id: number; temporaryPassword: string } }>(`/stores/admin/vendors/${id}/reset-password`);
         return response.data;
     },
 

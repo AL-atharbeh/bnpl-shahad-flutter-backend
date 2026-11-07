@@ -16,6 +16,13 @@ export type DocumentType = keyof typeof DOCUMENT_TYPES;
  * goes. Changing them afterwards goes through an admin, so a stolen login
  * cannot redirect settlements.
  */
+/**
+ * A store an admin has approved at least once: live now, or suspended. Its
+ * merchant can no longer change the vetted details or reapply their way out.
+ */
+export const hasBeenApproved = (status?: string) =>
+  status === 'approved' || status === 'suspended';
+
 export const LOCKED_AFTER_APPROVAL = [
   'legalName',
   'commercialRegistrationNo',
