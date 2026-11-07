@@ -2,28 +2,40 @@ import { CallHandler, ExecutionContext, Injectable, NestInterceptor, SetMetadata
 import { Reflector } from '@nestjs/core';
 import { Observable, map } from 'rxjs';
 
-const SHOW_STORE_CREDENTIALS = 'showStoreCredentials';
+const SHOW_PRIVATE_STORE_FIELDS = 'showPrivateStoreFields';
 
 /**
- * Lets a route return store API keys. Only for routes that already check the
- * caller is that store or an admin.
+ * Lets a route return a store's private fields. Only for routes that already
+ * check the caller is that store or an admin.
  */
-export const ShowStoreCredentials = () => SetMetadata(SHOW_STORE_CREDENTIALS, true);
+export const ShowPrivateStoreFields = () => SetMetadata(SHOW_PRIVATE_STORE_FIELDS, true);
 
-const HIDDEN = new Set(['apiKey', 'apiSecret']);
+/** A store's API keys, and the application only it and admins may see. */
+const HIDDEN = new Set([
+  'apiKey',
+  'apiSecret',
+  'ownerNationalId',
+  'bankName',
+  'bankAccountHolder',
+  'iban',
+  'docCommercialRegistration',
+  'docTradeLicense',
+  'docOwnerId',
+  'reviewNote',
+]);
 
 /**
- * Removes store API keys from every response unless the route is marked
- * with @ShowStoreCredentials(). Stores travel inside many responses (home
+ * Removes those fields from every response unless the route is marked with
+ * @ShowPrivateStoreFields(). Stores travel inside many responses (home
  * deals, a customer's payments, products), so one safety net here beats
  * remembering to strip them in each place.
  */
 @Injectable()
-export class HideStoreCredentialsInterceptor implements NestInterceptor {
+export class HidePrivateStoreFieldsInterceptor implements NestInterceptor {
   constructor(private readonly reflector: Reflector) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    const show = this.reflector.getAllAndOverride<boolean>(SHOW_STORE_CREDENTIALS, [
+    const show = this.reflector.getAllAndOverride<boolean>(SHOW_PRIVATE_STORE_FIELDS, [
       context.getHandler(),
       context.getClass(),
     ]);

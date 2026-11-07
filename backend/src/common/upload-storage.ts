@@ -25,6 +25,44 @@ export function uploadedFilePath(folder: UploadFolder, filename: string): string
   return existsSync(path) ? path : null;
 }
 
+/**
+ * Merchant documents (registration, licence, owner ID). Unlike images they
+ * get no public URL: they sit in UPLOAD_DIR/documents and are only served
+ * through a route that checks the caller is the store or an admin.
+ */
+const DOCUMENT_TYPES: Record<string, string> = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'application/pdf': '.pdf',
+};
+
+export function documentContentType(filename: string): string {
+  const ext = extname(filename).toLowerCase();
+  return Object.keys(DOCUMENT_TYPES).find((k) => DOCUMENT_TYPES[k] === ext) || 'application/octet-stream';
+}
+
+export async function storePrivateDocument(file: Express.Multer.File): Promise<string> {
+  const ext = DOCUMENT_TYPES[file.mimetype];
+  if (!ext) {
+    throw new BadRequestException('Only JPG, PNG or PDF documents are allowed.');
+  }
+  if (process.env.UPLOAD_STORAGE !== 'disk') {
+    throw new BadRequestException('Document uploads need UPLOAD_STORAGE=disk.');
+  }
+  const dir = join(uploadRoot(), 'documents');
+  await mkdir(dir, { recursive: true });
+  const filename = `${Date.now()}-${randomBytes(12).toString('hex')}${ext}`;
+  await writeFile(join(dir, filename), file.buffer);
+  return filename;
+}
+
+/** The document's place on disk, or null for a missing or crafted name. */
+export function privateDocumentPath(filename: string): string | null {
+  if (!filename || basename(filename) !== filename || filename.startsWith('.')) return null;
+  const path = join(uploadRoot(), 'documents', filename);
+  return existsSync(path) ? path : null;
+}
+
 /** Stores the image and returns its public URL. */
 export async function storeUpload(
   folder: UploadFolder,

@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import * as express from 'express';
 import * as path from 'path';
 import { AppModule } from './app.module';
-import { HideStoreCredentialsInterceptor } from './common/hide-store-credentials.interceptor';
+import { HidePrivateStoreFieldsInterceptor } from './common/hide-private-store-fields.interceptor';
 
 /**
  * Shared application setup used by both the local server (main.ts) and the
@@ -52,8 +52,9 @@ export async function createApp(
     credentials: true,
   });
 
-  // Store API keys never leave the API unless a route opts in.
-  app.useGlobalInterceptors(new HideStoreCredentialsInterceptor(app.get(Reflector)));
+  // Store API keys, bank details, IDs and documents never leave the API
+  // unless a route opts in.
+  app.useGlobalInterceptors(new HidePrivateStoreFieldsInterceptor(app.get(Reflector)));
 
   app.useGlobalPipes(
     new ValidationPipe({

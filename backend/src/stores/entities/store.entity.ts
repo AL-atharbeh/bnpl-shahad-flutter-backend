@@ -121,6 +121,56 @@ export class Store {
   @Column({ name: 'payout_cycle', length: 50, default: 'weekly' })
   payoutCycle: string; // 'daily' | 'weekly' | 'monthly'
 
+  // Merchant application, reviewed by an admin before the store goes live.
+  // Bank details, the owner's ID and documents are private to the store and
+  // admins (see HidePrivateStoreFieldsInterceptor).
+
+  @Column({ name: 'legal_name', length: 255, nullable: true })
+  legalName: string;
+
+  @Column({ name: 'commercial_registration_no', length: 50, nullable: true })
+  commercialRegistrationNo: string;
+
+  @Column({ name: 'trade_license_no', length: 50, nullable: true })
+  tradeLicenseNo: string;
+
+  @Column({ name: 'city', length: 100, nullable: true })
+  city: string;
+
+  @Column({ name: 'owner_national_id', length: 20, nullable: true })
+  ownerNationalId: string;
+
+  @Column({ name: 'bank_name', length: 100, nullable: true })
+  bankName: string;
+
+  @Column({ name: 'bank_account_holder', length: 255, nullable: true })
+  bankAccountHolder: string;
+
+  @Column({ name: 'iban', length: 34, nullable: true })
+  iban: string;
+
+  @Column({ name: 'doc_commercial_registration', length: 255, nullable: true })
+  docCommercialRegistration: string;
+
+  @Column({ name: 'doc_trade_license', length: 255, nullable: true })
+  docTradeLicense: string;
+
+  @Column({ name: 'doc_owner_id', length: 255, nullable: true })
+  docOwnerId: string;
+
+  @Column({ name: 'terms_accepted_at', type: 'timestamp', nullable: true })
+  termsAcceptedAt: Date;
+
+  @Column({ name: 'terms_version', length: 20, nullable: true })
+  termsVersion: string;
+
+  @Column({ name: 'application_submitted_at', type: 'timestamp', nullable: true })
+  applicationSubmittedAt: Date;
+
+  /** Why an admin rejected the store, shown to the merchant. */
+  @Column({ name: 'review_note', type: 'text', nullable: true })
+  reviewNote: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsBoolean, Min, Max } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsBoolean, Min, Max, MaxLength } from 'class-validator';
 
 export class CreateStoreDto {
     @IsString()
@@ -105,4 +105,49 @@ export class CreateStoreDto {
     @IsString()
     @IsOptional()
     payoutCycle?: string;
+
+    // Merchant application. Formats are checked again, all together, when
+    // the merchant submits it for review.
+
+    @IsString()
+    @MaxLength(255)
+    @IsOptional()
+    legalName?: string;
+
+    @IsString()
+    @MaxLength(50)
+    @IsOptional()
+    commercialRegistrationNo?: string;
+
+    @IsString()
+    @MaxLength(50)
+    @IsOptional()
+    tradeLicenseNo?: string;
+
+    @IsString()
+    @MaxLength(100)
+    @IsOptional()
+    city?: string;
+
+    @IsString()
+    @MaxLength(20)
+    @IsOptional()
+    ownerNationalId?: string;
+
+    @IsString()
+    @MaxLength(100)
+    @IsOptional()
+    bankName?: string;
+
+    @IsString()
+    @MaxLength(255)
+    @IsOptional()
+    bankAccountHolder?: string;
+
+    // Up to 50 so it can arrive as people write it, with spaces; it is
+    // stored without them, at most 34 characters.
+    @IsString()
+    @MaxLength(50)
+    @IsOptional()
+    iban?: string;
 }

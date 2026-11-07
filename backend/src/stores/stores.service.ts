@@ -1,4 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { unlink } from 'fs/promises';
+import { privateDocumentPath, storePrivateDocument } from '../common/upload-storage';
+import {
+  DOCUMENT_TYPES,
+  DocumentType,
+  TERMS_VERSION,
+  applicationMissing,
+  normalizeIban,
+} from './merchant-application';
 import { v4 as uuidv4 } from 'uuid';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, In, LessThanOrEqual, MoreThanOrEqual, IsNull } from 'typeorm';
@@ -12,6 +21,7 @@ import { UpdateStoreDto } from './dto/update-store.dto';
 
 @Injectable()
 export class StoresService {
+  private readonly logger = new Logger(StoresService.name);
   constructor(
     @InjectRepository(Store)
     private storeRepository: Repository<Store>,
@@ -63,7 +73,10 @@ export class StoresService {
     return stores;
   }
 
-  async updateStoreStatus(id: number, status: string): Promise<Store> {
+  async updateStoreStatus(id: number, status: string, note?: string): Promise<Store> {
+    if (!['approved', 'rejected', 'pending'].includes(status)) {
+      throw new BadRequestException('status must be approved, rejected or pending');
+    }
     const store = await this.storeRepository.findOne({ where: { id } });
 
     if (!store) {
@@ -72,6 +85,8 @@ export class StoresService {
 
     store.status = status;
     store.isActive = status === 'approved';
+    // The merchant sees why they were turned down; an approval clears it.
+    store.reviewNote = status === 'rejected' ? (note || '').trim() || null : null;
     
     // Generate credentials if they don't exist and store is being approved
     if (status === 'approved' && (!store.apiKey || !store.apiSecret)) {
@@ -273,6 +288,14 @@ export class StoresService {
 
     // Update fields
     Object.assign(store, updateStoreDto);
+    if (updateStoreDto.iban !== undefined) {
+      const iban = normalizeIban(updateStoreDto.iban);
+      if (iban.length > 34) throw new BadRequestException('IBAN أطول من 34 حرفاً');
+      store.iban = iban || null;
+    }
+    if (updateStoreDto.ownerNationalId !== undefined) {
+      store.ownerNationalId = updateStoreDto.ownerNationalId.trim() || null;
+    }
 
     // Recalculate total commission rate if ratios changed
     if (updateStoreDto.bankCommissionRate !== undefined || updateStoreDto.platformCommissionRate !== undefined) {
@@ -287,6 +310,71 @@ export class StoresService {
     }
 
     return this.storeRepository.save(store);
+  }
+
+  /** Saves a merchant document privately and records it on the store. */
+  async saveDocument(storeId: number, type: DocumentType, file: Express.Multer.File): Promise<Store> {
+    const store = await this.getStoreById(storeId, true);
+    const column = DOCUMENT_TYPES[type];
+    const previous = store[column];
+
+    store[column] = await storePrivateDocument(file);
+    const saved = await this.storeRepository.save(store);
+
+    // The replaced file has no other owner; drop it so old IDs do not linger.
+    const oldPath = previous && privateDocumentPath(previous);
+    if (oldPath) await unlink(oldPath).catch(() => undefined);
+    return saved;
+  }
+
+  /** Where a store's document is on disk, or 404. */
+  async getDocumentPath(storeId: number, type: DocumentType): Promise<string> {
+    const store = await this.getStoreById(storeId, true);
+    const path = privateDocumentPath(store[DOCUMENT_TYPES[type]]);
+    if (!path) throw new NotFoundException('المستند غير موجود');
+    return path;
+  }
+
+  /**
+   * Sends the application to the admins once it is complete and the terms are
+   * accepted. A rejected store that fixed its application goes back to
+   * pending, so applying again needs no help from support.
+   */
+  async submitApplication(storeId: number, termsAccepted: boolean): Promise<Store> {
+    const store = await this.getStoreById(storeId, true);
+    if (store.status === 'approved') {
+      throw new BadRequestException('المتجر مفعّل بالفعل');
+    }
+    const missing = applicationMissing(store);
+    if (missing.length) {
+      throw new BadRequestException({ message: 'الطلب غير مكتمل', missing });
+    }
+    if (!termsAccepted) {
+      throw new BadRequestException('يجب الموافقة على الشروط والأحكام');
+    }
+
+    store.termsAcceptedAt = new Date();
+    store.termsVersion = TERMS_VERSION;
+    store.applicationSubmittedAt = new Date();
+    store.status = 'pending';
+    store.reviewNote = null;
+    const saved = await this.storeRepository.save(store);
+
+    try {
+      const admins = await this.usersService.findAllAdmins();
+      for (const admin of admins) {
+        await this.notificationsService.sendToUser(
+          admin.id,
+          'طلب تاجر جاهز للمراجعة',
+          `متجر «${store.nameAr || store.name}» أرسل طلبه مكتملاً مع المستندات`,
+          { type: 'store_application_submitted', storeId: String(store.id) },
+          'urgent',
+        );
+      }
+    } catch (err) {
+      this.logger.warn(`Could not notify admins of application ${store.id}: ${err.message}`);
+    }
+    return saved;
   }
 
   /**

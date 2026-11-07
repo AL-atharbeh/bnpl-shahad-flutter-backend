@@ -6,6 +6,7 @@ import { VendorLoginDto } from './dto/vendor-login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
+import { ShowPrivateStoreFields } from '../common/hide-private-store-fields.interceptor';
 
 @ApiTags('Vendor Auth')
 @Controller('auth/vendor')
@@ -29,6 +30,7 @@ export class VendorAuthController {
 
     @Get('me')
     @UseGuards(JwtAuthGuard, RolesGuard)
+    @ShowPrivateStoreFields()
     @Roles('vendor')
     @ApiBearerAuth()
     @ApiOperation({ summary: "The signed-in vendor and their store's review status" })

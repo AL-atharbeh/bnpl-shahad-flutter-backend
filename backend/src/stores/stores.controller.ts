@@ -1,5 +1,10 @@
-import { Controller, Get, Put, Post, Delete, Body, Param, Query, ParseIntPipe, UseGuards, Req, ForbiddenException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Put, Post, Delete, Body, Param, Query, ParseIntPipe, UseGuards, Req, Res, ForbiddenException, BadRequestException, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { Response } from 'express';
+import { documentContentType } from '../common/upload-storage';
+import { DOCUMENT_TYPES, DocumentType, LOCKED_AFTER_APPROVAL } from './merchant-application';
+import { ApiTags, ApiOperation, ApiQuery, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { StoresService } from './stores.service';
 import { ProductsService } from '../products/products.service';
 import { CreateStoreDto } from './dto/create-store.dto';
@@ -9,7 +14,7 @@ import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { assertStoreAccess, publicStore } from '../auth/store-access';
-import { ShowStoreCredentials } from '../common/hide-store-credentials.interceptor';
+import { ShowPrivateStoreFields } from '../common/hide-private-store-fields.interceptor';
 
 /** Fields only an admin may set: money, approval and placement. */
 const ADMIN_ONLY_STORE_FIELDS = [
@@ -55,7 +60,7 @@ export class StoresController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @ApiBearerAuth()
-  @ShowStoreCredentials()
+  @ShowPrivateStoreFields()
   @Get('admin/all')
   @ApiOperation({ summary: 'Get all stores for admin (includes pending/inactive)' })
   async getAllAdminStores() {
@@ -74,8 +79,9 @@ export class StoresController {
   async updateStoreStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body('status') status: string,
+    @Body('note') note?: string,
   ) {
-    const store = await this.storesService.updateStoreStatus(id, status);
+    const store = await this.storesService.updateStoreStatus(id, status, note);
     return {
       success: true,
       data: store,
@@ -177,7 +183,7 @@ export class StoresController {
    * and admins also get its API keys, for the credentials screen.
    */
   @UseGuards(OptionalJwtAuthGuard)
-  @ShowStoreCredentials()
+  @ShowPrivateStoreFields()
   @Get(':id')
   @ApiOperation({ summary: 'Get store by ID' })
   async getStore(@Param('id') id: number, @Req() req: any) {
@@ -209,6 +215,7 @@ export class StoresController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'vendor')
   @ApiBearerAuth()
+  @ShowPrivateStoreFields()
   @Put(':id')
   @ApiOperation({ summary: 'Update store details' })
   async updateStore(
@@ -223,6 +230,20 @@ export class StoresController {
       if (blocked.length) {
         throw new ForbiddenException(`هذه الحقول يعدّلها المشرف فقط: ${blocked.join(', ')}`);
       }
+
+      // Once approved, the owner and bank details only change through an
+      // admin, so a stolen login cannot redirect the store's money.
+      const current = await this.storesService.getStoreById(id, true);
+      if (current.status === 'approved') {
+        const locked = LOCKED_AFTER_APPROVAL.filter(
+          (f) => updateStoreDto[f] !== undefined && updateStoreDto[f] !== current[f],
+        );
+        if (locked.length) {
+          throw new ForbiddenException(
+            `لتغيير بيانات المالك أو الحساب البنكي بعد التفعيل تواصل مع إدارة شهد: ${locked.join(', ')}`,
+          );
+        }
+      }
     }
 
     const store = await this.storesService.updateStore(id, updateStoreDto);
@@ -230,5 +251,75 @@ export class StoresController {
       success: true,
       data: store,
     };
+  }
+
+  /** Uploads a merchant document: commercial-registration, trade-license or owner-id. */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'vendor')
+  @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
+  @ShowPrivateStoreFields()
+  @Post(':id/documents/:type')
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } }))
+  async uploadDocument(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('type') type: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: any,
+  ) {
+    assertStoreAccess(req.user, id);
+    const docType = this.documentType(type);
+    if (!file) throw new BadRequestException('File is not provided');
+
+    if (req.user.role === 'vendor') {
+      const current = await this.storesService.getStoreById(id, true);
+      if (current.status === 'approved') {
+        throw new ForbiddenException('لتغيير مستندات متجر مفعّل تواصل مع إدارة شهد');
+      }
+    }
+
+    const store = await this.storesService.saveDocument(id, docType, file);
+    return { success: true, data: { type: docType, uploaded: Boolean(store[DOCUMENT_TYPES[docType]]) } };
+  }
+
+  /** Streams a merchant document to the store itself or an admin. */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'vendor')
+  @ApiBearerAuth()
+  @Get(':id/documents/:type')
+  async getDocument(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('type') type: string,
+    @Req() req: any,
+    @Res() res: Response,
+  ) {
+    assertStoreAccess(req.user, id);
+    const path = await this.storesService.getDocumentPath(id, this.documentType(type));
+    res.setHeader('Content-Type', documentContentType(path));
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.sendFile(path);
+  }
+
+  /** Sends a complete application, with the terms accepted, for review. */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'vendor')
+  @ApiBearerAuth()
+  @ShowPrivateStoreFields()
+  @Post(':id/application/submit')
+  async submitApplication(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('termsAccepted') termsAccepted: boolean,
+    @Req() req: any,
+  ) {
+    assertStoreAccess(req.user, id);
+    const store = await this.storesService.submitApplication(id, termsAccepted === true);
+    return { success: true, data: store };
+  }
+
+  private documentType(type: string): DocumentType {
+    if (!(type in DOCUMENT_TYPES)) {
+      throw new BadRequestException(`type must be one of: ${Object.keys(DOCUMENT_TYPES).join(', ')}`);
+    }
+    return type as DocumentType;
   }
 }

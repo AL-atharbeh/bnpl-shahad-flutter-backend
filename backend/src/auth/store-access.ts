@@ -32,7 +32,18 @@ export function scopedStoreId(actor: StoreActor | undefined, storeId?: number | 
 }
 
 /** Store fields only the store itself and admins may see. */
-export const PRIVATE_STORE_FIELDS = ['apiKey', 'apiSecret'] as const;
+export const PRIVATE_STORE_FIELDS = [
+  'apiKey',
+  'apiSecret',
+  'ownerNationalId',
+  'bankName',
+  'bankAccountHolder',
+  'iban',
+  'docCommercialRegistration',
+  'docTradeLicense',
+  'docOwnerId',
+  'reviewNote',
+] as const;
 
 /** Copies a store without the fields the public must not see. */
 export function publicStore<T extends Record<string, any>>(store: T): T {

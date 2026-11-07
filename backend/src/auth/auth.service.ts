@@ -19,6 +19,7 @@ import { Vendor } from '../vendors/entities/vendor.entity';
 import { OtpService } from './otp.service';
 import { UsersService } from '../users/users.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { TERMS_VERSION, applicationMissing } from '../stores/merchant-application';
 import { CheckPhoneDto } from './dto/check-phone.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
@@ -498,6 +499,12 @@ export class AuthService {
           nameAr: store.nameAr,
           status: store.status,
           isActive: store.isActive,
+        },
+        application: {
+          submittedAt: store.applicationSubmittedAt,
+          missing: applicationMissing(store),
+          reviewNote: store.reviewNote,
+          termsVersion: TERMS_VERSION,
         },
       },
     };
