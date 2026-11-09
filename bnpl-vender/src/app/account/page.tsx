@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { KeyRound, Loader2, Save, UserRound } from "lucide-react";
-import { changeVendorPassword, getVendorAccount, updateVendorProfile } from "@/services/api";
+import { KeyRound, Loader2, Save, Trash2, UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { changeVendorPassword, deleteVendorAccount, getVendorAccount, updateVendorProfile } from "@/services/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const errorText = (err: any, fallback: string) => {
@@ -15,6 +16,11 @@ const errorText = (err: any, fallback: string) => {
 export default function AccountPage() {
     const { language } = useLanguage();
     const ar = language === "ar";
+    const router = useRouter();
+
+    const [deletePassword, setDeletePassword] = useState("");
+    const [deleting, setDeleting] = useState(false);
+    const [deleteMsg, setDeleteMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
     const [profile, setProfile] = useState({ name: "", email: "", phone: "" });
     const [savingProfile, setSavingProfile] = useState(false);
@@ -76,6 +82,26 @@ export default function AccountPage() {
             setPasswordMsg({ ok: false, text: errorText(err, ar ? "تعذر تغيير كلمة المرور" : "Could not change the password") });
         } finally {
             setSavingPassword(false);
+        }
+    };
+
+    const deleteAccount = async () => {
+        const sure = window.confirm(
+            ar
+                ? "سيُغلق حسابك نهائياً ولن تستطيع الدخول مرة أخرى. هل أنت متأكد؟"
+                : "Your account will be closed for good and you will not be able to sign in again. Are you sure?",
+        );
+        if (!sure) return;
+        setDeleting(true);
+        setDeleteMsg(null);
+        try {
+            await deleteVendorAccount(deletePassword);
+            localStorage.removeItem("vendor_token");
+            localStorage.removeItem("vendor_user");
+            router.push("/auth/login");
+        } catch (err) {
+            setDeleteMsg({ ok: false, text: errorText(err, ar ? "تعذر حذف الحساب" : "Could not delete the account") });
+            setDeleting(false);
         }
     };
 
@@ -157,6 +183,31 @@ export default function AccountPage() {
                     >
                         {savingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
                         {ar ? "تغيير كلمة المرور" : "Change password"}
+                    </button>
+                </section>
+
+                <section className="glass rounded-2xl p-8 space-y-5 border-red-900/30">
+                    <h3 className="flex items-center gap-2 border-b border-red-900/30 pb-4 text-lg font-bold text-white">
+                        <Trash2 className="h-5 w-5 text-red-400" />
+                        {ar ? "حذف الحساب" : "Delete account"}
+                    </h3>
+                    <p className="text-sm leading-7 text-slate-400">
+                        {ar
+                            ? "يُغلق حسابك نهائياً: لن تستطيع الدخول، ويختفي متجرك من تطبيق شهد وتتوقف مفاتيح الربط. نحتفظ بسجلات المبيعات والتسويات لأن القانون يلزمنا بذلك."
+                            : "This closes your account for good: you can no longer sign in, your store leaves the Shahed app and your API keys stop working. We keep sales and settlement records because the law requires it."}
+                    </p>
+                    <div className="max-w-sm space-y-2">
+                        <label className={label}>{ar ? "كلمة المرور للتأكيد" : "Password to confirm"}</label>
+                        <input type="password" autoComplete="current-password" className={input} value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} />
+                    </div>
+                    {message(deleteMsg)}
+                    <button
+                        onClick={deleteAccount}
+                        disabled={deleting || !deletePassword}
+                        className="flex items-center gap-2 rounded-xl border border-red-500/40 bg-red-500/10 px-6 py-3 text-sm font-bold text-red-300 hover:bg-red-500/20 disabled:opacity-50"
+                    >
+                        {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        {ar ? "حذف حسابي نهائياً" : "Delete my account"}
                     </button>
                 </section>
             </div>

@@ -1,9 +1,9 @@
-import { Body, Controller, Post, Get, Put, HttpCode, HttpStatus, UseGuards, Request, Query } from '@nestjs/common';
+import { Body, Controller, Post, Get, Put, Delete, HttpCode, HttpStatus, UseGuards, Request, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { VendorRegisterDto } from './dto/vendor-register.dto';
 import { VendorLoginDto } from './dto/vendor-login.dto';
-import { ChangeVendorPasswordDto, UpdateVendorProfileDto } from './dto/vendor-account.dto';
+import { ChangeVendorPasswordDto, DeleteVendorAccountDto, UpdateVendorProfileDto } from './dto/vendor-account.dto';
 import { VendorNotificationsService } from '../vendors/vendor-notifications.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
@@ -59,6 +59,17 @@ export class VendorAuthController {
     @ApiOperation({ summary: 'Change the signed-in vendor password' })
     async changePassword(@Request() req: any, @Body() dto: ChangeVendorPasswordDto) {
         return this.authService.changeVendorPassword(req.user.id, dto.currentPassword, dto.newPassword);
+    }
+
+    /** Closes the signed-in vendor's account; needs their password. */
+    @Delete('me')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('vendor')
+    @ApiBearerAuth()
+    @ApiOperation({ summary: "Delete the signed-in vendor's account" })
+    async deleteAccount(@Request() req: any, @Body() dto: DeleteVendorAccountDto) {
+        return this.authService.deleteVendorAccount(req.user.id, dto.password);
     }
 
     @Get('notifications')

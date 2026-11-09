@@ -82,6 +82,25 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> _deleteAccount() async {
+    final session = context.read<SessionService>();
+    final navigator = Navigator.of(context);
+    final password = await showDialog<String>(
+      context: context,
+      builder: (_) => const _DeleteAccountDialog(),
+    );
+    if (password == null || password.isEmpty || !mounted) return;
+    try {
+      await session.api.deleteAccount(password);
+      if (!mounted) return;
+      showToast(context, context.trNow('accountDeleted'));
+      navigator.popUntil((route) => route.isFirst);
+      await session.logout();
+    } catch (e) {
+      if (mounted) showToast(context, errorMessage(context, e), isError: true);
+    }
+  }
+
   String? _required(String? v) =>
       (v ?? '').trim().isEmpty ? context.trNow('requiredField') : null;
 
@@ -184,8 +203,100 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
           ),
+          const SizedBox(height: 24),
+          SectionTitle(context.tr('deleteAccount')),
+          const SizedBox(height: 10),
+          SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  context.tr('deleteAccountDetail'),
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    height: 1.6,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: _deleteAccount,
+                  icon: const Icon(Icons.delete_forever_rounded),
+                  label: Text(context.tr('deleteAccountButton')),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    side: const BorderSide(color: AppColors.error),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
+    );
+  }
+}
+
+/// Asks for the password before the account is closed; returns it, or null.
+class _DeleteAccountDialog extends StatefulWidget {
+  const _DeleteAccountDialog();
+
+  @override
+  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  final _password = TextEditingController();
+
+  @override
+  void dispose() {
+    _password.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Text(context.tr('deleteAccount')),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.tr('deleteAccountConfirm'),
+            style: const TextStyle(fontSize: 14.5, height: 1.5),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _password,
+            obscureText: true,
+            autofocus: true,
+            decoration: InputDecoration(labelText: context.tr('password')),
+            onChanged: (_) => setState(() {}),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          style: TextButton.styleFrom(foregroundColor: AppColors.textMuted),
+          child: Text(context.tr('cancel')),
+        ),
+        TextButton(
+          onPressed: _password.text.isEmpty
+              ? null
+              : () => Navigator.pop(context, _password.text),
+          style: TextButton.styleFrom(foregroundColor: AppColors.error),
+          child: Text(context.tr('deleteAccountButton')),
+        ),
+      ],
     );
   }
 }

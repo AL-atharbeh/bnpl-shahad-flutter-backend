@@ -35,3 +35,11 @@ export class ChangeVendorPasswordDto {
   @MaxLength(128)
   newPassword: string;
 }
+
+export class DeleteVendorAccountDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(128)
+  password: string;
+}

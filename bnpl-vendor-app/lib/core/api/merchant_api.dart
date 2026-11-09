@@ -61,6 +61,10 @@ class MerchantApi {
     {'currentPassword': current, 'newPassword': next},
   );
 
+  /// Closes the merchant's account for good; needs their password.
+  Future<void> deleteAccount(String password) =>
+      client.delete('/auth/vendor/me', {'password': password});
+
   /// Newest first, with the unread count: `{items, unread}`.
   Future<Map<String, dynamic>> notifications() async => _map(
     _data(await client.get('/auth/vendor/notifications', query: {'limit': 50})),

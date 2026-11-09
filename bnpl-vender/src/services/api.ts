@@ -43,6 +43,9 @@ export const getVendorAccount = () => api.get('/auth/vendor/me');
 export const updateVendorProfile = (data: { name?: string; email?: string; phone?: string }) => api.put('/auth/vendor/me', data);
 export const changeVendorPassword = (currentPassword: string, newPassword: string) =>
     api.put('/auth/vendor/password', { currentPassword, newPassword });
+// Closes the merchant's account for good; needs their password.
+export const deleteVendorAccount = (password: string) =>
+    api.delete('/auth/vendor/me', { data: { password } });
 export const getVendorNotifications = () => api.get('/auth/vendor/notifications', { params: { limit: 30 } });
 // Without an id, marks every notification read.
 export const markVendorNotificationsRead = (id?: number) => api.post('/auth/vendor/notifications/read', id ? { id } : {});

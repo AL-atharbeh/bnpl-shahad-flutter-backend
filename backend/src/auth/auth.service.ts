@@ -418,6 +418,61 @@ export class AuthService {
   }
 
   /**
+   * The merchant closes their account from the app or website (the stores
+   * require this). Sign-in stops at once: the name, email and phone are
+   * replaced so they can be used again, the store leaves the customer app and
+   * its API keys stop working. Sales and settlements stay, as the law requires
+   * for financial records.
+   */
+  async deleteVendorAccount(vendorId: number, password: string) {
+    const vendor = await this.validateVendorById(vendorId);
+    if (!(await bcrypt.compare(password || '', vendor.passwordHash))) {
+      throw new BadRequestException('كلمة المرور غير صحيحة');
+    }
+
+    const formerName = vendor.name;
+    vendor.isActive = false;
+    vendor.name = 'حساب محذوف';
+    vendor.email = `deleted-${vendor.id}-${Date.now()}@deleted.shahedapp.com`;
+    vendor.phone = `deleted-${vendor.id}`.slice(0, 20);
+    vendor.passwordHash = await bcrypt.hash(uuidv4() + uuidv4(), 10);
+    await this.vendorRepository.save(vendor);
+
+    const store = vendor.storeId
+      ? await this.storeRepository.findOne({ where: { id: vendor.storeId } })
+      : null;
+    const othersActive = store
+      ? await this.vendorRepository.count({ where: { storeId: store.id, isActive: true } })
+      : 0;
+    if (store && othersActive === 0) {
+      store.isActive = false;
+      store.apiKey = null as any;
+      store.apiSecret = null as any;
+      // Off the admin's waiting list too.
+      store.status = store.status === 'approved' ? 'suspended' : 'rejected';
+      store.reviewNote = 'أغلق التاجر حسابه';
+      await this.storeRepository.save(store);
+    }
+
+    try {
+      const admins = await this.usersService.findAllAdmins();
+      for (const admin of admins) {
+        await this.notificationsService.sendToUser(
+          admin.id,
+          'تاجر أغلق حسابه',
+          `${formerName} أغلق حسابه${store ? ` ومتجر «${store.nameAr || store.name}» لم يعد ظاهراً` : ''}`,
+          { type: 'vendor_account_deleted', storeId: String(store?.id ?? ''), vendorId: String(vendor.id) },
+          'normal',
+        );
+      }
+    } catch (err) {
+      this.logger.warn(`Could not notify admins of deleted vendor ${vendor.id}: ${err.message}`);
+    }
+
+    return { success: true, message: 'تم حذف حسابك' };
+  }
+
+  /**
    * Vendor Login via Email and Password
    */
   async vendorLogin(vendorLoginDto: VendorLoginDto) {
