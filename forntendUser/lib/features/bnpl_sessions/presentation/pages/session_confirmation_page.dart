@@ -7,6 +7,7 @@ import 'package:bnpl/config/env/env_dev.dart';
 import 'package:bnpl/core/theme/app_colors.dart';
 import 'package:bnpl/features/bnpl_sessions/data/bnpl_session_service.dart';
 import 'package:bnpl/features/payments/presentation/pages/payment_webview_page.dart';
+import 'package:bnpl/services/auth_service.dart';
 import '../../models/bnpl_session.dart';
 import '../../data/bnpl_session_service.dart';
 import '../widgets/pin_verification_dialog.dart';
@@ -28,6 +29,7 @@ class SessionConfirmationPage extends StatefulWidget {
 
 class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
   final BnplSessionService _sessionService = BnplSessionService();
+  final AuthService _authService = AuthService();
   BnplSession? _session;
   bool _isLoading = true;
   String? _error;
@@ -241,13 +243,44 @@ class _SessionConfirmationPageState extends State<SessionConfirmationPage> {
 
   Future<bool> _verifyWithOTP() async {
     final prefs = await SharedPreferences.getInstance();
-    final phoneNumber = prefs.getString('user_phone') ?? '+962 7 7671 9225';
+    String? phoneNumber = prefs.getString('user_phone');
+
+    // 1. Fetch profile from backend if phone is missing from local storage
+    if (phoneNumber == null || phoneNumber.trim().isEmpty) {
+      try {
+        final profileRes = await _authService.getProfile();
+        if (profileRes['success'] == true && profileRes['data'] != null) {
+          final userData = profileRes['data']['user'] ?? profileRes['data'];
+          phoneNumber = userData['phone']?.toString();
+          if (phoneNumber != null && phoneNumber.isNotEmpty) {
+            await prefs.setString('user_phone', phoneNumber);
+          }
+        }
+      } catch (e) {
+        print('⚠️ Could not fetch user profile phone: $e');
+      }
+    }
+
+    // 2. Fallback error if phone is STILL unknown (never use hardcoded fake numbers)
+    if (phoneNumber == null || phoneNumber.trim().isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('❌ تعذر الحصول على رقم هاتفك. يرجى التأكد من تسجيل الدخول رقم هاتف صحيح'),
+            backgroundColor: const Color(0xFFE53935),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+      return false;
+    }
 
     final result = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) => OtpVerificationDialog(
-        phoneNumber: phoneNumber,
+        phoneNumber: phoneNumber!,
         onVerified: () {},
         onCancel: () {},
       ),

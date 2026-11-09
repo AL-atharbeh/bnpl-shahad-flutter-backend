@@ -52,9 +52,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   bool _showPromoBanner = true;
   late PageController _bannerPageController;
   late PageController _storesPageController;
-  final GlobalKey _navBarKey = GlobalKey();
-  double _dragProgress = 0.0;
-  bool _isDragging = false;
   late AnimationController _bannerAnimationController;
   late AnimationController _fadeAnimationController;
   late AnimationController _slideAnimationController;
@@ -311,7 +308,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _dragProgress = _currentNavIndex.toDouble();
     
     _bannerPageController = PageController();
     _storesPageController = PageController();
@@ -961,47 +957,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     _bannerAnimationController.forward();
   }
 
-  void _onNavDragUpdate(DragUpdateDetails details) {
-    if (_navBarKey.currentContext == null) return;
-    
-    final RenderBox box = _navBarKey.currentContext!.findRenderObject() as RenderBox;
-    final Offset localOffset = box.globalToLocal(details.globalPosition);
-    final double width = box.size.width;
-    
-    // Use the reliable LanguageService from Provider
-    final languageService = Provider.of<LanguageService>(context, listen: false);
-    final bool isArabic = languageService.isArabic;
-    
-    // Improved mapping: divide width into 4 equal segments
-    double progress = (localOffset.dx / (width / 4)) - 0.5;
-    progress = progress.clamp(0.0, 3.0);
-    
-    // If Arabic mode (RTL), index 0 is on the physical right.
-    // dx=0 (left) should map to index 3, dx=width (right) should map to index 0.
-    double logicalProgress = isArabic ? (3.0 - progress) : progress;
-    
-    int hoverIndex = logicalProgress.round();
-    
-    if (_isDragging && hoverIndex != _currentNavIndex) {
-      HapticFeedback.selectionClick();
-    }
-
-    setState(() {
-      _dragProgress = logicalProgress;
-      _isDragging = true;
-    });
-  }
-
-  void _onNavDragEnd() {
-    int finalIndex = _dragProgress.round().clamp(0, 3);
-    setState(() {
-      _isDragging = false;
-      _currentNavIndex = finalIndex;
-      _dragProgress = finalIndex.toDouble();
-    });
-    HapticFeedback.lightImpact();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1012,7 +967,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           _buildCurrentPage(),
           
           // Glassmorphism Bottom Navigation
-          _buildGlassmorphismBottomNav(),
+          GlassmorphismBottomNav(
+            currentIndex: _currentNavIndex,
+            onTabChanged: (index) {
+              setState(() {
+                _currentNavIndex = index;
+              });
+            },
+          ),
         ],
       ),
     );
@@ -3593,13 +3555,87 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       ),
     );
   }
+}
 
-    Widget _buildGlassmorphismBottomNav() {
+class GlassmorphismBottomNav extends StatefulWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTabChanged;
+
+  const GlassmorphismBottomNav({
+    Key? key,
+    required this.currentIndex,
+    required this.onTabChanged,
+  }) : super(key: key);
+
+  @override
+  State<GlassmorphismBottomNav> createState() => _GlassmorphismBottomNavState();
+}
+
+class _GlassmorphismBottomNavState extends State<GlassmorphismBottomNav> {
+  final GlobalKey _navBarKey = GlobalKey();
+  double _dragProgress = 0.0;
+  bool _isDragging = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _dragProgress = widget.currentIndex.toDouble();
+  }
+
+  @override
+  void didUpdateWidget(GlassmorphismBottomNav oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.currentIndex != oldWidget.currentIndex && !_isDragging) {
+      setState(() {
+        _dragProgress = widget.currentIndex.toDouble();
+      });
+    }
+  }
+
+  void _onNavDragUpdate(DragUpdateDetails details) {
+    if (_navBarKey.currentContext == null) return;
+    
+    final RenderBox box = _navBarKey.currentContext!.findRenderObject() as RenderBox;
+    final Offset localOffset = box.globalToLocal(details.globalPosition);
+    final double width = box.size.width;
+    
+    final languageService = Provider.of<LanguageService>(context, listen: false);
+    final bool isArabic = languageService.isArabic;
+    
+    double progress = (localOffset.dx / (width / 4)) - 0.5;
+    progress = progress.clamp(0.0, 3.0);
+    
+    double logicalProgress = isArabic ? (3.0 - progress) : progress;
+    
+    int hoverIndex = logicalProgress.round();
+    
+    if (_isDragging && hoverIndex != widget.currentIndex) {
+      HapticFeedback.selectionClick();
+    }
+
+    setState(() {
+      _dragProgress = logicalProgress;
+      _isDragging = true;
+    });
+  }
+
+  void _onNavDragEnd() {
+    int finalIndex = _dragProgress.round().clamp(0, 3);
+    setState(() {
+      _isDragging = false;
+      _dragProgress = finalIndex.toDouble();
+    });
+    widget.onTabChanged(finalIndex);
+    HapticFeedback.lightImpact();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final languageService = Provider.of<LanguageService>(context);
     final bool isArabic = languageService.isArabic;
     
     return Positioned(
-      left: 50, // Slightly wider margin for a more balanced layout
+      left: 50,
       right: 50,
       bottom: 30,
       child: GestureDetector(
@@ -3619,17 +3655,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
             filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
             child: Container(
               key: _navBarKey,
-              height: 70, // Sleeker, more compact height
+              height: 70,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.82), // Beautiful frosted white background
+                color: Colors.white.withValues(alpha: 0.82),
                 borderRadius: BorderRadius.circular(35),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.85), // Clean hairline border
+                  color: Colors.white.withValues(alpha: 0.85),
                   width: 1.0,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05), // Extremely soft, calm shadow
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 25,
                     offset: const Offset(0, 8),
                   ),
@@ -3638,7 +3674,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // World-Class Fluid Indicator - Refined Proportion
                   AnimatedAlign(
                     duration: Duration(milliseconds: _isDragging ? 80 : 500),
                     curve: _isDragging ? Curves.linear : Curves.easeOutBack,
@@ -3647,8 +3682,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                       0.0,
                     ),
                     child: Container(
-                      width: MediaQuery.of(context).size.width * 0.15, // Slimmer pill
-                      height: 56, // Increased from 48 to accommodate larger icons
+                      width: MediaQuery.of(context).size.width * 0.15,
+                      height: 56,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           begin: Alignment.topLeft,
@@ -3670,8 +3705,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                       ),
                     ),
                   ),
-                  
-                  // Icons with Liquid Transition
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
@@ -3691,13 +3724,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   }
 
   Widget _buildNavIcon(IconData icon, int index) {
-    // Distance from the current drag progress
     final double distance = (_dragProgress - index).abs();
     final double proximity = (1.0 - distance).clamp(0.0, 1.0);
     
-    final double scale = 0.85 + (proximity * 0.2); // More subtle scale
+    final double scale = 0.85 + (proximity * 0.2);
     final Color iconColor = Color.lerp(
-      const Color(0xFF64748B), // Soft slate grey for a calm, professional look
+      const Color(0xFF64748B),
       Colors.white,
       Curves.easeIn.transform(proximity),
     )!;
@@ -3708,9 +3740,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         onTap: () {
           HapticFeedback.mediumImpact();
           setState(() {
-            _currentNavIndex = index;
             _dragProgress = index.toDouble();
           });
+          widget.onTabChanged(index);
         },
         child: Center(
           child: Column(
@@ -3720,17 +3752,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 scale: scale,
                 child: Icon(
                   icon,
-                  size: 30, // Increased from 24 for better visibility
+                  size: 30,
                   color: iconColor,
                 ),
               ),
               const SizedBox(height: 5),
-              // Subtler dot
               Container(
                 width: 4 * proximity,
                 height: 4 * proximity,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: proximity * 0.8), // Branded active green dot
+                  color: const Color(0xFF10B981).withValues(alpha: proximity * 0.8),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -3879,6 +3910,7 @@ class _CategoryCardState extends State<CategoryCard> {
                           ? Image.memory(
                               _imageBytes!,
                               fit: BoxFit.cover,
+                              gaplessPlayback: true,
                               errorBuilder: (_, __, ___) => _buildFallback(),
                             )
                           : ImageHelper.buildImage(

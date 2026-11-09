@@ -15,14 +15,22 @@ class ImageHelper {
     return url.startsWith('http://') || url.startsWith('https://');
   }
 
+  // Cache for decoded base64 images to prevent flickering and save CPU
+  static final Map<String, Uint8List> _base64Cache = {};
+
   /// Extract base64 data from a data URL
   static Uint8List? decodeBase64DataUrl(String dataUrl) {
+    if (_base64Cache.containsKey(dataUrl)) {
+      return _base64Cache[dataUrl];
+    }
     try {
       // Format: data:image/jpeg;base64,/9j/4AAQ...
       final commaIndex = dataUrl.indexOf(',');
       if (commaIndex == -1) return null;
       final base64String = dataUrl.substring(commaIndex + 1);
-      return base64Decode(base64String);
+      final bytes = base64Decode(base64String);
+      _base64Cache[dataUrl] = bytes;
+      return bytes;
     } catch (e) {
       debugPrint('❌ Error decoding base64 image: $e');
       return null;
@@ -81,6 +89,7 @@ class ImageHelper {
           fit: fit,
           width: width,
           height: height,
+          gaplessPlayback: true,
           errorBuilder: (_, __, ___) => defaultError,
         );
       }

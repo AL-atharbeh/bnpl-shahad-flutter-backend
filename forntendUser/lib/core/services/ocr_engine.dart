@@ -1,24 +1,20 @@
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:flutter/foundation.dart';
 
-/// Real engine, backed by Google ML Kit.
+/// Stub engine used while ML Kit is switched off for simulator builds.
 ///
-/// ML Kit ships its iOS binaries without an arm64 simulator slice, so CocoaPods
-/// drops arm64 from simulator builds and the app then has no valid destination
-/// on an Apple Silicon Mac. Use tool/toggle_mlkit.sh to swap in the stub engine
-/// while working on the simulator.
+/// It returns no text, so the ID screens still run and every other flow can be
+/// exercised on the simulator; only the automatic field extraction is inert and
+/// the fields are filled in by hand.
 class OcrEngine {
-  final TextRecognizer _recognizer =
-      TextRecognizer(script: TextRecognitionScript.latin);
-
-  static const bool isAvailable = true;
+  static const bool isAvailable = false;
 
   Future<String> recognize(String imagePath) async {
-    final input = InputImage.fromFilePath(imagePath);
-    final result = await _recognizer.processImage(input);
-    return result.text;
+    debugPrint(
+      '⚠️ OCR is disabled in this build (ML Kit off for the simulator). '
+      'Enter the ID details manually, or run tool/toggle_mlkit.sh on.',
+    );
+    return '';
   }
 
-  void dispose() {
-    _recognizer.close();
-  }
+  void dispose() {}
 }
