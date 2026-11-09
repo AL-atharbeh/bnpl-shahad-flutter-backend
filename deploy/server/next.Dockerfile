@@ -9,7 +9,13 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 COPY package*.json ./
 RUN npm ci
 COPY . .
-RUN npm run build && npm prune --omit=dev
+# `next start` compiles next.config.ts with TypeScript, a dev dependency.
+# Keep it through the prune, or Next installs it at first start and the
+# container restarts once.
+RUN npm run build \
+ && (cp -r node_modules/typescript /tmp/typescript 2>/dev/null || true) \
+ && npm prune --omit=dev \
+ && if [ -d /tmp/typescript ] && [ ! -d node_modules/typescript ]; then mv /tmp/typescript node_modules/typescript; fi
 
 FROM node:20-alpine
 WORKDIR /app

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/l10n/language_service.dart';
 import '../../core/session/session_service.dart';
@@ -15,6 +16,9 @@ import 'store_settings_page.dart';
 
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
+
+  Future<void> _open(String url) =>
+      launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
 
   Future<void> _logout(BuildContext context) async {
     final confirmed = await confirmDialog(
@@ -169,6 +173,16 @@ class AccountPage extends StatelessWidget {
                   ),
                 ),
                 onTap: language.toggle,
+              ),
+              _MenuTile(
+                icon: Icons.privacy_tip_outlined,
+                title: context.tr('privacyPolicy'),
+                onTap: () => _open('https://shahedapp.com/privacy'),
+              ),
+              _MenuTile(
+                icon: Icons.description_outlined,
+                title: context.tr('termsOfUse'),
+                onTap: () => _open('https://shahedapp.com/terms'),
               ),
               _MenuTile(
                 icon: Icons.logout_rounded,

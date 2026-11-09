@@ -15,6 +15,8 @@ import 'features/shell/review_gate.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
+  // Every screen is laid out for a phone held upright.
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await initializeDateFormatting();
 
   final language = LanguageService();
