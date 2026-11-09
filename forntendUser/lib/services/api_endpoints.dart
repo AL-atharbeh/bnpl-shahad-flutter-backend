@@ -90,4 +90,6 @@ class ApiEndpoints {
   static const String securityEnableBiometric = '/security/biometric/enable';
   static const String securityDisableBiometric = '/security/biometric/disable';
   static const String securityDeleteAccount = '/security/account';
+  static const String securityDeletionPreview =
+      '/security/account/deletion-preview';
 }

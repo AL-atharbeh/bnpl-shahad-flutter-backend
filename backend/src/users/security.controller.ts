@@ -89,13 +89,45 @@ export class SecurityController {
     };
   }
 
-  @Delete('account')
-  @ApiOperation({ summary: 'Delete user account' })
-  async deleteAccount(@Request() req) {
-    await this.securityService.deleteAccount(req.user.id);
+  @Get('account/deletion-preview')
+  @ApiOperation({
+    summary: 'What deleting the account would leave behind',
+    description:
+      'The confirmation screen calls this first so the person sees any ' +
+      'outstanding balance before they commit. Deletion is never refused.',
+  })
+  async deletionPreview(@Request() req) {
+    const { count, amount } = await this.securityService.getOutstanding(
+      req.user.id,
+    );
+
     return {
       success: true,
-      message: 'تم حذف الحساب بنجاح',
+      data: {
+        outstandingCount: count,
+        outstandingAmount: amount,
+        // What survives the deletion, so the screen can say it plainly.
+        retainsIdentity: count > 0,
+      },
+    };
+  }
+
+  @Delete('account')
+  @ApiOperation({
+    summary: 'Delete user account',
+    description:
+      'Always succeeds. Personal data is erased; while a balance is ' +
+      'outstanding the name, phone and civil ID are kept for collection.',
+  })
+  async deleteAccount(@Request() req) {
+    const { count } = await this.securityService.getOutstanding(req.user.id);
+    await this.securityService.deleteAccount(req.user.id);
+
+    return {
+      success: true,
+      message: count > 0
+        ? 'تم حذف حسابك. تبقى أقساطك المستحقة قائمة وسنتواصل معك بشأنها.'
+        : 'تم حذف الحساب وبياناتك الشخصية بنجاح.',
     };
   }
 }

@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { randomBytes } from 'crypto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { UserSecuritySetting } from './entities/user-security-setting.entity';
@@ -162,35 +163,91 @@ export class SecurityService {
   }
 
   /**
-   * Check if user has any payments
+   * What the person still owes, if anything.
+   *
+   * Only pending instalments count. A settled payment is history, not a debt,
+   * and the old check counted those too, which is why an account that had
+   * paid everything off could never be deleted.
+   *
+   * The status comparison is case-insensitive because Postgres stores the
+   * value as it was written and older rows are not consistent about it.
    */
-  async hasPayments(userId: number): Promise<boolean> {
-    const paymentsCount = await this.paymentRepository.count({
-      where: { userId },
-    });
-    return paymentsCount > 0;
+  async getOutstanding(userId: number): Promise<{ count: number; amount: number }> {
+    const row = await this.paymentRepository
+      .createQueryBuilder('payment')
+      .select('COUNT(*)', 'count')
+      .addSelect('COALESCE(SUM(payment.amount), 0)', 'amount')
+      .where('payment.user_id = :userId', { userId })
+      .andWhere('LOWER(payment.status) = :status', { status: 'pending' })
+      .getRawOne<{ count: string; amount: string }>();
+
+    return {
+      count: Number(row?.count ?? 0),
+      amount: Number(row?.amount ?? 0),
+    };
   }
 
   /**
-   * Delete user account
-   * Throws BadRequestException if user has any payments
+   * Kept for callers that only need the yes/no.
+   */
+  async hasPayments(userId: number): Promise<boolean> {
+    const { count } = await this.getOutstanding(userId);
+    return count > 0;
+  }
+
+  /**
+   * Removes the person from the system.
+   *
+   * The row itself stays, because every payment hangs off it and deleting it
+   * would take the accounting record with it. What goes is the person: each
+   * field that identifies them is overwritten, the password is replaced with
+   * a value nobody holds, and the account can no longer be signed into.
+   *
+   * One exception. While money is still owed, the name, phone and civil ID
+   * are kept, because the debt cannot be collected without them. Everything
+   * else goes either way: the ID photographs, the income, the address, the
+   * avatar, the push token, the Firebase link. The confirmation screen tells
+   * the person this before they commit, and the privacy policy repeats it.
+   *
+   * Deletion is never refused. An outstanding balance changes what is kept,
+   * not whether the account can go.
    */
   async deleteAccount(userId: number): Promise<void> {
-    const user = await this.usersService.findById(userId);
-    
-    // Check if user has any payments
-    const hasAnyPayments = await this.hasPayments(userId);
-    if (hasAnyPayments) {
-      throw new BadRequestException(
-        'لا يمكن حذف الحساب لأنه يحتوي على دفعات. يرجى إتمام جميع الدفعات أولاً.'
-      );
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('المستخدم غير موجود');
     }
-    
-    // Delete security settings explicitly (CASCADE will handle it, but we do it explicitly)
+
+    const { count } = await this.getOutstanding(userId);
+
     await this.securityRepository.delete({ userId });
-    
-    // Delete user (this will cascade delete all related data due to foreign keys)
-    await this.userRepository.delete(userId);
+
+    const scrubbed: Partial<User> = {
+      email: null,
+      passwordHash: randomBytes(32).toString('hex'),
+      civilIdFront: null,
+      civilIdBack: null,
+      dateOfBirth: null,
+      address: null,
+      monthlyIncome: null,
+      employer: null,
+      avatarUrl: null,
+      otp: null,
+      fcmToken: null,
+      stripeCustomerId: null,
+      firebaseUid: null,
+      isPhoneVerified: false,
+      isEmailVerified: false,
+      isActive: false,
+    };
+
+    if (count === 0) {
+      scrubbed.name = 'حساب محذوف';
+      // phone is unique, so it needs a value no real number can collide with
+      scrubbed.phone = `deleted-${userId}`;
+      scrubbed.civilIdNumber = null;
+    }
+
+    await this.userRepository.update(userId, scrubbed);
   }
 }
-

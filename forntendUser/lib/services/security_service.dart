@@ -35,6 +35,14 @@ class SecurityService {
   }
 
   // Delete user account
+  /// What deleting the account would leave behind.
+  ///
+  /// The confirmation screen asks for this first, so an outstanding balance
+  /// is shown before the person commits rather than after.
+  Future<Map<String, dynamic>> deletionPreview() async {
+    return await _apiService.get(ApiEndpoints.securityDeletionPreview);
+  }
+
   Future<Map<String, dynamic>> deleteAccount() async {
     return await _apiService.delete(ApiEndpoints.securityDeleteAccount);
   }

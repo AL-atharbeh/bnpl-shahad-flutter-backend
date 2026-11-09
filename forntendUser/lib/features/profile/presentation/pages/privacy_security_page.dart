@@ -569,7 +569,24 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
 
   Future<void> _showDeleteAccountDialog() async {
     final l10n = AppLocalizations.of(context)!;
-    
+
+    // Ask the server what deletion would leave behind before offering it, so
+    // an unpaid balance is stated up front rather than discovered later.
+    int owedCount = 0;
+    double owedAmount = 0;
+    try {
+      final preview = await _securityService.deletionPreview();
+      final data = preview['data'] as Map<String, dynamic>?;
+      owedCount = (data?['outstandingCount'] as num?)?.toInt() ?? 0;
+      owedAmount = (data?['outstandingAmount'] as num?)?.toDouble() ?? 0;
+    } catch (_) {
+      // The preview is a courtesy. Losing it must not block the deletion
+      // itself, so fall through to the general warning.
+    }
+
+    if (!mounted) return;
+    final owes = owedCount > 0;
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -589,11 +606,40 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 8),
-            const Text(
-              '⚠️ سيتم حذف جميع بياناتك نهائياً ولا يمكن التراجع',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.w600),
-            ),
+            if (owes) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF2F2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFFECACA)),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'عليك $owedCount قسطاً مستحقاً بقيمة ${owedAmount.toStringAsFixed(2)} د.أ',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFFB91C1C),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'حذف الحساب لا يلغي هذا الالتزام. نحتفظ باسمك ورقم هاتفك ورقمك الوطني لمتابعة السداد فقط، ونحذف كل ما عداها.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12, color: Color(0xFF991B1B), height: 1.5),
+                    ),
+                  ],
+                ),
+              ),
+            ] else
+              const Text(
+                '⚠️ ستُحذف بياناتك الشخصية نهائياً ولا يمكن التراجع',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.w600),
+              ),
           ],
         ),
         actions: [
